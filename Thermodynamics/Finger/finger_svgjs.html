@@ -1,0 +1,284 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <style>
+      body {
+        margin: 0px;
+        padding: 0px;
+      }
+      .bowl {
+        cursor: pointer;
+      }
+    </style>
+        <script src="./svg.min.js"></script>
+  </head> 
+  <body>
+    <svg id="board" width="1000" height="800" version="1.1" xmlns="http://www.w3.org/2000/svg">
+      <image class="bowl" x="30" y="80" width="128.75" height="72.5" onclick="coldMetal()" xlink:href="./coldMetal.svg"/>
+      <image class="bowl" x="240" y="80" width="128.75" height="72.5" onclick="coldWood()" xlink:href="./coldWood.svg"/>
+      <image class="bowl" x="470" y="80" width="128.75" height="72.5" onclick="hotMetal()" xlink:href="./hotMetal.svg"/>
+      <image class="bowl" x="670" y="80" width="128.75" height="72.5" onclick="hotWood()" xlink:href="./hotWood.svg"/>
+      <text x="55" y="170" 
+        font-family="Verdana" 
+        font-size="13">
+        Cool Metal Bowl
+      </text>
+      <text x="250" y="170" 
+        font-family="Verdana" 
+        font-size="13">
+        Cool Wood Bowl
+      </text>
+      <text x="495" y="170" 
+        font-family="Verdana" 
+        font-size="13">
+        Hot Metal Bowl
+      </text>
+      <text x="675" y="170" 
+        font-family="Verdana" 
+        font-size="13">
+        Hot Wood Bowl
+      </text>
+      <text x="15" y="190" 
+        font-family="Verdana" 
+        font-size="13">
+        (High Thermal Conductivity)
+      </text>
+      <text x="215" y="190" 
+        font-family="Verdana" 
+        font-size="13">
+        (Low Thermal Conductivity)
+      </text>
+      <text x="445" y="190" 
+        font-family="Verdana" 
+        font-size="13">
+        (High Thermal Conductivity)
+      </text>
+      <text x="640" y="190" 
+        font-family="Verdana" 
+        font-size="13">
+        (Low Thermal Conductivity)
+      </text>
+      <rect x="10" y="220" width="850" height="450" stroke="black" fill="transparent" stroke-width="1"/>
+
+    <script type="text/javascript">
+      var draw = SVG('board');
+      var clicked = false;
+      var arr = [];
+      var count = 0;
+      var lastClicked = 0;
+      //array containing text and function that writes the descriptive text at the top
+      var topTextArr = ['Click on a bowl to "touch" it with your finger.', 'Click on the other bowl that is the same temperature to "touch" it.', 'Now experiment with the other bowls!  Try to figure out what decides how a bowl\nfeels.  Is the temperature the only thing that decides how the bowl will feel?'];
+      var topText = draw.text(function(add) {
+        add.tspan(topTextArr[0])
+      }).dx(10).y(36.5).font({
+        family: 'Arial',
+        size: 24
+      })
+      <!-- ----------------COLD METAL----------------- -->
+      function coldMetal() {
+        //helper function that draws the bowl and finger
+        clicker(1);
+        //runs finger animation, then calls next animation
+        var anim = function() {
+          finger.animate(500).move(485, 350).after(anim2);
+        }
+        //runs heat animation and loops the heat arrows
+        var anim2 = function() {
+          var heat = draw.image("./coldHeat.png", 30, 40);
+              heat.attr({
+                'x': 465,
+                'y': 420
+              });
+          var arrow = draw.image("./arrow.svg", 60, 28);
+              arrow.attr({
+                'x': 465,
+                'y': 425
+              })
+          var arrow2 = arrow.clone(),
+              arrow3 = arrow.clone();
+          arr.push(heat, arrow, arrow2, arrow3);
+          arrow.animate(700).move(435, 425).loop();
+          arrow2.animate(700).rotate(20).move(435, 395).loop();
+          arrow3.animate(700).rotate(-20).move(435, 455).loop();
+          heat.animate(700).scale(3, 3).move(460, 420);
+        }
+        //triggers animation
+        anim();
+      }
+
+      <!-- ----------------COLD WOOD----------------- -->
+      function coldWood() {
+        //helper function that draws the bowl and finger
+        clicker(2);
+        //runs finger animation, then calls next animation
+        var anim = function() {
+          finger.animate(500).move(485, 350).after(anim2);
+        }
+        //runs heat animation and loops the heat arrows
+        var anim2 = function() {
+          var heat = draw.image("./coldHeat.png", 15, 20);
+              heat.attr({
+                'x': 475,
+                'y': 435
+              });
+          var arrow = draw.image("./arrow.svg", 60, 28);
+              arrow.attr({
+                'x': 490,
+                'y': 425
+              })
+          var arrow2 = arrow.clone(),
+              arrow3 = arrow.clone();
+          arr.push(heat, arrow, arrow2, arrow3);
+          arrow.animate(2500).move(435, 425).loop();
+          arrow2.animate(2500).rotate(40).move(425, 395).loop();
+          arrow3.animate(2500).rotate(-40).move(425, 455).loop();
+          heat.animate().scale(2.8, 2.8).move(473, 435);
+        }
+        anim();
+      }
+
+      <!-- ----------------HOT METAL----------------- -->
+      function hotMetal() {
+        //helper function that draws the bowl and finger
+        clicker(3);
+        //runs finger animation, then calls next animation
+        var anim = function() {
+          finger.animate(500).move(485, 350).after(anim2);
+        }
+        //runs heat animation and loops the heat arrows
+        var anim2 = function() {
+          var heat = draw.image("./hotHeat.png", 30, 40);
+              heat.attr({
+                'x': 490,
+                'y': 420
+              });
+          var arrow = draw.image("./arrow2.svg", 60, 28);
+              arrow.attr({
+                'x': 430,
+                'y': 425
+              })
+          var arrow2 = arrow.clone(),
+              arrow3 = arrow.clone();
+          arr.push(heat, arrow, arrow2, arrow3);
+          arrow.animate(700).move(485, 425).loop();
+          arrow2.animate(700).transform({rotation: 30, relative: true}).move(495, 445).loop();
+          arrow3.animate(700).transform({rotation: -30, relative: true}).move(495, 405).loop();
+          heat.animate(400).scale(2.5, 2.5).move(493, 420);
+        }
+        anim();
+      }
+
+      <!-- ----------------HOT WOOD----------------- -->
+      function hotWood() {
+        //helper function that draws the bowl and finger
+        clicker(4);
+        //runs finger animation, then calls next animation
+        var anim = function() {
+          finger.animate(500).move(485, 350).after(anim2);
+        }
+        //runs heat animation and loops the heat arrows
+        var anim2 = function() {
+          var heat = draw.image("./hotHeat.png", 30, 40);
+              heat.attr({
+                'x': 475,
+                'y': 420
+              });
+          var arrow = draw.image("./arrow2.svg", 60, 28);
+              arrow.attr({
+                'x': 430,
+                'y': 425
+              })
+          var arrow2 = arrow.clone(),
+              arrow3 = arrow.clone();
+          arr.push(heat, arrow, arrow2, arrow3);
+          arrow.animate(2500).move(485, 425).loop();
+          arrow2.animate(2500).transform({rotation: 20, relative: true}).move(495, 445).loop();
+          arrow3.animate(2500).transform({rotation: -20, relative: true}).move(495, 405).loop();
+          heat.animate(500).scale(1.3, 1.3).move(485, 420);
+        }
+        anim();
+      }
+      <!-- ----------------------------------------- -->
+
+      //helper function that draws the finger and bowl
+      function clicker(num) {
+        topText.clear();
+        count ++;
+        if (arr.length > 0) {
+          for (var i = 0; i < arr.length; i ++) {
+            arr[i].stop();
+            arr[i].remove();
+          }
+        }
+        //rewrites the top descriptive text based
+        if (count === 1) {
+          topText.text(topTextArr[1]).y(30);
+        } else {
+          topText.text(topTextArr[2]).y(10);
+        }
+        //writes text label for animation
+        var textArr = ['(Low Thermal Conductivity)', '(High Thermal Conductivity)',  
+            'Cold Metal', 'Cold Wood', 'Hot Metal', 'Hot Wood'];
+        var text = draw.text(function(add) {
+          add.tspan(textArr[num + 1]).dx(390);
+          add.tspan(textArr[num % 2]).newLine().dx(300);
+        }).y(250)
+        .font({
+          family: 'Arial',
+          size: 22
+        });
+        //draws the thermometer for the bowl
+        if (num <= 2) {
+          var thermo = "./coldThermo.svg";
+        } else {
+          var thermo = "./hotThermo.svg";
+        }
+        var bowlThermo = draw.image(thermo, 50, 200);
+            bowlThermo.attr({
+              'x': 160,
+              'y': 350
+            });
+        //draws the thermometer for the finger
+        var fingerThermo = draw.image("./fingerThermo.svg", 50, 200);
+            fingerThermo.attr({
+              'x': 650,
+              'y': 350
+            });
+        //draws line from finger/bowl to thermometer
+        var line1 = draw.line(220, 520, 340, 500).stroke({width: 2}).front();
+        var line2 = draw.line(570, 500, 640, 520).stroke({width: 2}).front();
+        //temperature text for thermometers
+        var bowlText = draw.text(function(add) {
+          add.tspan('60\xB0 C').x(130).y(390);
+          add.tspan('(Body Temp.) 37\xB0 C').x(43).y(455);
+          add.tspan('(Room Temp.) 22\xB0 C').x(38).y(490);
+        }).font({
+          family: 'Arial',
+          size: 14
+        })
+        var fingerText = draw.text(function(add) {
+          add.tspan('60\xB0 C').x(690).y(390);
+          add.tspan('37\xB0 C (Body Temp.)').x(690).y(455);
+          add.tspan('22\xB0 C(Room Temp.)').x(690).y(490);
+        }).font({
+          family: 'Arial',
+          size: 14
+        })
+        //draws the bowl
+        bowl = draw.image("./" + num + ".svg", 258, 258)
+            bowl.attr({
+              'x': 250,
+              'y': 330
+            }).back();;
+        //draws the finger
+        finger = draw.image("./finger.svg", 144, 220);
+            finger.attr({
+              'x': 495,
+              'y': 350
+            }).back();
+        //creates set and adds finger/bowl to set
+        arr.push(bowl, finger, text, bowlThermo, fingerThermo, bowlText, fingerText, line1, line2);
+      }
+    </script>
+  </body>
+</html>  
