@@ -14,10 +14,10 @@
   </head> 
   <body>
     <svg id="board" width="1000" height="800" version="1.1" xmlns="http://www.w3.org/2000/svg">
-      <image class="bowl" x="30" y="80" width="128.75" height="72.5" onclick="coldMetal()" xlink:href="./coldMetal.svg"/>
-      <image class="bowl" x="240" y="80" width="128.75" height="72.5" onclick="coldWood()" xlink:href="./coldWood.svg"/>
-      <image class="bowl" x="470" y="80" width="128.75" height="72.5" onclick="hotMetal()" xlink:href="./hotMetal.svg"/>
-      <image class="bowl" x="670" y="80" width="128.75" height="72.5" onclick="hotWood()" xlink:href="./hotWood.svg"/>
+      <image class="bowl" x="30" y="80" width="128.75" height="72.5" onclick="coldMetal()" xlink:href="./img/coldMetal.svg"/>
+      <image class="bowl" x="240" y="80" width="128.75" height="72.5" onclick="coldWood()" xlink:href="./img/coldWood.svg"/>
+      <image class="bowl" x="470" y="80" width="128.75" height="72.5" onclick="hotMetal()" xlink:href="./img/hotMetal.svg"/>
+      <image class="bowl" x="670" y="80" width="128.75" height="72.5" onclick="hotWood()" xlink:href="./img/hotWood.svg"/>
       <text x="55" y="170" 
         font-family="Verdana" 
         font-size="13">
@@ -84,12 +84,12 @@
         }
         //runs heat animation and loops the heat arrows
         var anim2 = function() {
-          var heat = draw.image("./coldHeat.png", 30, 40);
+          var heat = draw.image("./img/coldHeat.png", 30, 40);
               heat.attr({
                 'x': 465,
                 'y': 420
               });
-          var arrow = draw.image("./arrow.svg", 60, 28);
+          var arrow = draw.image("./img/arrow.svg", 60, 28);
               arrow.attr({
                 'x': 465,
                 'y': 425
@@ -116,12 +116,12 @@
         }
         //runs heat animation and loops the heat arrows
         var anim2 = function() {
-          var heat = draw.image("./coldHeat.png", 15, 20);
+          var heat = draw.image("./img/coldHeat.png", 15, 20);
               heat.attr({
                 'x': 475,
                 'y': 435
               });
-          var arrow = draw.image("./arrow.svg", 60, 28);
+          var arrow = draw.image("./img/arrow.svg", 60, 28);
               arrow.attr({
                 'x': 490,
                 'y': 425
@@ -147,12 +147,12 @@
         }
         //runs heat animation and loops the heat arrows
         var anim2 = function() {
-          var heat = draw.image("./hotHeat.png", 30, 40);
+          var heat = draw.image("./img/hotHeat.png", 30, 40);
               heat.attr({
                 'x': 490,
                 'y': 420
               });
-          var arrow = draw.image("./arrow2.svg", 60, 28);
+          var arrow = draw.image("./img/arrow2.svg", 60, 28);
               arrow.attr({
                 'x': 430,
                 'y': 425
@@ -178,12 +178,12 @@
         }
         //runs heat animation and loops the heat arrows
         var anim2 = function() {
-          var heat = draw.image("./hotHeat.png", 30, 40);
+          var heat = draw.image("./img/hotHeat.png", 30, 40);
               heat.attr({
                 'x': 475,
                 'y': 420
               });
-          var arrow = draw.image("./arrow2.svg", 60, 28);
+          var arrow = draw.image("./img/arrow2.svg", 60, 28);
               arrow.attr({
                 'x': 430,
                 'y': 425
@@ -229,9 +229,9 @@
         });
         //draws the thermometer for the bowl
         if (num <= 2) {
-          var thermo = "./coldThermo.svg";
+          var thermo = "./img/coldThermo.svg";
         } else {
-          var thermo = "./hotThermo.svg";
+          var thermo = "./img/hotThermo.svg";
         }
         var bowlThermo = draw.image(thermo, 50, 200);
             bowlThermo.attr({
@@ -239,7 +239,7 @@
               'y': 350
             });
         //draws the thermometer for the finger
-        var fingerThermo = draw.image("./fingerThermo.svg", 50, 200);
+        var fingerThermo = draw.image("./img/fingerThermo.svg", 50, 200);
             fingerThermo.attr({
               'x': 650,
               'y': 350
@@ -265,13 +265,13 @@
           size: 14
         })
         //draws the bowl
-        bowl = draw.image("./" + num + ".svg", 258, 258)
+        bowl = draw.image("./img/" + num + ".svg", 258, 258)
             bowl.attr({
               'x': 250,
               'y': 330
             }).back();;
         //draws the finger
-        finger = draw.image("./finger.svg", 144, 220);
+        finger = draw.image("./img/finger.svg", 144, 220);
             finger.attr({
               'x': 495,
               'y': 350
