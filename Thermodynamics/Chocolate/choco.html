@@ -96,6 +96,7 @@
           iron.remove();
         }
         if (startButtonBool === true) {
+          drawStartButton();
           stopAnim();
         }
         arrow.remove()
@@ -158,12 +159,12 @@
         drawHeat();
         maxArr = submission.slice(0, 2)
         maxIndex = maxArr.indexOf(Math.max(...maxArr));
-        rect1.animate(selection1 * 1500 + 1500, 'quadIn').attr({
+        rect1.animate(selection1 * 2000 + 3500, 'quadIn').attr({
           'width': 400
         }).after(poopCall1);
 
         
-        rect2.animate(selection2 * 1500 + 1500, 'quadIn').attr({
+        rect2.animate(selection2 * 2000 + 3500, 'quadIn').attr({
           'width': 400
         }).after(poopCall2);
       }
@@ -309,6 +310,8 @@
           rect1.remove();
           rect2.remove();
         }
+        var mask = draw.polygon('130,122 130,100 150,90 530,90 530,114 515,122').fill('white');
+        var mask2 = draw.polygon('130,422 130,400 150,390 530,390 530,414 515,422').fill('white');
 
         rect1 = draw.rect(5, 35).attr({
           'x': 130,
