@@ -159,12 +159,12 @@
         drawHeat();
         maxArr = submission.slice(0, 2)
         maxIndex = maxArr.indexOf(Math.max(...maxArr));
-        rect1.animate(selection1 * 2000 + 3500, 'quadIn').attr({
+        rect1.animate(selection1 * 3000 + 3000, 'quadIn').attr({
           'width': 400
         }).after(poopCall1);
 
         
-        rect2.animate(selection2 * 2000 + 3500, 'quadIn').attr({
+        rect2.animate(selection2 * 3000 + 3000, 'quadIn').attr({
           'width': 400
         }).after(poopCall2);
       }
@@ -310,18 +310,20 @@
           rect1.remove();
           rect2.remove();
         }
-        var mask = draw.polygon('130,122 130,100 150,90 530,90 530,114 515,122').fill('white');
-        var mask2 = draw.polygon('130,422 130,400 150,390 530,390 530,414 515,422').fill('white');
+        var mask = draw.polygon('130,122 130,100 150,90 525,90 525,114 515,122').fill('white');
+        var mask2 = draw.polygon('130,422 130,400 150,390 525,390 525,414 515,422').fill('white');
 
         rect1 = draw.rect(5, 35).attr({
           'x': 130,
           'y': 90
         }).opacity(.3).fill('red')
+        rect1.maskWith(mask);
 
         rect2 = draw.rect(5, 35).attr({
           'x': 130,
           'y': 390
         }).opacity(.3).fill('red')
+        rect2.maskWith(mask2);
 
         chip = draw.image('./img/chip1.png', 128, 50).attr({
           'x': 410,
