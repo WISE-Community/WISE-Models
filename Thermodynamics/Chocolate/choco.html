@@ -6,6 +6,9 @@
         margin: 0px;
         padding: 0px;
       }
+      .clickable {
+        cursor: pointer;
+      }
     </style>
         <script src="./svg.min.js"></script>
         <script src="./svg.easing.min.js"></script>
@@ -19,7 +22,6 @@
       var arrBot = [];
       var submission = [];
       var click1 = false;
-      var click2 = false;
       var selection1, selection2;
       var startButtonBool = false;
       var resetButtonBool = false;
@@ -32,7 +34,7 @@
         'y': 170
       }).click(function() {
         select(1)
-      });
+      }).addClass('clickable');
       var metalText = draw.text('Metal (Good Thermal Conductor)').x(340).y(170);
 
       var glass = draw.image('./img/2.png', 200, 18).attr({
@@ -40,7 +42,7 @@
         'y': 210
       }).click(function() {
         select(2);
-      });
+      }).addClass('clickable');
       var glassText = draw.text('Glass (Medium Thermal Conductor)').x(340).y(210);
 
       var wood = draw.image('./img/3.png', 200, 17).attr({
@@ -48,7 +50,7 @@
         'y': 250
       }).click(function() {
         select(3);
-      });
+      }).addClass('clickable');
       var woodText = draw.text('Wood (Poor Thermal Conductor)').x(340).y(250);
 
       drawArrow1();
@@ -61,7 +63,7 @@
         'bottom': true
       }).click(function() {
         select2(1)
-      });
+      }).addClass('clickable');
       var metalText2 = draw.text('Metal (Good Thermal Conductor)').x(340).y(470);
 
       var glass2 = draw.image('./img/2.png', 200, 18).attr({
@@ -70,7 +72,7 @@
         'bottom': true
       }).click(function() {
         select2(2)
-      });
+      }).addClass('clickable');
       var glassText2 = draw.text('Glass (Medium Thermal Conductor)').x(340).y(510);
 
       var wood2 = draw.image('./img/3.png', 200, 17).attr({
@@ -79,22 +81,18 @@
         'bottom': true
       }).click(function() {
         select2(3)
-      });
+      }).addClass('clickable');
       var woodText2 = draw.text('Wood (Poor Thermal Conductor)').x(340).y(550);
       <!-- ------------------------------------------- -->
 
-
-      var group = draw.set();
-      var group2 = draw.set();
-      group.thing = true;
-      group.add(metal, metalText, glass, glassText, wood, woodText);
-      group2.add(metal2, metalText2, glass2, glassText2, wood2, woodText2);
-
+      //selects the type of material and draws it on the screen
       function select(num) {
+        //removes the plank/iron if it has already been drawn
         if (typeof plank !== 'undefined') {
           plank.remove();
           iron.remove();
         }
+        //resets if the start button has been pressed
         if (startButtonBool === true) {
           drawStartButton();
           stopAnim();
@@ -118,9 +116,11 @@
       }
 
       function select2(num) {
+        //cannot select bottom material until top material has been selected
         if (click1 === false) {
           return;
         }
+        //removes the plank/iron if it has already been drawn
         if (typeof plank2 !== 'undefined') {
           plank2.remove();
           iron2.remove();
@@ -145,25 +145,30 @@
         'y': 350
         });
       }
-      
+
+      //begins start animations
       function startAnim() {
         if (typeof chip !== 'undefined') {
           removeChips();
         }
+        //makes start button unclickable during duration of animation
         startButtonIcon.click('null')
+        //draws iron and then starts heat animation
         drawIron();
         heatAnim();
       }
       
       function heatAnim() {
+        //calls function that draws the heat and chocolate chips
         drawHeat();
+        //finds which of the the two materials selected is the slower one
         maxArr = submission.slice(0, 2)
         maxIndex = maxArr.indexOf(Math.max(...maxArr));
+        //heat animation for top material, runs chocolate animation after
         rect1.animate(selection1 * 3000 + 3000, 'quadIn').attr({
           'width': 400
         }).after(poopCall1);
-
-        
+        //heat animation for bottom material, runs chocolate animation after
         rect2.animate(selection2 * 3000 + 3000, 'quadIn').attr({
           'width': 400
         }).after(poopCall2);
@@ -186,6 +191,7 @@
                 startButtonBool = true;
                 submission[2] = new Date().toLocaleString();
                 console.log(submission);
+                log();
                 startAnim();
               })
             }, 4000);
@@ -206,6 +212,7 @@
                 startButtonBool = true;
                 submission[2] = new Date().toLocaleString();
                 console.log(submission);
+                log();
                 startAnim();
               })
             }, 4000);
@@ -215,7 +222,7 @@
 
       function stopAnim() {
         var chips = [chip, chip1, chip2, chip3, chip4, chip5, rect1, rect2];
-        set.stop();
+        // set.stop();
         for (var i = 0 ; i < chips.length; i++) {
           chips[i].remove();
         }
@@ -238,7 +245,7 @@
           startButtonText = draw.text('Start').x(648).y(278).font({size: 25});
           startButtonIcon = draw.rect(150,50).x(600).y(270).radius(15).fill('white').stroke({width:2}).opacity(1).attr({
             'fill-opacity': 0
-          });
+          }).addClass('clickable');
           arr.push(startButtonIcon, startButtonText);
         }
         startButtonIcon.click(function() {
@@ -254,7 +261,7 @@
           resetButtonText = draw.text('Reset').x(643).y(378).font({size: 25});
           resetButtonIcon = draw.rect(150,50).x(600).y(370).radius(15).fill('white').stroke({width:2}).opacity(1).attr({
             'fill-opacity': 0
-          });;
+          }).addClass('clickable');
           resetButtonBool = true;
           arr.push(resetButtonIcon, resetButtonText);
         }
@@ -382,6 +389,19 @@
             chips[i].remove();
         }
       }
+
+      function log() {
+        state.messageType = "studentWork";
+        state.isAutoSave = false;
+        state.isSubmit = false;
+        state.studentData = submission;
+        saveWISE5State(state);
+      }
+      
+      function saveWISE5State(componentState) {
+        parent.postMessage(componentState, "*");
+      }
+
     </script>
   </body>
 </html>
