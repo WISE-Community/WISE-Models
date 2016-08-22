@@ -1,21 +1,22 @@
  ; Thermo software
 ; Oct 21, 2015
 ; Bob
+; Aug 22, 2016 Hiroki
 
 ; A microworld for creating and exploring materials with various conductivities
 ; Generates "research-data" text in the following format
 ; "[New Dataset 30.7 Pause [[[52 14.2 25 Orange: Aluminium/Cork] [52 12 55 Green: Cardboard/Cork] [52 17 0 Experiment 1]] [[2.9 2.8 25] [2.3 2.1 25]....
 ; A string consisting of a list of multiple datasets each deliminted by "New Dataset"
 ; After "New Dataset" is the time since start, the button that initiated this save, three list of label information and the data
-; The label information contains the u-v location, color, and text of each label. 
+; The label information contains the u-v location, color, and text of each label.
 ; The data consists of triplets of time (since starting the current run), the temperature, and the color (of the thermometer that generated this point)
 
-; Every patch has a sprite on top of it. 
+; Every patch has a sprite on top of it.
 ; The software uses ~10K sprites to show the temperature and to vary its transparency
 ; When new objects are drawn, their color stays in the patches
 ;    and all the thermo properties are given to the patch
 ; Sept 21 corrected scaling of the functions--until now, they remained fixed when the graph was rescaled
-;    later removed because of interactions with re-scaling.  
+;    later removed because of interactions with re-scaling.
 
 Globals [
   one-layer?
@@ -24,9 +25,9 @@ Globals [
   next-dataset             ; index into the saved data
   run-pressed?             ; true only if the run button was the last pressed
   research-data            ; saves all data in CSV format
-  
+
   ; Mouse variables
-  old-mouse-up?  
+  old-mouse-up?
   old-mouse-xcor
   old-mouse-ycor
   old-time                 ; used to detect hovering. Possibly useful to log
@@ -36,20 +37,20 @@ Globals [
   ; window variables
   separator                ; the line used separate the model and graph
   v-margin                 ; space at the top and bottom of the model without sprites, where messages can be placed
-  buffer                   ; the width of a boundary of the model where the mouse cannot go  
+  buffer                   ; the width of a boundary of the model where the mouse cannot go
   ptch-size
   ratio                    ; the relative size of a patch compared to 3.41, the original size
   current-half-state       ; the state of the left half of the model window as it is being constructed
   half-state-list          ; a list of half-states, each consisting of one or more objects of the form [<d> u0 v0 u1 v1]
-    
+
   ; variables supporting pull-downs
   temperature
   actions
   model-tools
   graph-tools
   cursor-shows
-  
-  material-properties 
+
+  material-properties
   model-tool-properties
   action-properties
   old-pull-down
@@ -61,22 +62,22 @@ Globals [
   old-temperature-setter
 ;  temperature                 ; the temperature selected after setting the range and "temperature-setter"
   min-temp max-temp           ; the temperature range selected
- 
+
   ; thermometer variables
-  max-number-of-thermometers  ; if more than six are needed, the following two lists need to be created with more items. 
+  max-number-of-thermometers  ; if more than six are needed, the following two lists need to be created with more items.
   thermometer-colors          ; list of colors of length >= number-of-thermometers
-  thermometers-used?          ; A list that eeps track of the number of thermometers already placed-a list of true and false 
-  active-thermometer          ; the who of the thermometer being dragged. Zero indicates none. 
-  T-units                     ; the temperature units shown 
+  thermometers-used?          ; A list that eeps track of the number of thermometers already placed-a list of true and false
+  active-thermometer          ; the who of the thermometer being dragged. Zero indicates none.
+  T-units                     ; the temperature units shown
   default-temp                ; the temperature of objects when first made
   alpha                       ; the transparancy of the sprites 0-255
-  
+
   ; model state variables
   half-states                 ; a list of states of half-models--models that fill half the model state
   left-pointer          ; the item in the variable model-states that defines the current left half of the model space
   right-pointer         ; the item for the right hand state
-  divider                     ; the centr of the model space 
-  
+  divider                     ; the centr of the model space
+
   ; Painting variables
   vacuum-color
   air-color
@@ -85,31 +86,31 @@ Globals [
   current-background   ; air or vacuum
   brush-size           ; the diameter of the brush that draws
   reporter-who         ; saves the who of the first of six reporters used for reporting values near the mouse
-  cursor-who           ; the who of the lower of two cursor agents 
+  cursor-who           ; the who of the lower of two cursor agents
   rectangle-who        ; the who to 6 white patchs to write on
   corner-who           ; used to capture the first corner's who when drawing a selection rectangle
   first-corner-u       ; used to save the starting corners of the rectangle used in fill
   first-corner-v
-  
+
   ; Moving variables
   under-rectangle      ; a description of all the patches under the latest rectangle
   temperature-map      ; used to preserve the temperature of the object as it is moved (not implemented)
   starting-u           ; the u,v coordinates of the mouse at the start of a move
   starting-v
-  
+
   ; Action variables
   view-temperature?     ; records latest of show temp or show material
   starting-temps        ; the temperatures of the model when run is hit
 ;  saved-state           ; used to save the state of the model from the Action pull-down
-;  erased-state          ; used to save the state of the model before erasing it. 
+;  erased-state          ; used to save the state of the model before erasing it.
   mode                  ; set to "Ready" "Running" or "Paused"
   view                  ; set to "Temperature" "Material" or "Overlay"
   model-source          ; set to "Starting" "Saved" and "Restored" or blank
   flow-speed            ; controls model speed
-  
+
   ; heater/cooler variables
-  active-h/c           ; the who of the heater/cooler being dragged. Zero indicates none. 
-  
+  active-h/c           ; the who of the heater/cooler being dragged. Zero indicates none.
+
   ; Graph variables
   duration              ; default duration of a run, in seconds
   deviation-width       ; the width of the deviation bar at the right of the graph
@@ -117,7 +118,7 @@ Globals [
   mx bx my by           ; transformation coefs: u=mx*x + bx and v=my*y + by (u,v are screen coord; x,y are problem coords)
   grid-umax grid-umin   ; the boundaries of the graphing grid (as opposed to window boundaries)
   grid-vmax grid-vmin
-  edge edge+            ; the distance between the window and the grid in screen units 
+  edge edge+            ; the distance between the window and the grid in screen units
   grid-xmin grid-xmax grid-xlabel
   grid-ymin grid-ymax grid-ylabel
   grid-separation       ; target number of pixels per grid line
@@ -134,10 +135,10 @@ Globals [
   new-mouse-ycor
   square-who            ; the who of the first of two guide squares used to draw functions
   function-name         ; used to store the name of the function to be graphed
-  
+
    ; graph colors
   grid-back-color       ; the color of the background
-  grid-color 
+  grid-color
   grid-label-color
   graph-color
 ]
@@ -146,14 +147,14 @@ breed [titles title]      ; used for the graph title
 breed [sprites sprite]    ; these cover the model and hold temperature and conductivity data
 breed [thermometers thermometer]
 breed [thermometer-labels thermometer-label]
-breed [grid-dots grid-dot]            ; used for drawing the graphing grid. 
+breed [grid-dots grid-dot]            ; used for drawing the graphing grid.
 breed [graph-dots graph-dot]          ; used for graphs
 ;breed [drawing-dots drawing-dot]      ; used for various tasks.
 
 breed [cursors cursor]                ; used in the graph
 breed [reporters reporter]            ; used with hover to show data
 
-patches-own [patch-temp conductivity material-color]    
+patches-own [patch-temp conductivity material-color]
 thermometers-own [thermometer-label-who]
 graph-dots-own [x-val y-val brightness]  ; brightness can be zero for hidden, 1 for dim and 2 for full size
 
@@ -162,7 +163,7 @@ to setup-experiment
  ; hand code the four options
   setup-one-layer set one-layer? true
 ;  setup-two-layers set one-layer? false
-  set-temp 100 set grid-ymax 105     
+  set-temp 100 set grid-ymax 105
 ;  set-temp 0  set grid-ymax 20
   make-thermometer -32 0
 end
@@ -190,7 +191,7 @@ to on/off                                 ; This is a forever loop
     act-on-mouse-events]                  ; needs to be fast or a click can be missed
   every .2 [                              ; check for user actions
     act-on-pull-down-changes
-;    act-on-slider-changes                ; supports only the temperature 
+;    act-on-slider-changes                ; supports only the temperature
     update-thermometer-reading            ; report temperature results
     if view-temperature? [color-sprites]] ; colors patches according to their temperature
 end
@@ -200,8 +201,8 @@ to initialize-model
   set left-pointer 0
   draw-half-state true (item left-pointer half-state-list)
   set right-pointer 0
-  draw-half-state false (item right-pointer half-state-list) 
-end 
+  draw-half-state false (item right-pointer half-state-list)
+end
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;; Initialize everything ;;;;;;;;;;;;;;
@@ -221,9 +222,9 @@ to initialize-globals
     ["Cork" "Draw Cork in the model" 29 5]
     ["Cardboard" "" 38 3]
     ["Styrofoam" "" 89 3]
-    ["Air" "Make the background air" 79 2.4] 
-    ["Air (No Jacket)" "" 79 2.4]     
-    ["Water" "Draw water in the model" sky 30] 
+    ["Air" "Make the background air" 79 2.4]
+    ["Air (No Jacket)" "" 79 2.4]
+    ["Water" "Draw water in the model" sky 30]
     ["Vacuum" "Create a vacuum" grey 0]]
 
    set half-state-list [[] [[37 -53 -7 -39 7] [9.9 -50 -4 -42 4] ["Thermometer" -46 0 25 0] ] [[37 -53 -7 -39 7] [29 -51 -5 -41 5][9.9 -50 -4 -42 4] ["Thermometer" -46 0 25 0]  ]]
@@ -247,12 +248,12 @@ to initialize-globals
   set temperature 20
   set min-temp 0 set max-temp 100
   set temperature 20
-  
+
     ; drawing window variables
   set separator -5
   set divider round (.5 * (separator + min-pxcor))
   set ptch-size 3.41 * ratio      ; the original design had patch-size 3.41
-  set default-temp 20    
+  set default-temp 20
   set T-units "°C"
   set buffer 0                    ; margin around the modeling space
   set view-temperature? false     ; show the material view
@@ -265,19 +266,19 @@ to initialize-globals
   set v-margin 4                ; space at the top and bottom of the world with no sprites
   set mode "Ready"
   set view "Material"
-  set flow-speed .0007          
-  
+  set flow-speed .0007
+
   ; various colors
   set grid-back-color 9.5      ; the color of the background
-  set grid-color blue + 3 
+  set grid-color blue + 3
   set grid-label-color blue - 1
   set graph-color green     ; to be removed-
   set air-color get-property material-properties "Air" 0 2
   set vacuum-color get-property material-properties "Vacuum" 0 2
-  
+
   set graph-selection-made? false      ; true if there is a valid selection rectangle showing, waiting for action
   set making-graph-selection? false    ; true only when the selection rectangle is being made
-  
+
   reset-graph
 
 end
@@ -301,7 +302,7 @@ to initialize-patches
   if pxcor < (separator + 1)  [
     set pcolor air-color
     set material-color air-color
-    set patch-temp 20 
+    set patch-temp 20
     set conductivity con]  ; change this if material-properties for air are changed
   if pxcor > (separator + 1)  [set pcolor grid-back-color]
   if pxcor = max-pxcor or pxcor = min-pxcor or
@@ -313,22 +314,22 @@ to initialize-patches
 end
 
 to initialize-turtles
-  
+
   ; initialize the sprites that show the temperature color
   let i min-pxcor + 1           ; create a sprite on every integer coordinate in the model space
   while [i < separator][
-    let j min-pycor + (v-margin + 1 ) / ratio 
+    let j min-pycor + (v-margin + 1 ) / ratio
     while [j < (max-pycor - v-margin / ratio)] [  ; top margin provides space for messages at top of screen
       create-sprites 1 [
         setxy i j
         set size 1.24        ; this just fills the grid of patches
         set shape "Square"
-        set heading 0] 
+        set heading 0]
       set j j + 1]
     set i i + 1]
   set alpha 0   ; make them transparent
   color-sprites ; color the sprites based on the temperature of the patch they are on
-  
+
   ; initialize the reporter              ; used for messages and tips
   create-reporters 1 [set size 0 set reporter-who who] ; Need up to six reporters
   create-reporters 6 [set size 0]                      ; these will have successive values of who
@@ -336,7 +337,7 @@ to initialize-turtles
   ; the last is used for the x-axis readout
 end
 
-to initialize-cursor ; needs to come after drawing the grid. 
+to initialize-cursor ; needs to come after drawing the grid.
   set cursor-who 0       ; saves the who of the lower cursor dot
   create-cursors 1 [
     set cursor-who who
@@ -345,13 +346,13 @@ to initialize-cursor ; needs to come after drawing the grid.
   create-cursors 1 [
     set color gray
     setxy grid-umin grid-vmax
-    set size 0 
+    set size 0
     create-link-with cursor cursor-who ]
 ;  create-rectangles 1 [  ; white rectangles to write on
 ;    set rectangle-who who]
-;  create-rectangles 6 
+;  create-rectangles 6
 ;  ask rectangles [ht
-;    set shape "rectangle" 
+;    set shape "rectangle"
 ;    set color red
 ;    set size 14 / ratio]
 end
@@ -367,9 +368,9 @@ to make-heat-flow              ; purposely simple, straight code to maximize tim
     let my-con conductivity
     ask neighbors4 [
       let con min list conductivity my-con        ; the smallest conductivity controls the flow--keeps heat from leaking into the vacuum
-      set q q + con * (patch-temp - my-temp) ]    ; inflow if this neighboring patch is hotter     
+      set q q + con * (patch-temp - my-temp) ]    ; inflow if this neighboring patch is hotter
     set patch-temp patch-temp + flow-speed * q ]  ; flow-speed determines how fast the simulation is
-  color-sprites                                   ; sprites show the color temperature of the patches under them 
+  color-sprites                                   ; sprites show the color temperature of the patches under them
 end
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -392,17 +393,17 @@ to handle-mouse-down   ; called once when the user first clicks the mouse
   if in-model? mouse-xcor mouse-ycor [       ; handle a mouse click in the model area
     handle-set-material-on-mouse-down]
 end
-  
+
 to handle-mouse-up       ; called once when the user first releases the mouse
   set old-mouse-up? true
 end
 
 to handle-mouse-hover  ; if there was no click but the mouse is inside the model, show what the 'cursor-shows'
-  ;   pull-down selects: nothing, material, temperature, average temperature, mass, contact area 
-  ; if the cursor is in the grid, show a vertical line and the value of any data nearby. 
-  ifelse (old-mouse-xcor = mouse-xcor and old-mouse-ycor = mouse-ycor) 
+  ;   pull-down selects: nothing, material, temperature, average temperature, mass, contact area
+  ; if the cursor is in the grid, show a vertical line and the value of any data nearby.
+  ifelse (old-mouse-xcor = mouse-xcor and old-mouse-ycor = mouse-ycor)
     [stop]
-    [set old-mouse-xcor mouse-xcor 
+    [set old-mouse-xcor mouse-xcor
      set old-mouse-ycor mouse-ycor ]
   if not in-grid? mouse-xcor mouse-ycor [
     ask cursors [set xcor grid-umin]] ; hides the graph cursor
@@ -413,12 +414,12 @@ to handle-mouse-hover  ; if there was no click but the mouse is inside the model
       setxy mouse-xcor mouse-ycor
       let mc-here material-color                ; get the color from the patch
       let pull-down-color get-color material
-      ifelse view = "Temperature Overlay" 
+      ifelse view = "Temperature Overlay"
         [set label-color white]
         [set label-color black]
-;      if cursor-shows = "Material" [      
+;      if cursor-shows = "Material" [
         set label get-property material-properties material-color 2 0 ] ; by matching color, find name of material "\
-        if label = "Silver" [set label "Beverage"]  
+        if label = "Silver" [set label "Beverage"]
 ;      if cursor-shows = "Temperature" [
         set label (word label " " (precision patch-temp 1) "°C")]
 ;      if cursor-shows = "Average Temperature"[
@@ -444,25 +445,25 @@ to handle-mouse-hover  ; if there was no click but the mouse is inside the model
 ;        set name-at-cursor get-material-name color-at-cursor]
 ;      let name-at-neihgbor material        ; get the name of the material in the material pull-down
 ;      let color-at-neighbor get-color material  ; get the color of this material
-;      if color-at-cursor != color-at-neighbor [  ; contact area with self makes no sense 
+;      if color-at-cursor != color-at-neighbor [  ; contact area with self makes no sense
 ;        let c count patches with [(material-color = color-at-cursor) and  ; count patches that have the local color and..
 ;             (any? neighbors with [material-color = color-at-neighbor])]  ;  have a neighbor with the selected color
  ;       set label (word material "/" name-at-cursor " area: " c )]]]
- 
+
     if in-grid? mouse-xcor mouse-ycor[   ; show a cursor and its intercepts
       ask cursors [set xcor mouse-xcor]  ; moves it into view--when the cursor is not in the grid, it hides under the vertical axis
       let i 0
       while [i < max-number-of-thermometers][  ; repeat for each of the possible thermometers
         if item i thermometers-used? [   ; check whether the i-th thermometer is in use
           let least-dist 1e10                ; find the nearest dot
-          let nearest-u 0 
+          let nearest-u 0
           let nearest-v 0
           let nearest-T 0
           ask graph-dots with [color = item i thermometer-colors ][
             let d abs (xcor - mouse-xcor)
             if d < least-dist [
               set least-dist d
-              set nearest-u xcor 
+              set nearest-u xcor
               set nearest-v ycor
               set nearest-T y-val]]  ; nearest-u, nearest-v now contains the coordinates of the nearest dot
                   ; make the rectangle vanish if cannot write the temp.
@@ -472,14 +473,14 @@ to handle-mouse-hover  ; if there was no click but the mouse is inside the model
            [let out-of-bounds? false
             ask reporter (reporter-who + i) [
               let u0 nearest-u + 12 / ratio ; offset the values
-              let v0 nearest-v  
-              ifelse not in-grid? u0 v0 
+              let v0 nearest-v
+              ifelse not in-grid? u0 v0
                 [set out-of-bounds? true]
                 [ setxy u0 v0
                set label word precision nearest-t 1 "°C"
                set label-color item i thermometer-colors ]]
 ;           ask rectangle (rectangle-who + i)[ st
-;             let u0 nearest-u + 8 / ratio 
+;             let u0 nearest-u + 8 / ratio
 ;             let v0 nearest-v + 1 / ratio  ; offset the rectangle under the print
 ;             if in-grid? u0 v0 [
 ;               setxy u0 v0 ]]
@@ -491,13 +492,13 @@ to handle-mouse-hover  ; if there was no click but the mouse is inside the model
         set v [ycor] of cursor cursor-who
         let u0 u + 14 / ratio
         let v0 v + .5 / ratio
-        ifelse in-grid? u0 v0 
+        ifelse in-grid? u0 v0
           [setxy u0 v0 st
-           set label word (precision ((u - bx) / mx) 1 ) " sec" 
+           set label word (precision ((u - bx) / mx) 1 ) " sec"
            set label-color gray]
           [ht]]
 ;      ask rectangle (rectangle-who + 6)[ st
-;        let u0 u + 8 / ratio 
+;        let u0 u + 8 / ratio
 ;        let v0 v + 2 / ratio  ; offset the rectangle under the print
 ;          if in-grid? u0 v0 [
 ;            setxy u0 v0 ]]
@@ -519,11 +520,11 @@ to act-on-pull-down-changes   ; called by on/off
 ;    set old-temperature-range temperature-range
 ;    handle-temp-range-pull-down]
 ;  if old-material != material [
-;    set old-material material 
+;    set old-material material
 ;    handle-material-pull-down stop]
   if not (old-model-tools = model-tools) [
     set old-model-tools model-tools
-;    show-tip model-tool-properties model-tools true true 
+;    show-tip model-tool-properties model-tools true true
     stop]
      ; show tip in upper left
 ;  if model-tools = "Move Rectangle" [  ; show the rectangle tool
@@ -543,14 +544,14 @@ end
 ;  if s = "35°C to 45°C" [
 ;    set min-temp 35 set max-temp 45]
 ;  if s = "0°C to 300°C" [
-;    set min-temp 0 set max-temp 300]  
+;    set min-temp 0 set max-temp 300]
 ;  if s = "-100°C to 300°C" [
-;    set min-temp -100 set max-temp 300]  
+;    set min-temp -100 set max-temp 300]
 ;  set temperature round (min-temp + temperature-setter * (max-temp - min-temp) * .01)
 ;  set grid-ymin min-temp
 ;  set grid-ymax max-temp
 ;  rescale-grid
-;end 
+;end
 
 to handle-material-pull-down   ; show tip, make background air or vacuum
 ;  show-tip material-properties material true true  ; displays the tip
@@ -558,18 +559,18 @@ to handle-material-pull-down   ; show tip, make background air or vacuum
 ;  if material = "Air" [
 ;    set current-background "Air"
 ;    ask patches with [pcolor = vacuum-color][
-;      set pcolor air-color 
+;      set pcolor air-color
 ;      set conductivity get-property material-properties "Air" 0 3 ]]
 ;  if material = "Vacuum" [
 ;    set current-background "Vacuum"
 ;    ask patches with [pcolor = air-color][
-;      set pcolor vacuum-color 
+;      set pcolor vacuum-color
 ;      set conductivity get-property material-properties "Vacuum" 0 3 ]]
 end
 
 to handle-actions-pull-down  ; show tip, set color by temp/material, etc
   ; These are all actions that can be completed immediately and end with the action pull-down on "None"
-;  show-tip action-properties actions true true  ; displays the tip 
+;  show-tip action-properties actions true true  ; displays the tip
 ;  if actions = "Set Starting State" [
 ;    restore-state starting-state   ; restore model state at the beginning of the last run
 ;    set model-source "Starting"
@@ -578,15 +579,15 @@ to handle-actions-pull-down  ; show tip, set color by temp/material, etc
 ;    ask graph-dots with [size = 4] [die]
 ;    set actions "None"]
   if actions = "Start" [ ; in reality, this is 'run' and 'resume' together
-    ifelse mode = "Paused" 
+    ifelse mode = "Paused"
       [set delay delay + timer - time-of-pause]    ;    delay adds up the time paused
       [reset-graph
-       set time-zero timer 
+       set time-zero timer
        set delay 0]
 ;       save-starting-temps ]
-    set mode "Running" 
+    set mode "Running"
 ;    set model-source ""       ; needed????
-    set actions "Overlay Temperature"] ; "Overlay.. ends with setting actions to "None"  
+    set actions "Overlay Temperature"] ; "Overlay.. ends with setting actions to "None"
   if actions = "Pause" [
     set mode "Paused"
     set time-of-pause timer
@@ -597,7 +598,7 @@ to handle-actions-pull-down  ; show tip, set color by temp/material, etc
 ;    set actions "None"]
 ;  if actions = "Take Snapshot" [ set actions "None"]
   if actions = "Show Temperature Only" [
-    set alpha 255 color-sprites 
+    set alpha 255 color-sprites
     set view "Temperature Only"
     ask thermometer-labels [set label-color black]]
 ;    set actions "None"
@@ -607,16 +608,16 @@ to handle-actions-pull-down  ; show tip, set color by temp/material, etc
     set view "Material Only"
     set actions "None"]
   if actions = "Overlay Temperature" [
-    set alpha 175  color-sprites 
+    set alpha 175  color-sprites
     gray-out-material
     ask thermometer-labels [set label-color white]
     set view "Temperature Overlay"
     set actions "None"]
-end  
+end
 
 to handle-graph-tools  ; called if a graph tool is selected
   if graph-tools = "Autoscale" [
-    ifelse any? graph-dots 
+    ifelse any? graph-dots
       [set grid-xmin min [x-val] of graph-dots
        set grid-xmax max [x-val] of graph-dots
        set grid-ymin min [y-val] of graph-dots
@@ -625,7 +626,7 @@ to handle-graph-tools  ; called if a graph tool is selected
       [stop]]
   set graph-tools "--------"
 end
-  
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;to act-on-slider-changes
@@ -643,52 +644,52 @@ end
 ; On a mouse-click inside the model window we need to find out the who of the active thermometer
 ; each thermometer is a different color. up to six are supported
 ; If there is no thermometer nearby, a new one is made and its who becomes the active thermometer
-; A new one can be made only if it doesn't exceed the max-number 
-; Because thermometers can be killed by moving them outside the model area, it is a bit tricky to 
+; A new one can be made only if it doesn't exceed the max-number
+; Because thermometers can be killed by moving them outside the model area, it is a bit tricky to
 ;    find a color for the new one. A list of logicals called thermometer-available? tracks unused thermometers
 
-; The user then drags the active thermometer to its new home. As it drags it reports the temperature of the patch nearest.  
+; The user then drags the active thermometer to its new home. As it drags it reports the temperature of the patch nearest.
 ; If the user drags outside the model window, the thermometer is killed and thermometer-available? needs updating.
 
 ; When the mouse-up is detected, The thermometer is dropped and no longer 'active.' This happens by changing the mode to "None"
 
 ; If running, every .1 sec all thermometers in use send temperature data to update the graph. (called in on/off)
-                     
+
 to handle-thermometer-mouse-click
   let dist 1e10            ; find the themometer nearest the mouse
   let w 0                  ; w becomes the who of the nearest thermometer
-  let i 0 
+  let i 0
   ask thermometers [
     let d distancexy mouse-xcor mouse-ycor
       if d < dist [set dist d set w who]]
   ; now w is the nearest thermometer and and its distance to the mouse is dist
   ; if there is no thermometer, w will be zero and the dist 1e10
-  
-  if dist < nearby  [             ; if a thermometer is near the mouse, grab it 
+
+  if dist < nearby  [             ; if a thermometer is near the mouse, grab it
     set active-thermometer w        ; use its who to identify it as the active thermometer
     ask thermometer w [
-        setxy mouse-xcor mouse-ycor ]]   ; snap the thermometer to the mouse   
+        setxy mouse-xcor mouse-ycor ]]   ; snap the thermometer to the mouse
   if dist >= nearby  [  ; if the mouse isn't near an active thermometer, make one at the mouse
-    make-thermometer mouse-xcor mouse-ycor]              
+    make-thermometer mouse-xcor mouse-ycor]
 end
- 
+
 to make-thermometer [u v] ; creates a new thermometer and label at u,v with the first available color
   let found? false               ; if none nearby, search for an available new one
                                  ;    This requires that at least one item in the first max-number items in thermometers-used? be false
   let i 0
-  while [i < max-number-of-thermometers and not found?] [    
-    if not (item i thermometers-used?) [    ; first find an available thermometer 
-      set found? true 
+  while [i < max-number-of-thermometers and not found?] [
+    if not (item i thermometers-used?) [    ; first find an available thermometer
+      set found? true
       set thermometers-used? replace-item-hack i thermometers-used? true]   ; indicate that this thermometer is in use
       set i i + 1 ]              ; an available thermometer may have been found or the loop ran out of i values
            ;  at this point, either found? is false, incidating that there are no available thermometers
            ;     or one was found and its index is i - 1
   if not found? [
     clear-output
-    output-print "A maximum of eight thermometers is allowed." 
+    output-print "A maximum of eight thermometers is allowed."
     output-print "If you want to get rid of some, click on 'Set Thermometers' and then "
     output-print "click on a thermometer that you don't want and drag it off screen."
-    stop]            
+    stop]
   let w 0
   create-thermometer-labels 1 [
     set w who
@@ -708,10 +709,10 @@ to make-thermometer [u v] ; creates a new thermometer and label at u,v with the 
 end
 
 to handle-thermometer-mouse-drag
-  if in-model? mouse-xcor mouse-ycor [     ; as long as the mouse is inside the model area, move the active thermometer to it. 
+  if in-model? mouse-xcor mouse-ycor [     ; as long as the mouse is inside the model area, move the active thermometer to it.
     let w 0
     let local-temp 0
-    ask thermometer active-thermometer [   ; 
+    ask thermometer active-thermometer [   ;
       set w thermometer-label-who
       ask sprites-here [
         set local-temp precision patch-temp 1]
@@ -723,7 +724,7 @@ to handle-thermometer-mouse-drag
         setxy u v
         set label word local-temp T-units
       ]]]
-  if not in-model? mouse-xcor mouse-ycor [           ; if the mouse wanders out of the model area 
+  if not in-model? mouse-xcor mouse-ycor [           ; if the mouse wanders out of the model area
     set old-mouse-up? true         ; this stops calling mouse-drag from the on/off loop
     set current-color [color] of thermometer active-thermometer
     let i position current-color thermometer-colors  ; make this color of thermometer available
@@ -731,7 +732,7 @@ to handle-thermometer-mouse-drag
     let w 0
     ask thermometer active-thermometer [set w thermometer-label-who]
     ask thermometer-label w [die]                  ; kill off the label
-    ask thermometer active-thermometer [die] 
+    ask thermometer active-thermometer [die]
     set model-tools "None"]
 end
 
@@ -747,9 +748,9 @@ to update-thermometer-reading       ; called by on/off to ensure that all visibl
 end
 
 
-to handle-set-material-on-mouse-down    
+to handle-set-material-on-mouse-down
 ;  set Cursor-Shows "Material"  ; Set the cursor to show material
-  set Actions "Show Material Only" ; get out of overlay mode. 
+  set Actions "Show Material Only" ; get out of overlay mode.
   let new-color get-property material-properties material 0 2          ; material is a pull-down that gives a name
    ; read the material at the mouse and give all such material on the same half the material-color of the variable material
   let new-conductivity get-property material-properties material 0 3
@@ -762,7 +763,7 @@ to handle-set-material-on-mouse-down
   let local-material-color 0
   set clicked-in-left? in-left-half? mouse-xcor mouse-ycor
   ask patch mouse-xcor mouse-ycor [set local-material-color material-color]
-  let silver-color get-property material-properties "Silver" 0 2 
+  let silver-color get-property material-properties "Silver" 0 2
   if local-material-color = silver-color [stop]   ; cannot change the 'silver' beverage
   if local-material-color = air-color [stop]      ; cannot change the surround
   ; change the material-color of all patches of this type, only on the side clicked
@@ -784,13 +785,13 @@ to handle-set-material-on-mouse-down
   ask one-of sprites-on patch (maxu - 1) (minv + 1) [
     set label-color black
     set label material ]
-  ask reporters with [in-model? xcor ycor] [set label material]  
-  clear-output 
+  ask reporters with [in-model? xcor ycor] [set label material]
+  clear-output
   output-print "You can continue to change the jacket materials on either model."
   output-print "When you have the jackets you want to test, press 'Run'"
-  output-print "The model will compute how the heat would be transfered." 
+  output-print "The model will compute how the heat would be transfered."
   output-print "The temperature at each thermometer is graphed."
-end 
+end
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;; Painting Tools ;;;;;;;;;;;;;;;
@@ -799,12 +800,12 @@ end
 ; Handles Brush, Pencil, Large Eraser, Small Eraser, and Fill
 ; The first two convert patches to the current material
 ; The erase options convert patches to air or vacuum, whichever was used last
-; Fill defines a rectangle to be filled. 
+; Fill defines a rectangle to be filled.
 
-; Mouse down: So the user can see what is being drawn, Actions is set to "Show Material" 
+; Mouse down: So the user can see what is being drawn, Actions is set to "Show Material"
 ; The painting diameter is set small for pencil, large for brush.
 ; The patch colors are set to the material selected or the current background (for erase)
-; The current-conductivity is set. 
+; The current-conductivity is set.
 
 ; Drag causes the change.
 ; except for fill, every patch within the painting diameter is set to the current material
@@ -835,19 +836,19 @@ to handle-painting-mouse-click
 end
 
 
-  
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;; move objects ;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-; Overview; When the move tool is selected, The selection rectangle is shown. 
+; Overview; When the move tool is selected, The selection rectangle is shown.
 ; if the user clicks within the rectangle, it can be moved
 
 ; This means that every time a rectangle is filled or moved, whatever was under it must be saved in under-rectangle
-; under-rectangle also contains the coordinates of the selection rectangle 
-; Initially, under-rectangle is empty. 
+; under-rectangle also contains the coordinates of the selection rectangle
+; Initially, under-rectangle is empty.
 ; under-rectangle consists of [[u0 v0 u1 v1][u v material-color temperature conductivity][...]] for all patches under the rectangle
-; On save and restore the under-rectangle needs to be saved and restored. 
+; On save and restore the under-rectangle needs to be saved and restored.
 
 ; on click. save the mouse location. save the temperature-map of the object
 
@@ -857,12 +858,12 @@ end
 ; the location of the mouse is saved for the next iteration.
 
 ; on mouse-up. the selection rectangle goes away
-  
+
 to handle-move-drag
 ;  if empty? under-rectangle [stop]
 ;  let rect first under-rectangle           ; the first element is the coordinates of the rectangle
 ;  let u0 first rect let v0 item 1 rect
-;  let u1 item 2 rect let v1 item 3 rect 
+;  let u1 item 2 rect let v1 item 3 rect
 ;  let du mouse-xcor - old-mouse-xcor       ; calculate the distance the mouse has moved
 ;  let dv mouse-ycor - old-mouse-ycor
 ;  if abs dv < .05 and abs du < .05 [stop]  ; the mouse has not moved much so stop
@@ -871,17 +872,17 @@ to handle-move-drag
 
 ;  let data bf under-rectangle              ; start unpacking under-rectangle prior to restoring it
 ;  while [not empty? data][
-;    let p-data first data 
+;    let p-data first data
 ;    set data bf data
 ;    ask patch first p-data item 1 p-data [ ; start restoring patches with under-rectangle
 ;      set material-color item 2 p-data
 ;      set pcolor item 2 p-data
 ;      set patch-temp item 3 p-data
-;      set conductivity item 4 p-data 
-;   ]]  ; the patches under the rectangle are now restored 
+;      set conductivity item 4 p-data
+;   ]]  ; the patches under the rectangle are now restored
 
 ;  set u0 u0 + du set v0 v0 + dv  ; calculate all the new coordinates
-;  set u1 u1 + du set v1 v1 + dv  
+;  set u1 u1 + du set v1 v1 + dv
 ;  if not (in-model? u0 v0 and in-model? u0 v1 and
 ;          in-model? u1 v1 and in-model? u1 v0 )[stop]  ; stop if the rectangle strays outside the model area
 ;  set under-rectangle []          ; clear out under-rectangle
@@ -893,11 +894,11 @@ to handle-move-drag
 ;         set under-rectangle lput data under-rectangle
 ;         set pcolor current-color
 ;         set material-color current-color
-;         set patch-temp default-temp   ; this is a bad shortcut. The temp should be the temperature of the 
+;         set patch-temp default-temp   ; this is a bad shortcut. The temp should be the temperature of the
 ;         ; corresponding patch before the move. This will require saving a temperature map of the rectangle before moving it
 ;         set conductivity current-conductivity]]
 
-;   get the coordinates 
+;   get the coordinates
 
 ;  draw-rectangle u0 v0 u1 v1 ; draw the rectangle
 end
@@ -906,12 +907,12 @@ end
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;; useful code ;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-    
+
 to-report in-model? [u v]
-  report u < (separator - buffer) and 
-         u > (min-pxcor + buffer) and 
+  report u < (separator - buffer) and
+         u > (min-pxcor + buffer) and
          v < (max-pycor - buffer) and
-         v > (min-pycor + buffer)   
+         v > (min-pycor + buffer)
 end
 
 to-report inside? [u v]
@@ -937,11 +938,11 @@ end
   ;     the properties are in 'prop' and consist of [name tip] pairs
   ;     the program looks up 'name' in the property list and shows the associated tip
   ; if upper? is false, this simply displays name at bottom left or right
-  
+
   ; prop is a list of lists where each list starts with name
 ;  if upper? [
 ;    while [not empty? prop ][             ;      and the next item is a tip
-;      let one-prop first prop             ; tips for the model are on the left, for the graph on the right. 
+;      let one-prop first prop             ; tips for the model are on the left, for the graph on the right.
 ;      set prop bf prop
 ;      if first one-prop = name [
 ;        ask tips with [left? = left-side? and top? = upper?][
@@ -990,9 +991,9 @@ end
 
 to gray-out-material      ; When temperature overlays are shown, the materials become gray
   ask patches with [in-model? pxcor pycor] [
-    if material-color != air-color and 
+    if material-color != air-color and
      material-color != vacuum-color [
-      set pcolor (4 + material-color / 50)]] ; assignes a shade of gray to every possible color 
+      set pcolor (4 + material-color / 50)]] ; assignes a shade of gray to every possible color
 end
 
 to color-material  ; colors substances based on their material
@@ -1001,34 +1002,34 @@ end
 
 to-report get-material-name [mc]  ; report the name of the color of material m
   report get-property material-properties mc 2 0
-;     ; have to search through material-properties for item 2         
+;     ; have to search through material-properties for item 2
 ;  let prop material-properties            ;    matching material-color, then get first prop
 ;  while [not empty? prop][
 ;    let first-prop first prop
 ;    set prop bf prop
-;    if item 2 first-prop = mc [ 
+;    if item 2 first-prop = mc [
 ;      report first first-prop ]]
 end
 
 to-report get-color [mat-name]  ; find the color number for the material named mat-name
   report get-property material-properties mat-name 0 2
-;  let prop material-properties 
+;  let prop material-properties
 ;  while [not empty? prop][
 ;    let first-prop first prop
 ;    set prop bf prop
-;    if first first-prop = mat-name [ 
+;    if first first-prop = mat-name [
 ;      report item 2 first-prop ]]
-end  
-  
-  
+end
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;; scale and grid-drawing routines ;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-to draw-grid  ; draws the grid 
-  ; inputs (all globals) are the grid screen boundaries, the desired ranges of x and y, the intended number of tic marks in the x-direction, 
+to draw-grid  ; draws the grid
+  ; inputs (all globals) are the grid screen boundaries, the desired ranges of x and y, the intended number of tic marks in the x-direction,
   ; the axis labels, and the colors of the grid and labels
-  ; Draws and labels the graphing grid 
+  ; Draws and labels the graphing grid
   ; outputs are the transformation coefs which are stored in the second position in their respective lists
   ask grid-dots [die] ; clear the grid
   draw-verticals   ; draws the vertical lines and the x-axis
@@ -1047,23 +1048,23 @@ to draw-verticals ; draws the vertical lines and labels them along x-axis
   let dxx (grid-xmax - grid-xmin) / (n-xtics - 1)
   let x grid-xmin
   repeat n-xtics [   ; draw and label the verticals one at a time
-    let w 0 
+    let w 0
     let u mx * x + bx
     create-grid-dots 1 [
-      set size 0 
+      set size 0
       setxy u grid-vmax  ; place at the top of the grid
       set w who ]
     create-grid-dots 1 [ ; place a linked dot at the bottom
-      set size 0 
+      set size 0
       setxy u grid-vmin - tic-length
       create-link-with grid-dot w [
         set thickness line-width
         set color grid-color
-        if abs (x - grid-xmin ) < .01 * dxx or 
+        if abs (x - grid-xmin ) < .01 * dxx or
             abs (x - grid-xmax ) < .01 * dxx [
           set thickness 2 * line-width ]]]   ; make edges wider
-    create-grid-dots 1 [      ; used to place the value 
-      set size 0 
+    create-grid-dots 1 [      ; used to place the value
+      set size 0
       set label precision x 3
       set label-color grid-label-color
       setxy u + 1 grid-vmin - (tic-length + 2 )]
@@ -1071,16 +1072,16 @@ to draw-verticals ; draws the vertical lines and labels them along x-axis
   create-grid-dots 1 [    ; label the axis
     set size 0
     let u .5 * (grid-umax + grid-umin) + 1.3 * length grid-xlabel / ratio
-    setxy u grid-vmin - 9 / ratio        
-    set label grid-xlabel 
+    setxy u grid-vmin - 9 / ratio
+    set label grid-xlabel
     set label-color grid-label-color]
 end
-      
+
 to draw-horizontals ; draws the horizontal lines and labels them along the y-axis
   let yTarget (grid-vmax - grid-vmin ) * ptch-size * ratio / grid-separation      ;  sets the target number of tics based on the size of the graphing area
                                                     ; allocates about grid-separation pixels per tic
-  let a ticMarks grid-yMin grid-yMax yTarget        ; a now contains graph-xmin, graph-xmax, x-interval, and n-xtics 
-  set grid-ymin first a 
+  let a ticMarks grid-yMin grid-yMax yTarget        ; a now contains graph-xmin, graph-xmax, x-interval, and n-xtics
+  set grid-ymin first a
   set grid-ymax item 1 a
   ; compute the transformation coeficients in u=mx+b
   set my (grid-vmax - grid-vmin) / (grid-ymax - grid-ymin)
@@ -1089,31 +1090,31 @@ to draw-horizontals ; draws the horizontal lines and labels them along the y-axi
   let dyy (grid-ymax - grid-ymin) / (n-ytics - 1)
   let y grid-ymin
   repeat n-ytics [   ; draw and label the horizontals one at a time
-    let w 0 
+    let w 0
     let v my * y + by
     create-grid-dots 1 [
-      set size 0 
+      set size 0
       setxy grid-umax v ; place a dot at the right of the grid
       set w who ]
     create-grid-dots 1 [
-      set size 0 
+      set size 0
       setxy (grid-umin - tic-length) v  ; place a second dot tic-length to the left of the grid
       set label precision y 3
       set label-color grid-label-color
       create-link-with grid-dot w [     ; connect the dots to make a grid line and tic
         set thickness line-width
         set color grid-color
-        if abs (y - grid-ymin ) < .01 * dyy or 
+        if abs (y - grid-ymin ) < .01 * dyy or
             abs (y - grid-ymax ) < .01 * dyy [
           set thickness 2 * line-width ]]]   ; make edges wider
     set y y + dyy ]
   create-grid-dots 1 [ ; label the y-axis
-    set size 0 
+    set size 0
     set label grid-ylabel
     set label-color grid-label-color
     let u grid-umin + 1.5 * length grid-ylabel / ratio
     setxy u grid-vmax + 3 / ratio]
-end 
+end
 
 to-report ticMarks [zMin zMax targetNumber]
      ; Computes the scaling parameters.
@@ -1142,12 +1143,12 @@ to-report ticMarks [zMin zMax targetNumber]
         [set r  2]
         [ifelse  z < .85                      ; otherwise if it is less that .85 set r to 5
           [set r 5 ]                          ; and if all else fails, set r to 10
-          [set r 10 ]]]                       ; r is the nearest 'nice' number to z: 1, 2, 5 or 10                        
+          [set r 10 ]]]                       ; r is the nearest 'nice' number to z: 1, 2, 5 or 10
    set dz  r * 10 ^ a                         ; dz is now the "corrected" tic interval
-   let k floor (zMin / dz)                  
+   let k floor (zMin / dz)
    let lowtic k * dz
    let ntics 1 + ceiling (zMax / dz ) - k     ; the actual number of tic marks
-   let hitic lowtic + dz * (ntics - 1)  
+   let hitic lowtic + dz * (ntics - 1)
    report (list lowtic hitic ntics)
 end
 
@@ -1165,7 +1166,7 @@ to place-point [x y c]   ; places the point x,y on the grid as a dot of color c
   let v my * y + by
   create-graph-dots 1 [ht
     set x-val x set y-val y ; save the problem coordinates
-    set size 1.6 / ratio  
+    set size 1.6 / ratio
     set shape "dot"
     set color c
     if in-grid? u v [ st
@@ -1173,13 +1174,13 @@ to place-point [x y c]   ; places the point x,y on the grid as a dot of color c
 end
 
 to rescale-grid    ; redraws the grid and any points using the globals grid-xmin, grid-ymin,  etc....
-  draw-grid         
+  draw-grid
   ask graph-dots [
     let u mx * x-val + bx
     let v my * y-val + by
-    ifelse in-grid? u v 
+    ifelse in-grid? u v
       [st setxy u v ]
-      [ht]]    
+      [ht]]
 end
 
 to add-points-to-graph      ; reads all active thermometers, up to max-number-of-thermometers
@@ -1197,27 +1198,27 @@ end
 
 to reset-graph       ; sets graph into its default condition ppp
   set grid-ymax 20   ;  HACK
-  ask graph-dots with [size = 4][die]     ; 
-  ; Graph variables 
+  ask graph-dots with [size = 4][die]     ;
+  ; Graph variables
   ; define grid coordinates and labels
-  ; define graphing window 
+  ; define graphing window
   set duration 30    ; default duration of a run in seconds
-  set wind-umin separator 
+  set wind-umin separator
   set wind-umax max-pxcor   ; the left and right window area that contains the grid
   set wind-vmin min-pycor                        ; the top and bottom of the window
-  set wind-vmax max-pycor 
-  ; now set the default grid values and draw the grid 
+  set wind-vmax max-pycor
+  ; now set the default grid values and draw the grid
   set edge 4 / ratio set edge+ 11 / ratio    ; used to reserve space between graph and grid
-  set grid-umin wind-umin + (edge+ + 3 / ratio)  
-  set grid-umax wind-umax - (edge + 2 / ratio)      
+  set grid-umin wind-umin + (edge+ + 3 / ratio)
+  set grid-umax wind-umax - (edge + 2 / ratio)
   set grid-vmin wind-vmin + (edge+ + .5 / ratio)
   set grid-vmax wind-vmax - (edge + 4 / ratio)   ; leave room for vertical axis label.
   set grid-separation 35 * ratio    ; the approximate number of pixels per grid line
-  set grid-xmin 0    
-  set grid-xmax duration 
+  set grid-xmin 0
+  set grid-xmax duration
   set grid-xlabel "Time (s)"
-  set grid-ymin 0    
-;  set grid-ymax 105  
+  set grid-ymin 0
+;  set grid-ymax 105
   set grid-ylabel "Temperature (°C)"
   set tic-length 1 / ratio   ; the distance a tic mark extends beyond the axis
   set line-width .5 / ratio   ; the thin lines that make up the grid ***
@@ -1226,11 +1227,11 @@ end
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;   Button Actions    ;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;; 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-; Each of the following buttons sends and abbreviation of its name to 'last-action,'      
-;   that is used to track progress and generate log data.                 
-                    
+; Each of the following buttons sends and abbreviation of its name to 'last-action,'
+;   that is used to track progress and generate log data.
+
 to next-left ; use left-pointer to select the next state for the left half of the model window
   erase-half true    ; erase the left side of the model space
   set left-pointer left-pointer + 1
@@ -1249,13 +1250,13 @@ to next-right; use the right-pointer to select the next state on the right half 
   draw-half-state false (item right-pointer half-state-list)
   clear-output
   output-print "When you have the setup you want, set the materials you will use."
-end    
+end
 
 to setup-one-layer
   erase-half true    ; erase the left side of the model space
   draw-half-state true (item 1 half-state-list)
   erase-half false    ; erase the left side of the model space
-  draw-half-state false (item 1 half-state-list)  
+  draw-half-state false (item 1 half-state-list)
   clear-output
   output-print "First, be sure that the 'On/Off' button is on and shows dark blue."
   output-print "Next, select a material like 'Wood' and apply it to a jacket."
@@ -1266,7 +1267,7 @@ to setup-two-layers
   erase-half true    ; erase the left side of the model space
   draw-half-state true (item 2 half-state-list)
   erase-half false    ; erase the left side of the model space
-  draw-half-state false (item 2 half-state-list)  
+  draw-half-state false (item 2 half-state-list)
   clear-output
   output-print "First, be sure that the 'On/Off' button is on and shows dark blue."
   output-print "Next, select a material like 'Wood' and apply it to a jacket."
@@ -1276,11 +1277,11 @@ end
 to erase-half [left-half?]        ; converts all the patches on the left or right half-model to air
   let center .5 * (min-pxcor + separator)
   let u0 0 let u1 0
-  ifelse left-half? 
+  ifelse left-half?
     [set u0 min-pxcor set u1 center]
     [set u0 center set u1 separator]
-  ask patches with [pxcor > u0 and pxcor < u1 and 
-                    pycor < max-pycor and pycor > min-pycor][  
+  ask patches with [pxcor > u0 and pxcor < u1 and
+                    pycor < max-pycor and pycor > min-pycor][
     set pcolor get-property material-properties "Air" 0 2
     set conductivity get-property material-properties "Air" 0 3
 ;    let mp material-properties
@@ -1291,23 +1292,23 @@ to erase-half [left-half?]        ; converts all the patches on the left or righ
 ;        set pcolor item 2 prop
 ;        set conductivity item 3 prop
     set material-color pcolor]
-  ask thermometers with [pxcor > u0 and pxcor < u1 and 
+  ask thermometers with [pxcor > u0 and pxcor < u1 and
      pycor < max-pycor and pycor > min-pycor] [  ; have to free up thermometer of the color of this thermometer
     let i position color thermometer-colors
     set thermometers-used? replace-item-hack i thermometers-used? false
     die]
-  ask thermometer-labels with [pxcor > u0 and pxcor < u1 and 
+  ask thermometer-labels with [pxcor > u0 and pxcor < u1 and
      pycor < max-pycor and pycor > min-pycor] [die]
 
 end
-                       
-                            
+
+
 to set-temperature
   ; temperature will have been set by a branch of the forever loop that detects changes in the range and percent slider
   ; read the temperature, wait for the user to click on something and then set everything
   ;   made of that meterial on the side (left or right) clicked
   ; Keep this active until another button is selected
-  ; Set the cursor to read temperature. 
+  ; Set the cursor to read temperature.
   set cursor-shows "Temperature"
   set model-tools "Set Temperature"
   clear-output
@@ -1315,46 +1316,46 @@ to set-temperature
   output-print "by selecting the range pull-down and the percent slider."
   output-print "Then click on objects to give them that temperature."
   output-print "When you have the temperatures set, go on to change the material."
-  
+
 end
 
 to set-material
-  ; Read the material pull-down and wait for a click in the model. Then change everything of the 
-  ;   material clicked to the material in the pull-down on that side only. 
-  set model-tools "Set Material" 
-  set cursor-shows "Material"                                                 
+  ; Read the material pull-down and wait for a click in the model. Then change everything of the
+  ;   material clicked to the material in the pull-down on that side only.
+  set model-tools "Set Material"
+  set cursor-shows "Material"
   clear-output
   output-print "To change the material of an object, select the desired material and click on the object."
-  output-print "A click will only influence the material on one side of the model space at a time." 
+  output-print "A click will only influence the material on one side of the model space at a time."
   output-print "You can click on the surround to make it air or a vacuum."
   output-print "If you have containers, now fill them with water. If not, go on to set thermometers."
 end
 
 to click-to-fill
-  ; Respond only if there is a container and if the user clicks on a container. The fill algorithm 
-  ;   fills a number of patches with water in proportion to the fill slider. 
+  ; Respond only if there is a container and if the user clicks on a container. The fill algorithm
+  ;   fills a number of patches with water in proportion to the fill slider.
   ; Erase the water before filling.
-  ; Works only with a temperature 0-100 temperature range. Give a hint about this. 
+  ; Works only with a temperature 0-100 temperature range. Give a hint about this.
   clear-output
   output-print "Use this to fill containers with water. To fill a container,"
   output-print "first use the slider to select the amount of water used, then"
-  output-print "click on the container." 
+  output-print "click on the container."
 
 end
 
 to set-thermometer
-  ; use to create, move, and remove a thermometer. Keep active until another another student action is detected. 
-  ; set cursor to temperature. 
-  set model-tools "Add Thermometer"                                               
+  ; use to create, move, and remove a thermometer. Keep active until another another student action is detected.
+  ; set cursor to temperature.
+  set model-tools "Add Thermometer"
   clear-output
   output-print "The thermometer reads temperature at its bottom, where the red dot is."
   output-print "A graph will show the history of this temperature using points with the thermometer's color."
   output-print "Create a new thermometer by clicking in the model. You can drag an existing thermometer."
   output-print "Remove one by dragging it outside the model."
-       
+
 end
 
-to set-thermostat   ; 
+to set-thermostat   ;
 end
 
 to set-heaters
@@ -1375,7 +1376,7 @@ to run-experiment
   create-titles 1 [
     set w who
     setxy 52 17
-    set label-color black 
+    set label-color black
     set label word "Experiment " experiment-number]
   let mc [material-color] of patch -46 6
   let mat-left get-property material-properties mc 2 0
@@ -1388,12 +1389,12 @@ to run-experiment
   create-titles 1 [
     set label-color green
     setxy 52 12
-    set label word "Green: " mat-right] 
+    set label word "Green: " mat-right]
   if not one-layer? [
     set mc [material-color] of patch -46 5
     let mat-left-inner get-property material-properties mc 2 0
     set mc [material-color] of patch -18 5
-    let mat-right-inner get-property material-properties mc 2 0  
+    let mat-right-inner get-property material-properties mc 2 0
     ask title (w + 1) [
       set label (word label "/" mat-left-inner)]
     ask title (w + 2) [
@@ -1401,7 +1402,7 @@ to run-experiment
   ask titles [
     set shape "dot"
     set size .1]
-  
+
   ; switch to heatmap display
   ; make cursor show temperature
   ; if paused simply continue, un-pause
@@ -1426,11 +1427,11 @@ end
 to reset
   set run-pressed? false
   save-research-data "Save"
-  set experiment-number experiment-number + 1  
-  ask titles [die] 
-  ask graph-dots [die] 
+  set experiment-number experiment-number + 1
+  ask titles [die]
+  ask graph-dots [die]
   ask reporters [set label ""]
-  set time-zero timer set delay 0 
+  set time-zero timer set delay 0
   set mode "Ready"
   color-sprites
   set actions "Show Material Only"
@@ -1460,10 +1461,10 @@ to save-half-state
 ;  set current-half-state []          ; empty the current half state
 end
 
-to draw-half-state [left-side? half-st]   ; paints a half-state into the left or right half of the model, depending on left-side? 
-  ; half-st is a list of objects of the format [<c> u0 v0 u1 v1] where c is a color number or "Thermometer" 
+to draw-half-state [left-side? half-st]   ; paints a half-state into the left or right half of the model, depending on left-side?
+  ; half-st is a list of objects of the format [<c> u0 v0 u1 v1] where c is a color number or "Thermometer"
   let offset round (.5 * (divider - min-pxcor))   ;
-  while [not empty? half-st][ 
+  while [not empty? half-st][
     let obj first half-st
     set half-st bf half-st
     let u0 (item 1 obj)    let v0 (item 2 obj)  ;
@@ -1476,10 +1477,10 @@ to draw-half-state [left-side? half-st]   ; paints a half-state into the left or
       if not left-side? [  ; just add the offset to draw this object on the right side
         set u0 u0 + offset
         set u1 u1 + offset]
-      let con get-property material-properties clr 2 3   ; get the conductivity (in item 3) from the color (in item 2) 
+      let con get-property material-properties clr 2 3   ; get the conductivity (in item 3) from the color (in item 2)
       let name get-property material-properties clr 2 0  ; get the name of the material
       if name = "Silver" [set name "Beverage"]
-      let maxu -1e8                  ; label the lower-right patch with the material type. 
+      let maxu -1e8                  ; label the lower-right patch with the material type.
       let minv 1e8                   ; this will be the patch with the largest u and smallest v
       ask patches with [(pxcor >= u0) and (pxcor <= u1) and (pycor >= v0) and (pycor <= v1)][
         if pxcor > maxu [set maxu pxcor]
@@ -1495,7 +1496,7 @@ to draw-half-state [left-side? half-st]   ; paints a half-state into the left or
 ;      show minv
     ]
     if first obj = "Thermometer" [
-      ; draw a themometer at u0 v0  The format is ["Thermometer" u0 v0 color 0]  
+      ; draw a themometer at u0 v0  The format is ["Thermometer" u0 v0 color 0]
       ; will not necessarily be painted with its original color--it might duplicate something alreay in the model space
       if not left-side? [  ; just add the offset to draw this object on the right side
         set u0 u0 + offset
@@ -1515,7 +1516,7 @@ to restore-starting-temps  ; restores the entire model to its state when run was
     set starting-temps bf starting-temps
     ask patch first datum item 1 datum [
       set temperature item 2 datum]]
-  ; color sprites 
+  ; color sprites
 end
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1527,7 +1528,7 @@ to-report replace-item-hack [number a-list new-val]    ; needed because replace-
   let r []
   let cnt 0
   while [not empty? a-list ][
-    ifelse cnt = number 
+    ifelse cnt = number
       [set r lput new-val r]
       [set r lput first a-list r]
     set a-list bf a-list
@@ -1535,10 +1536,10 @@ to-report replace-item-hack [number a-list new-val]    ; needed because replace-
   report r
 end
 
-to-report get-property [LoL match i j]  ; uses a list of lists (LoL) 
+to-report get-property [LoL match i j]  ; uses a list of lists (LoL)
   ; finds the first sublist that has match in item i and returns item j of that sublist
   ; if the match fails (i.e., match cannot be found in item i of any sublist), 1e-9 is returned
-  ; if LoL doesn't have the right structure this will crash. 
+  ; if LoL doesn't have the right structure this will crash.
   ; item i must exist in every sublist and item j must exist in the sublist for which item i is equal to match
   let found false
   let r 1e-9
@@ -1564,7 +1565,7 @@ to set-temp [temp]
   ask patches with [material-color = air-color][
     set patch-temp 20]
 end
-        
+
 to save
   set run-pressed? false
   save-research-data "Save"
@@ -1573,13 +1574,13 @@ to save
   ; each item of experient data consists of title-data followed by dot-data
   ; title-data consists of four items each consisting of u v color and "Experiment #"
   ; dot-data consists of a list of dot-data each consisting of time temperature and color
-  
+
   clear-output
   output-print "You can always see these data again; just click on the 'Load Saved Data' button."
   output-print "You can save and later reload many sets of data."
   output-print "Just keep clicking the 'Load' button to see all your saved data, one set at a time."
 end
-  
+
 to-report packaged-data
   ; save the graph dots and titles
   let title-data []
@@ -1600,7 +1601,7 @@ to restore-data
   ask titles [die]
   if next-dataset >= n [set next-dataset 0]
   let data-set item next-dataset saved-data ;
-  let title-data first data-set 
+  let title-data first data-set
   while [not empty? title-data][       ; put up the titles
     let td first title-data
     set title-data bf title-data
@@ -1619,7 +1620,7 @@ to restore-data
       set x-val first dd
       set y-val item 1 dd
       set color item 2 dd
-      set size 1.6 / ratio 
+      set size 1.6 / ratio
       set shape "Dot"]]
   set graph-tools "Autoscale"   ; scales the grid to fit the data
   set next-dataset next-dataset + 1  ; next time 'restore' is clicked, it will point to another dataset
@@ -1632,41 +1633,41 @@ end
 to pulse-heaters
   set actions "Pulse Heaters"
   clear-output
-  output-print "Each pulse gives a fixed amount of thermal energy from all the heaters."  
-end                    
-          
-to save-research-data [button]  
+  output-print "Each pulse gives a fixed amount of thermal energy from all the heaters."
+end
+
+to save-research-data [button]
    let new-data (list "New Dataset" (precision timer 1) button packaged-data)
    set research-data word research-data new-data
 end
-  
-  
-  
-     
-  
 
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
 
-   
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 @#$#@#$#@
 GRAPHICS-WINDOW
 33
@@ -2237,7 +2238,7 @@ Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 
 @#$#@#$#@
-NetLogo 5.1.0
+NetLogo 5.3.1
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
