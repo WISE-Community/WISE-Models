@@ -1,7 +1,7 @@
  ; Thermo software
 ; Oct 21, 2015
 ; Bob
-; Aug 22, 2016 Hiroki
+; Aug 22, 2016 Hiroki Added chooser for each material, which updates when a choice is selected instead of clicking on the material
 
 ; A microworld for creating and exploring materials with various conductivities
 ; Generates "research-data" text in the following format
@@ -32,7 +32,6 @@ Globals [
   old-mouse-ycor
   old-time                 ; used to detect hovering. Possibly useful to log
   nearby                   ; the distance from the mouse to an object that 'feels' like a hit
-  clicked-in-left?         ; logical used to determine which half-model was clicked
 
   ; window variables
   separator                ; the line used separate the model and graph
@@ -54,7 +53,8 @@ Globals [
   model-tool-properties
   action-properties
   old-pull-down
-  old-material
+  old-material1
+  old-material2
   old-model-tools
   old-graph-tools
   old-actions
@@ -81,8 +81,8 @@ Globals [
   ; Painting variables
   vacuum-color
   air-color
-  current-color        ; the color of the material currently being created
-  current-conductivity ; the conductivity of the material currently being created
+  ;current-color        ; the color of the material currently being created
+  ;current-conductivity ; the conductivity of the material currently being created
   current-background   ; air or vacuum
   brush-size           ; the diameter of the brush that draws
   reporter-who         ; saves the who of the first of six reporters used for reporting values near the mouse
@@ -186,14 +186,19 @@ to on/off                                 ; This is a forever loop
   if mode = "Running" [
     make-heat-flow
     every (.005 * grid-xmax)[
-      add-points-to-graph]] ; this slows down point creation as the scale gets larger
+      add-points-to-graph]
+  ] ; this slows down point creation as the scale gets larger
   every .05 [
     act-on-mouse-events]                  ; needs to be fast or a click can be missed
-  every .2 [                              ; check for user actions
+  every .2 [
     act-on-pull-down-changes
+    act-on-material1-chooser                         ; check for user actions
+    act-on-material2-chooser                         ; check for user actions
+
 ;    act-on-slider-changes                ; supports only the temperature
     update-thermometer-reading            ; report temperature results
-    if view-temperature? [color-sprites]] ; colors patches according to their temperature
+    if view-temperature? [color-sprites]
+    ] ; colors patches according to their temperature
 end
 
 to initialize-model
@@ -207,6 +212,76 @@ end
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;; Initialize everything ;;;;;;;;;;;;;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+to act-on-material1-chooser
+   if old-material1 = "Air (No Jacket)" [stop]  ; don't allow user to switch from air...this is a limitation from the old model.
+   if old-material1 != material1 [
+   let old-material-color get-property material-properties old-material1 0 2
+   let new-color get-property material-properties material1 0 2          ; material is a pull-down that gives a name
+   ; read the material at the mouse and give all such material on the same half the material-color of the variable material
+   let new-conductivity get-property material-properties material1 0 3
+   ;let local-material-color 0
+   ;let clicked-in-left? in-left-half? mouse-xcor mouse-ycor  ; logical used to determine which half-model was clicked
+   ;ask patch mouse-xcor mouse-ycor [set local-material-color material-color]
+   ;let silver-color get-property material-properties "Silver" 0 2
+   ;if local-material-color = silver-color [stop]   ; cannot change the 'silver' beverage
+   ;if local-material-color = air-color [stop]      ; cannot change the surround
+   ; change the material-color of all patches of this type, only on the side clicked
+   let maxu -1e8 let minv 1e8
+   ask patches with [(material-color = old-material-color)] [
+    if in-left-half? pxcor pycor [
+      if pxcor > maxu [set maxu pxcor]
+      if pycor < minv [set minv pycor]
+      set conductivity new-conductivity
+      set material-color new-color
+      set pcolor new-color]
+   ]
+   if maxu != -1e8 and minv != 1e8 [
+     ask one-of sprites-on patch (maxu - 1) (minv + 1) [
+       set label-color black
+       set label material1 ]
+   ]
+
+   set old-material1 material1
+
+   stop
+  ]
+end
+
+to act-on-material2-chooser
+   if old-material2 = "Air (No Jacket)" [stop]  ; don't allow user to switch from air...this is a limitation from the old model.
+   if old-material2 != material2 [
+   let old-material-color get-property material-properties old-material2 0 2
+   let new-color get-property material-properties material2 0 2          ; material is a pull-down that gives a name
+   ; read the material at the mouse and give all such material on the same half the material-color of the variable material
+   let new-conductivity get-property material-properties material2 0 3
+   ;let local-material-color 0
+   ;let clicked-in-left? in-left-half? mouse-xcor mouse-ycor  ; logical used to determine which half-model was clicked
+   ;ask patch mouse-xcor mouse-ycor [set local-material-color material-color]
+   ;let silver-color get-property material-properties "Silver" 0 2
+   ;if local-material-color = silver-color [stop]   ; cannot change the 'silver' beverage
+   ;if local-material-color = air-color [stop]      ; cannot change the surround
+   ; change the material-color of all patches of this type, only on the side clicked
+   let maxu -1e8 let minv 1e8
+   ask patches with [(material-color = old-material-color)] [
+    if not in-left-half? pxcor pycor [
+      if pxcor > maxu [set maxu pxcor]
+      if pycor < minv [set minv pycor]
+      set conductivity new-conductivity
+      set material-color new-color
+      set pcolor new-color]
+   ]
+   if maxu != -1e8 and minv != 1e8 [
+     ask one-of sprites-on patch (maxu - 1) (minv + 1) [
+       set label-color black
+       set label material2 ]
+   ]
+
+   set old-material2 material2
+
+   stop
+  ]
+end
 
 to initialize-globals
   ; the following provide data for the pull-downs. The first item must match one of the options of a pull-down
@@ -285,11 +360,13 @@ end
 
 to initialize-pull-downs
   set old-pull-down ""         ; used to keep track of which pull-down was previously used
-  set material "Glass"
+  set material1 "Glass"
+  set material2 "Glass"
   set actions "Show Material Only"
   set actions "None"
   set model-tools "None"
-  set old-material material
+  set old-material1 material1
+  set old-material2 material2
   set old-model-tools model-tools
   set old-actions actions
   handle-actions-pull-down
@@ -391,7 +468,8 @@ end
 to handle-mouse-down   ; called once when the user first clicks the mouse
   set old-mouse-up? false
   if in-model? mouse-xcor mouse-ycor [       ; handle a mouse click in the model area
-    handle-set-material-on-mouse-down]
+    ;handle-set-material-on-mouse-down
+    ]
 end
 
 to handle-mouse-up       ; called once when the user first releases the mouse
@@ -413,7 +491,7 @@ to handle-mouse-hover  ; if there was no click but the mouse is inside the model
     if in-model? mouse-xcor mouse-ycor [
       setxy mouse-xcor mouse-ycor
       let mc-here material-color                ; get the color from the patch
-      let pull-down-color get-color material
+      let pull-down-color get-color material1
       ifelse view = "Temperature Overlay"
         [set label-color white]
         [set label-color black]
@@ -708,33 +786,33 @@ to make-thermometer [u v] ; creates a new thermometer and label at u,v with the 
     if in-model? u v [setxy u v]]
 end
 
-to handle-thermometer-mouse-drag
-  if in-model? mouse-xcor mouse-ycor [     ; as long as the mouse is inside the model area, move the active thermometer to it.
-    let w 0
-    let local-temp 0
-    ask thermometer active-thermometer [   ;
-      set w thermometer-label-who
-      ask sprites-here [
-        set local-temp precision patch-temp 1]
-      if in-model?  mouse-xcor mouse-ycor [setxy mouse-xcor mouse-ycor ]]
-    ask thermometer-label w [    ; this shadows the thermometer in order to get the temperature label near the bulb
-      let u mouse-xcor + 13 / ratio  ;These are the offsets of the thermometer-label from the thermometer
-      let v mouse-ycor - 1 / ratio
-      if in-model? u v [
-        setxy u v
-        set label word local-temp T-units
-      ]]]
-  if not in-model? mouse-xcor mouse-ycor [           ; if the mouse wanders out of the model area
-    set old-mouse-up? true         ; this stops calling mouse-drag from the on/off loop
-    set current-color [color] of thermometer active-thermometer
-    let i position current-color thermometer-colors  ; make this color of thermometer available
-    set thermometers-used? replace-item i thermometers-used? false
-    let w 0
-    ask thermometer active-thermometer [set w thermometer-label-who]
-    ask thermometer-label w [die]                  ; kill off the label
-    ask thermometer active-thermometer [die]
-    set model-tools "None"]
-end
+;to handle-thermometer-mouse-drag
+;  if in-model? mouse-xcor mouse-ycor [     ; as long as the mouse is inside the model area, move the active thermometer to it.
+;    let w 0
+;    let local-temp 0
+;    ask thermometer active-thermometer [   ;
+;      set w thermometer-label-who
+;      ask sprites-here [
+;        set local-temp precision patch-temp 1]
+;      if in-model?  mouse-xcor mouse-ycor [setxy mouse-xcor mouse-ycor ]]
+;    ask thermometer-label w [    ; this shadows the thermometer in order to get the temperature label near the bulb
+;      let u mouse-xcor + 13 / ratio  ;These are the offsets of the thermometer-label from the thermometer
+;      let v mouse-ycor - 1 / ratio
+;      if in-model? u v [
+;        setxy u v
+;        set label word local-temp T-units
+;      ]]]
+;  if not in-model? mouse-xcor mouse-ycor [           ; if the mouse wanders out of the model area
+;    set old-mouse-up? true         ; this stops calling mouse-drag from the on/off loop
+;    set current-color [color] of thermometer active-thermometer
+;    let i position current-color thermometer-colors  ; make this color of thermometer available
+;    set thermometers-used? replace-item i thermometers-used? false
+;    let w 0
+;    ask thermometer active-thermometer [set w thermometer-label-who]
+;    ask thermometer-label w [die]                  ; kill off the label
+;    ask thermometer active-thermometer [die]
+;    set model-tools "None"]
+;end
 
 to update-thermometer-reading       ; called by on/off to ensure that all visible thermometers show the right temperature
   let local-temp 0 let w 0          ; these need to be local but global to this procedure
@@ -748,50 +826,43 @@ to update-thermometer-reading       ; called by on/off to ensure that all visibl
 end
 
 
-to handle-set-material-on-mouse-down
-;  set Cursor-Shows "Material"  ; Set the cursor to show material
-  set Actions "Show Material Only" ; get out of overlay mode.
-  let new-color get-property material-properties material 0 2          ; material is a pull-down that gives a name
-   ; read the material at the mouse and give all such material on the same half the material-color of the variable material
-  let new-conductivity get-property material-properties material 0 3
-;  let new-conductivity 0
-;  let mp material-properties
-;  while [not empty? mp ][
-;    let test-material first mp
-;    set mp bf mp
-;    if material = first test-material [set new-conductivity item 2 test-material]]  ; pick up conductivity of (new) material
-  let local-material-color 0
-  set clicked-in-left? in-left-half? mouse-xcor mouse-ycor
-  ask patch mouse-xcor mouse-ycor [set local-material-color material-color]
-  let silver-color get-property material-properties "Silver" 0 2
-  if local-material-color = silver-color [stop]   ; cannot change the 'silver' beverage
-  if local-material-color = air-color [stop]      ; cannot change the surround
-  ; change the material-color of all patches of this type, only on the side clicked
-  let name get-property material-properties local-material-color 2 0     ; get the name of the material
-  let maxu -1e8 let minv 1e8
-  ask patches with [(material-color = local-material-color)] [
-    if clicked-in-left? and in-left-half? pxcor pycor[
-      if pxcor > maxu [set maxu pxcor]
-      if pycor < minv [set minv pycor]
-      set conductivity new-conductivity
-      set material-color new-color
-      set pcolor new-color]
-    if not (clicked-in-left? or in-left-half? pxcor pycor)[
-      if pxcor > maxu [set maxu pxcor]
-      if pycor < minv [set minv pycor]
-      set conductivity new-conductivity
-      set material-color new-color
-      set pcolor new-color]]
-  ask one-of sprites-on patch (maxu - 1) (minv + 1) [
-    set label-color black
-    set label material ]
-  ask reporters with [in-model? xcor ycor] [set label material]
-  clear-output
-  output-print "You can continue to change the jacket materials on either model."
-  output-print "When you have the jackets you want to test, press 'Run'"
-  output-print "The model will compute how the heat would be transfered."
-  output-print "The temperature at each thermometer is graphed."
-end
+;to handle-set-material-on-mouse-down
+;;  set Cursor-Shows "Material"  ; Set the cursor to show material
+;  set Actions "Show Material Only" ; get out of overlay mode.
+;  let new-color get-property material-properties material 0 2          ; material is a pull-down that gives a name
+;   ; read the material at the mouse and give all such material on the same half the material-color of the variable material
+;  let new-conductivity get-property material-properties material 0 3
+;  let local-material-color 0
+;  let clicked-in-left? in-left-half? mouse-xcor mouse-ycor  ; logical used to determine which half-model was clicked
+;  ask patch mouse-xcor mouse-ycor [set local-material-color material-color]  ; save the clicked-patch's material color into local-material-color variable
+;  let silver-color get-property material-properties "Silver" 0 2
+;  if local-material-color = silver-color [stop]   ; cannot change the 'silver' beverage
+;  if local-material-color = air-color [stop]      ; cannot change the surround
+;  ; change the material-color of all patches of this type, only on the side clicked
+;  let maxu -1e8 let minv 1e8
+;  ask patches with [(material-color = local-material-color)] [
+;    if clicked-in-left? and in-left-half? pxcor pycor[
+;      if pxcor > maxu [set maxu pxcor]
+;      if pycor < minv [set minv pycor]
+;      set conductivity new-conductivity
+;      set material-color new-color
+;      set pcolor new-color]
+;    if not (clicked-in-left? or in-left-half? pxcor pycor)[
+;      if pxcor > maxu [set maxu pxcor]
+;      if pycor < minv [set minv pycor]
+;      set conductivity new-conductivity
+;      set material-color new-color
+;      set pcolor new-color]]
+;  ask one-of sprites-on patch (maxu - 1) (minv + 1) [
+;    set label-color black
+;    set label material ]
+;  ask reporters with [in-model? xcor ycor] [set label material]
+;  clear-output
+;  output-print "You can continue to change the jacket materials on either model."
+;  output-print "When you have the jackets you want to test, press 'Run'"
+;  output-print "The model will compute how the heat would be transfered."
+;  output-print "The temperature at each thermometer is graphed."
+;end
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;; Painting Tools ;;;;;;;;;;;;;;;
@@ -814,26 +885,27 @@ end
 
 ; Mouse up always sets Model-tools to None. This turns off the painting
 
-to handle-painting-mouse-click
-  set actions "Show Material Only"              ; The action tool is set to show the material
-  if model-tools = "Use Pencil" or model-tools = "Use Small Eraser" [set brush-size 1]
-  if model-tools = "Use Brush" or model-tools = "Use Large Eraser" [set brush-size 3]
-  let found? false
-  let i 0                                       ; get the current material's color and conductivity
-  while [not found?] [
-    let prop item i material-properties         ; get the properties of one substance from the list material-properties
-    if first prop = material [set found? true]  ; if this substance is the one selected in the material pull-down, stop looking at the end of this loop
-    set current-color item 2 prop               ; set the current color and conductivity
-    set current-conductivity item 3 prop
-    if member? "Eraser" model-tools [           ; if the tool is an eraser
-      ifelse current-background = "Air"         ; paint with the current background color
-        [set current-color air-color]           ; erasing is actually painting with background
-        [set current-color vacuum-color]]
-    set i i + 1]
-  if model-tools = "Fill Rectangle" [           ; save the click coordinates for the rectangle
-    set first-corner-u mouse-xcor
-    set first-corner-v mouse-ycor]
-end
+;to handle-painting-mouse-click
+;  set actions "Show Material Only"              ; The action tool is set to show the material
+;  if model-tools = "Use Pencil" or model-tools = "Use Small Eraser" [set brush-size 1]
+;  if model-tools = "Use Brush" or model-tools = "Use Large Eraser" [set brush-size 3]
+;  let found? false
+;  let i 0                                       ; get the current material's color and conductivity
+;  while [not found?] [
+;    let prop item i material-properties         ; get the properties of one substance from the list material-properties
+;    if first prop = material [set found? true]  ; if this substance is the one selected in the material pull-down, stop looking at the end of this loop
+;    set current-color item 2 prop               ; set the current color and conductivity
+;    set current-conductivity item 3 prop
+;    if member? "Eraser" model-tools [           ; if the tool is an eraser
+;      ifelse current-background = "Air"         ; paint with the current background color
+;        [set current-color air-color]           ; erasing is actually painting with background
+;        [set current-color vacuum-color]]
+;    set i i + 1]
+;  if model-tools = "Fill Rectangle" [           ; save the click coordinates for the rectangle
+;    set first-corner-u mouse-xcor
+;    set first-corner-v mouse-ycor]
+;end
+
 
 
 
@@ -1255,8 +1327,11 @@ end
 to setup-one-layer
   erase-half true    ; erase the left side of the model space
   draw-half-state true (item 1 half-state-list)
-  erase-half false    ; erase the left side of the model space
+  set old-material1 "Teflon"
+  erase-half false    ; erase the right side of the model space
   draw-half-state false (item 1 half-state-list)
+  set old-material2 "Teflon"
+
   clear-output
   output-print "First, be sure that the 'On/Off' button is on and shows dark blue."
   output-print "Next, select a material like 'Wood' and apply it to a jacket."
@@ -1319,17 +1394,17 @@ to set-temperature
 
 end
 
-to set-material
-  ; Read the material pull-down and wait for a click in the model. Then change everything of the
-  ;   material clicked to the material in the pull-down on that side only.
-  set model-tools "Set Material"
-  set cursor-shows "Material"
-  clear-output
-  output-print "To change the material of an object, select the desired material and click on the object."
-  output-print "A click will only influence the material on one side of the model space at a time."
-  output-print "You can click on the surround to make it air or a vacuum."
-  output-print "If you have containers, now fill them with water. If not, go on to set thermometers."
-end
+;to set-material
+;  ; Read the material pull-down and wait for a click in the model. Then change everything of the
+;  ;   material clicked to the material in the pull-down on that side only.
+;  set model-tools "Set Material"
+;  set cursor-shows "Material"
+;  clear-output
+;  output-print "To change the material of an object, select the desired material and click on the object."
+;  output-print "A click will only influence the material on one side of the model space at a time."
+;  output-print "You can click on the surround to make it air or a vacuum."
+;  output-print "If you have containers, now fill them with water. If not, go on to set thermometers."
+;end
 
 to click-to-fill
   ; Respond only if there is a container and if the user clicks on a container. The fill algorithm
@@ -1438,7 +1513,7 @@ to reset
   reset-graph
   ; restore starting-temps
   setup-experiment
-  clear-output
+;  clear-output
   output-print "Pick materials that you want to test for the left and right sides of the modeling space."
   output-print "Explore the different materials to find the best."
 end
@@ -1663,11 +1738,6 @@ end
 
 
 
-
-
-
-
-
 @#$#@#$#@
 GRAPHICS-WINDOW
 33
@@ -1697,11 +1767,11 @@ ticks
 30.0
 
 BUTTON
-38
-378
-196
-411
-NIL
+40
+427
+198
+460
+ON
 On/off
 T
 1
@@ -1714,22 +1784,22 @@ NIL
 1
 
 TEXTBOX
-43
-415
-190
-433
+45
+465
+192
+483
 Leave \"ON\" (dark blue)
 11
 0.0
 1
 
 CHOOSER
-233
-370
-397
-415
-Material
-Material
+52
+353
+186
+398
+Material1
+Material1
 "Aluminium" "Cardboard" "Glass" "Cork" "Lead" "Teflon" "Wood" "Air (No Jacket)"
 2
 
@@ -1768,10 +1838,10 @@ NIL
 1
 
 OUTPUT
-41
-433
-862
-513
+34
+489
+855
+569
 14
 
 BUTTON
@@ -1809,10 +1879,10 @@ NIL
 1
 
 TEXTBOX
-46
-353
-196
-375
+42
+399
+192
+421
 Start here!
 18
 0.0
@@ -1851,6 +1921,16 @@ NIL
 NIL
 NIL
 1
+
+CHOOSER
+265
+354
+403
+399
+Material2
+Material2
+"Aluminium" "Cardboard" "Glass" "Cork" "Lead" "Teflon" "Wood" "Air (No Jacket)"
+0
 
 @#$#@#$#@
 ## WHAT IS IT?
