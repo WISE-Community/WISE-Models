@@ -182,7 +182,7 @@ To startup
   reset-ticks
 end
 
-to on/off                                 ; This is a forever loop
+to onOff
   if mode = "Running" [
     make-heat-flow
     every (.005 * grid-xmax)[
@@ -1445,6 +1445,7 @@ end
 
 to run-experiment
   ; first obtain and show jacket materials and experiment number. These will be saved with the data
+  if not run-pressed? [
   set run-pressed? true
   let w 0
   ask titles [die]
@@ -1486,6 +1487,11 @@ to run-experiment
   output-print "The model now shows a heat map showing red hot and blue cold areas."
   output-print "To pause the model, press 'Pause.' Resume by pressing 'Run' again."
   output-print "Each graph is the color of the thermometer in the model that generates that graph."
+  stop
+  ]
+  if run-pressed? [
+    pause
+  ]
 end
 
 to pause
@@ -1737,7 +1743,6 @@ end
 
 
 
-
 @#$#@#$#@
 GRAPHICS-WINDOW
 33
@@ -1772,7 +1777,7 @@ BUTTON
 198
 460
 ON
-On/off
+onOff
 T
 1
 T
@@ -1783,16 +1788,6 @@ NIL
 NIL
 1
 
-TEXTBOX
-45
-465
-192
-483
-Leave \"ON\" (dark blue)
-11
-0.0
-1
-
 CHOOSER
 52
 353
@@ -1800,15 +1795,15 @@ CHOOSER
 398
 Material1
 Material1
-"Aluminium" "Cardboard" "Glass" "Cork" "Lead" "Teflon" "Wood" "Air (No Jacket)"
-2
+"Aluminium" "Cardboard" "Glass" "Cork" "Lead" "Teflon" "Wood"
+3
 
 BUTTON
 440
 354
 564
 388
-Run
+Run/Pause
 Run-experiment
 NIL
 1
@@ -1821,97 +1816,12 @@ NIL
 1
 
 BUTTON
-746
-376
-861
-409
-Reset
-Reset
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
-OUTPUT
-34
-489
-855
-569
-14
-
-BUTTON
-439
-392
-563
-426
-NIL
-Pause
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
-BUTTON
-594
-37
-710
-70
-Autoscale
-set graph-tools \"Autoscale\"
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
-TEXTBOX
-42
-399
-192
-421
-Start here!
-18
-0.0
-1
-
-BUTTON
-595
+576
 354
-716
+691
 387
-Save Data
-Save
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
-BUTTON
-595
-392
-717
-425
-Load Saved Data
-restore-data
+Reset
+Reset
 NIL
 1
 T
@@ -1929,7 +1839,7 @@ CHOOSER
 399
 Material2
 Material2
-"Aluminium" "Cardboard" "Glass" "Cork" "Lead" "Teflon" "Wood" "Air (No Jacket)"
+"Aluminium" "Cardboard" "Glass" "Cork" "Lead" "Teflon" "Wood"
 0
 
 @#$#@#$#@
