@@ -65046,6 +65046,10 @@ Line -7500403 true 150 150 210 180
       $(document).ready(function() {
         $(".netlogo-forever-button input").click();
         $(".netlogo-forever-button").hide();
+ 
+        $("button:contains('Run/Pause')").on("click", function() {
+          // TODO hiroki: see if we can disable the material drop-down while the model is running
+        });
       });
     </script>
 
