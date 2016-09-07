@@ -326,7 +326,7 @@ to initialize-globals
   set temperature 20
 
     ; drawing window variables
-  set separator -40
+  set separator -5
   set divider round (.5 * (separator + min-pxcor))
   set ptch-size 3.41 * ratio      ; the original design had patch-size 3.41
   set default-temp 20
@@ -1453,7 +1453,7 @@ to run-experiment
   ask titles [die]
   create-titles 1 [
     set w who
-    setxy -20 17
+    setxy -52 17
     set label-color black
     set label word "Experiment " experiment-number]
   let mc [material-color] of patch -46 6
@@ -1461,12 +1461,12 @@ to run-experiment
   set mc [material-color] of patch -18 6
   let mat-right get-property material-properties mc 2 0
   create-titles 1 [       ; show the outer left material
-    setxy -20 14.2
+    setxy -52 14.2
     set label-color orange
     set label word "Orange: " mat-left]
   create-titles 1 [
     set label-color green
-    setxy -20 12
+    setxy -52 12
     set label word "Green: " mat-right]
   if not one-layer? [
     set mc [material-color] of patch -46 5
