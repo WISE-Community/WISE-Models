@@ -62724,6 +62724,8 @@ Globals [
   next-dataset             ; index into the saved data
   run-pressed?             ; true only if the run button was the last pressed
   research-data            ; saves all data in CSV format
+  trials
+  createNewTrialOnRun?          ; do we need to create a new trial next time student clicks on run?
 
   ; Mouse variables
   old-mouse-up?
@@ -63007,6 +63009,8 @@ to initialize-globals
                                    ; ratio is used to scale drawings
   set run-pressed? false
   set research-data ""              ; this is where all data will be stored
+  set trials []
+  set createNewTrialOnRun? true      ; we always create a new trial at the beginning
   set experiment-number 1
   set next-dataset 0        ; item number used to retrieve stored data
   set saved-data []
@@ -63963,8 +63967,43 @@ to add-points-to-graph      ; reads all active thermometers, up to max-number-of
       let therm-color item i thermometer-colors
       ask thermometers with [color = therm-color] [
         set y patch-temp]
-      place-point (timer - (delay + time-zero)) y therm-color]
+      place-point (timer - (delay + time-zero)) y therm-color
+      save-trial-data (timer - (delay + time-zero)) y therm-color
+      ]
     set i i + 1 ]
+end
+
+to save-trial-data [x y c]
+  let trial last trials
+  let done? false
+
+  let i 0
+  while [i < max-number-of-thermometers and not done? ][
+    if item i thermometers-used? [         ; max-number-of-thermometers is a list. if an item is true, the thermometer is in use
+      let therm-color item i thermometer-colors
+
+      let currentSeriesData item i trial
+      let currentSeriesDataColor item 0 currentSeriesData ; color will be the first element in the list
+      if currentSeriesDataColor = c [
+        set currentSeriesData lput (list (precision x 3) (precision y 3)) currentSeriesData     ; append new dataset to this list
+        set trial replace-item i trial currentSeriesData
+        set done? true
+      ]
+    ]
+    set i i + 1
+  ]
+  set trials replace-item ((length trials) - 1) trials trial
+
+  ;if not table:has-key? trial c [
+    ;table:put trial c []
+  ;]
+  ;let dataPointsForColor table:get trial c
+  ;set dataPointsForColor sentence dataPointsForColor (list (list x y))
+  ;table:put trial c dataPointsForColor   ; replace with updated dataPoints
+  ;let numTrials length trials
+  ;set trials replace-item (numTrials - 1) trials trial
+
+
 end
 
 to reset-graph       ; sets graph into its default condition ppp
@@ -64146,6 +64185,31 @@ to run-experiment
   ; first obtain and show jacket materials and experiment number. These will be saved with the data
   if not run-pressed? [
   set run-pressed? true
+  if createNewTrialOnRun? [
+    let newTrial []
+    let i 0
+    while [i < max-number-of-thermometers ] [
+      if item i thermometers-used? [         ; max-number-of-thermometers is a list. if an item is true, the thermometer is in use
+        let therm-color item i thermometer-colors
+        let thermometerMaterial ""
+        if i = 0 [
+          set thermometerMaterial material1
+        ]
+        if i = 1 [
+          set thermometerMaterial material2
+        ]
+        if i = 2 [
+          set thermometerMaterial "Room"
+        ]
+
+        set newTrial lput (list therm-color thermometerMaterial) newTrial
+      ]
+      set i i + 1
+    ]
+    set trials lput newTrial trials
+    set createNewTrialOnRun? false
+  ]
+
   let w 0
   ask titles [die]
   create-titles 1 [
@@ -64206,6 +64270,7 @@ end
 
 to reset
   set run-pressed? false
+  set createNewTrialOnRun? true
   save-research-data "Save"
   set experiment-number experiment-number + 1
   ask titles [die]
@@ -64441,7 +64506,6 @@ end
 
 
 
-
 @#$#@#$#@
 GRAPHICS-WINDOW
 33
@@ -64495,7 +64559,7 @@ CHOOSER
 Material1
 material1
 "Aluminium" "Cardboard" "Glass" "Cork" "Lead" "Teflon" "Wood"
-3
+6
 
 BUTTON
 440
@@ -64539,7 +64603,7 @@ CHOOSER
 Material2
 material2
 "Aluminium" "Cardboard" "Glass" "Cork" "Lead" "Teflon" "Wood"
-0
+5
 @#$#@#$#@
 ## WHAT IS IT?
 
@@ -65040,17 +65104,21 @@ Line -7500403 true 150 150 210 180
         }, 200);
       }
     </script>
-  
+
     <script>
-      // start the forever loop after the model loads, and hide the button so students can't click on it.
-      $(document).ready(function() {
-        $(".netlogo-forever-button input").click();
-        $(".netlogo-forever-button").hide();
- 
-        $("button:contains('Run/Pause')").on("click", function() {
-          // TODO hiroki: see if we can disable the material drop-down while the model is running
-        });
-      });
-    </script>
+     // start the forever loop after the model loads, and hide the button so students can't click on it.
+     $(document).ready(function() {
+       $(".netlogo-forever-button input").click();
+       $(".netlogo-forever-button").hide();
+
+       $("button:contains('Run/Pause')").on("click", function() {
+         // TODO hiroki: see if we can disable the material drop-down while the model is running
+       });
+       setInterval(function() {
+          var trialData = world.observer.getGlobal("trials");
+          debugger;
+       }, 200);
+     });
+   </script>
 
 </body></html>
