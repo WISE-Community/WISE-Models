@@ -65086,6 +65086,11 @@ Line -7500403 true 150 150 210 180
       if (parent !== window) {
         var width = "", height = "";
         window.setInterval(function() {
+        
+            if (world.observer.getGlobal("run-pressed?")) {
+                sendTrialsToWISE5();
+            }
+            
           if (activeContainer.offsetWidth  !== width ||
               activeContainer.offsetHeight !== height ||
               (session !== undefined && document.title != pageTitle(session.modelTitle()))) {
@@ -65103,6 +65108,52 @@ Line -7500403 true 150 150 210 180
           }
         }, 200);
       }
+      
+    function saveWISE5State(componentState) {
+        parent.postMessage(componentState, "*");
+    }
+    
+    function sendTrialsToWISE5() {
+        var trials = world.observer.getGlobal("trials");
+        
+        var state = {};
+        state.messageType = "studentWork";
+        state.isAutoSave = false;
+        state.isSubmit = false;
+        
+        var studentData = {};
+        studentData.trials = [];
+        
+        for (var t = 0; t < trials.length; t++) {
+            var trial = trials[t];
+        
+            var trialName = "Trial " + (t + 1);
+            var series = []
+            
+            for (var l = 0; l < trial.length; l++) {
+                var lineDataPoints = trial[l];
+                
+                var seriesName = lineDataPoints[1];
+                var dataPoints = lineDataPoints.slice(2);
+                
+                var line = {};
+                line.name = seriesName;
+                line.data = dataPoints;
+                
+                series.push(line);
+            }
+            
+            var newTrial = {};
+            newTrial.name = trialName;
+            newTrial.series = series;
+            
+            studentData.trials.push(newTrial);
+        }
+        
+        state.studentData = studentData;
+        
+        saveWISE5State(state);
+    }
     </script>
 
     <script>
@@ -65114,10 +65165,12 @@ Line -7500403 true 150 150 210 180
        $("button:contains('Run/Pause')").on("click", function() {
          // TODO hiroki: see if we can disable the material drop-down while the model is running
        });
+       /*
        setInterval(function() {
           var trialData = world.observer.getGlobal("trials");
-          debugger;
+          console.log(trialData);
        }, 200);
+       */
      });
    </script>
 
