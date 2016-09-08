@@ -62889,8 +62889,8 @@ to onOff
     every (.005 * grid-xmax)[
       add-points-to-graph]
   ] ; this slows down point creation as the scale gets larger
-  every .05 [
-    act-on-mouse-events]                  ; needs to be fast or a click can be missed
+  ;every .05 [
+  ;  act-on-mouse-events]                  ; needs to be fast or a click can be missed
   every .2 [
     act-on-pull-down-changes
     act-on-material1-chooser                         ; check for user actions
