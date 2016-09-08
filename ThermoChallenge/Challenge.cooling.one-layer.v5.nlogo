@@ -178,7 +178,7 @@ To startup
   initialize-turtles
   initialize-model
   setup-experiment
-  draw-grid
+;  draw-grid
   initialize-cursor
   reset-timer         ; used for time-stamping user actions
   reset-ticks
@@ -358,7 +358,7 @@ to initialize-globals
   set graph-selection-made? false      ; true if there is a valid selection rectangle showing, waiting for action
   set making-graph-selection? false    ; true only when the selection rectangle is being made
 
-  reset-graph
+;  reset-graph
 
 end
 
@@ -385,7 +385,7 @@ to initialize-patches
     set material-color air-color
     set patch-temp 20
     set conductivity con]  ; change this if material-properties for air are changed
-  if pxcor > (separator + 1)  [set pcolor grid-back-color]
+;  if pxcor > (separator + 1)  [set pcolor grid-back-color]
   if pxcor = max-pxcor or pxcor = min-pxcor or
      pycor = max-pycor or pycor = min-pycor [
        set pcolor black]]
@@ -663,8 +663,8 @@ to handle-actions-pull-down  ; show tip, set color by temp/material, etc
   if actions = "Start" [ ; in reality, this is 'run' and 'resume' together
     ifelse mode = "Paused"
       [set delay delay + timer - time-of-pause]    ;    delay adds up the time paused
-      [reset-graph
-       set time-zero timer
+;      [reset-graph
+       [set time-zero timer
        set delay 0]
 ;       save-starting-temps ]
     set mode "Running"
@@ -1108,8 +1108,8 @@ to draw-grid  ; draws the grid
   ; Draws and labels the graphing grid
   ; outputs are the transformation coefs which are stored in the second position in their respective lists
   ask grid-dots [die] ; clear the grid
-  draw-verticals   ; draws the vertical lines and the x-axis
-  draw-horizontals ; draws the horizontal lines and the y-axis
+;  draw-verticals   ; draws the vertical lines and the x-axis
+;  draw-horizontals ; draws the horizontal lines and the y-axis
 end
 
 to draw-verticals ; draws the vertical lines and labels them along x-axis
@@ -1250,7 +1250,7 @@ to place-point [x y c]   ; places the point x,y on the grid as a dot of color c
 end
 
 to rescale-grid    ; redraws the grid and any points using the globals grid-xmin, grid-ymin,  etc....
-  draw-grid
+;  draw-grid
   ask graph-dots [
     let u mx * x-val + bx
     let v my * y-val + by
@@ -1268,7 +1268,7 @@ to add-points-to-graph      ; reads all active thermometers, up to max-number-of
       let therm-color item i thermometer-colors
       ask thermometers with [color = therm-color] [
         set y patch-temp]
-      place-point (timer - (delay + time-zero)) y therm-color
+      ;place-point (timer - (delay + time-zero)) y therm-color
       save-trial-data (timer - (delay + time-zero)) y therm-color
       ]
     set i i + 1 ]
@@ -1515,7 +1515,7 @@ to run-experiment
   ask titles [die]
   create-titles 1 [
     set w who
-    setxy 52 17
+    setxy -52 17
     set label-color black
     set label word "Experiment " experiment-number]
   let mc [material-color] of patch -46 6
@@ -1523,12 +1523,12 @@ to run-experiment
   set mc [material-color] of patch -18 6
   let mat-right get-property material-properties mc 2 0
   create-titles 1 [       ; show the outer left material
-    setxy 52 14.2
+    setxy -52 14.2
     set label-color orange
     set label word "Orange: " mat-left]
   create-titles 1 [
     set label-color green
-    setxy 52 12
+    setxy -52 12
     set label word "Green: " mat-right]
   if not one-layer? [
     set mc [material-color] of patch -46 5
@@ -1581,7 +1581,7 @@ to reset
   set mode "Ready"
   color-sprites
   set actions "Show Material Only"
-  reset-graph
+;  reset-graph
   ; restore starting-temps
   setup-experiment
 ;  clear-output
