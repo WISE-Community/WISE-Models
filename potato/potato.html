@@ -1,0 +1,242 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <style>
+      body {
+        margin: 0px;
+        padding: 0px;
+      }
+    </style>
+        <script src="./svg.min.js"></script>
+  </head> 
+  <body>
+    <svg id="board" width="600" height="800" version="1.1" xmlns="http://www.w3.org/2000/svg">
+    <script type="text/javascript">
+    var draw = SVG('board');
+    var background = draw.image('./bg.png', 600, 800);
+    var lightbulb = draw.image('./lightbulb20001.png', 40, 70);
+    lightbulb.rotate(150);
+
+    var stem = draw.image('./stem.png').attr({
+      'x': 270,
+      'y': 360
+    })
+
+    var tuber = draw.image('./tuber.png').attr({
+      'x': 100,
+      'y': 550
+    })
+
+    <!------------------ Drawing the start, light on , and light off buttons ------------------- --> 
+    var buttons = {
+      startButton: {
+        buttonText: draw.text('Start').x(485).y(35).font({size: 18}),
+        button: draw.rect(150,30).x(430).y(30).radius(10).fill('white').stroke({width:2}).opacity(1).attr({
+          'fill-opacity': 0
+        }).click(function() {
+          start()
+        })
+      },
+      lightOnButton: {
+        buttonText: draw.text('Turn Light ON').x(451).y(75).font({size: 18}),
+        button: draw.rect(150,30).x(430).y(70).radius(10).fill('white').stroke({width:2}).opacity(1).attr({
+          'fill-opacity': 0
+        }).click(function() {
+          turnOn()
+        })
+      },
+      lightOffButton: {
+        buttonText: draw.text('Turn Light OFF').x(445).y(115).font({size: 18}),
+        button: draw.rect(150,30).x(430).y(110).radius(10).fill('white').stroke({width:2}).opacity(1).attr({
+          'fill-opacity': 0
+        }).click(function() {
+          turnOff()
+        })
+      }
+    }
+    <!------------------------------------------------------------------------------------------ -->
+
+    <!-------------------------------------leaves------------------------------------------------- -->
+    var leaf1 = draw.image('./leaf1.png').attr({
+      'x': 150,
+      'y': 260,
+      'opacity': 0
+    })
+    var leaf2 = draw.image('./leaf2.png').attr({
+      'x': 310,
+      'y': 285,
+      'opacity': 0
+    })
+    var leaf3 = draw.image('./leaf3.png').attr({
+      'x': 155,
+      'y': 200,
+      'opacity': 0
+    })
+    var leaf4 = draw.image('./leaf4.png').attr({
+      'x': 310,
+      'y': 235,
+      'opacity': 0
+    })
+    var leaf5 = draw.image('./leaf5.png').attr({
+      'x': 180,
+      'y': 130,
+      'opacity': 0
+    })
+    var leaf6 = draw.image('./leaf6.png').attr({
+      'x': 300,
+      'y': 200,
+      'opacity': 0
+    })
+    // var leaf7 = draw.image('./leaf7.png').attr({
+    //   'x': 200,
+    //   'y': 80
+    // })
+    var leaf8 = draw.image('./leaf8.png', 170).attr({
+      'x': 260,
+      'y': 110,
+      'opacity': 0
+    })
+    var leaf9 = draw.image('./leaf9.png', 250).attr({
+      'x': 210,
+      'y': 30,
+      'opacity': 0
+    })
+
+    leafs = [leaf2, leaf1, leaf3, leaf4, leaf6, leaf5, leaf9, leaf8]
+    <!------------------------------------------------------------------------------------------ -->
+
+    function start() {
+      startLight()
+      lightOn = true
+      //timer for animation, calls plantAnimation every 3 seconds
+      var intervalTime = window.setInterval(plantAnimation, 3000);
+    }
+
+    function turnOn() {
+      startLight();
+      lightOn = true
+    }
+
+    function turnOff() {
+      stopLight()
+      lightOn = false;
+    }
+
+    function startLight() {
+      lightAnimation()
+      if (typeof overlay != "undefined") {
+        overlay.stop()
+        overlay.remove()
+      }
+      overlay = draw.rect(600, 800).attr({
+        'fill-opacity': 0
+      }).back()
+    }
+
+    function lightAnimation() {
+      if (lightOn === false) {      
+        var photon = draw.image('./photon.png', 30, 30)
+        var photon2 = photon.clone().attr({
+          'x': 80,
+          'y': 50
+        })
+        var photon3 = photon.clone().attr({
+          'x': 30,
+          'y': 50
+        })
+        var photon4 = photon.clone().attr({
+          'x': 120,
+          'y': 90
+        })
+
+        photonArr = [photon, photon2, photon3, photon4]
+        //animating a group of photons
+        for (var i = 0; i < photonArr.length; i++) {
+          photonArr[i].animate().move(photonArr[i].attr('x') + 250, photonArr[i].attr('y') + 400).loop()
+        }
+      }
+      
+    }
+      
+    function stopLight() {
+      for (var i = 0; i < photonArr.length; i++) {
+        photonArr[i].animate().stop()
+        photonArr[i].remove()
+      }
+      overlay.animate().attr({
+        fill: 'black',
+        'fill-opacity': '0.3'
+      })
+      plantAnimation()
+    }
+
+
+
+    function carrot() {
+      this.glucoseMade = 0;
+      this.glucoseStored = 0;
+      this.glucoseUsed = 0;
+      this.alive = true;
+
+      this.incrementGlucose = function() {
+        this.glucoseMade += 20;
+        this.glucoseStored += 10;
+        this.glucoseUsed += 10;
+      }
+
+      this.decrementGlucose = function() {
+        this.glucoseStored -= 7;
+        this.glucoseUsed += 8;
+      }
+    }
+    
+    var mrCarrot = new carrot();
+
+    var lightOn = false;
+
+
+    function plantAnimation() {
+      if (lightOn) {
+        //rounds down to get index of leaf that should be animated
+        var leafNum = Math.floor(mrCarrot.glucoseStored / 10)
+        var leaf = leafs[leafNum]
+        console.log(leaf)
+        leaf.animate().attr({
+          'opacity': 1
+        })
+        mrCarrot.incrementGlucose()
+        glucoseAnimation()
+      }
+      if (!lightOn) {
+        if (mrCarrot.glucoseStored < 0) {
+          alert('your plant has died!')
+        }
+        var leafNum = Math.floor(mrCarrot.glucoseStored / 10)
+        var leaf = leafs[leafNum]
+        console.log(leafNum)
+        console.log(mrCarrot.glucoseStored)
+        leaf.animate().attr({
+          'opacity': 0
+        })
+        mrCarrot.decrementGlucose()
+      }
+    }
+
+    function glucoseAnimation() {
+      var glucose = draw.image('./glucose.png', 20, 20).attr({
+        'x': 300,
+        'y': 370,
+        'opacity': 0
+      })
+      glucose.animate().move(280, 450).attr({
+        'opacity': 1
+      }).after(function() {
+        this.animate().move(275, 500).attr({
+          'opacity': 0
+        })
+      })
+    }
+   
+    </script>
+  </body>
+  </html>
