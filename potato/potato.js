@@ -23,9 +23,11 @@ var maxGlucose = 200;
 
 var weekNumber = 0;
 var maxWeeks = 20;
-var glucoseAmount = 0;
+var glucoseCreated = 0;
 var glucoseIndex = 0;
-var glucoseData = [];
+var glucoseCreatedData = [];
+var glucoseUsedData = [];
+var glucoseStoredData = [];
 
 var startButtonEnabled = true;
 var turnLightOffButtonEnabled = false;
@@ -280,8 +282,8 @@ var resetButtonEnabled = false;
           //stopPhotons();
           
           if (turnLightOnWhenStart) {
-              turnLightOn();
-              //startPhotons();
+              //turnLightOn();
+              startPhotons();
           }
           
           //startLight();
@@ -302,12 +304,13 @@ var resetButtonEnabled = false;
         }
         
         weekNumber = 0;
-        glucoseAmount = 0;
+        glucoseCreated = 0;
         glucoseIndex = 0;
         
         initializeGraph();
         showLeafs(1);
         showCarrot(1);
+        turnLightOn();
     }
 
     function turnOn() {
@@ -377,7 +380,7 @@ var resetButtonEnabled = false;
         turnLightOnWhenStart = true;
         
         if (!photonsEnabled) {
-            startPhotons();
+            //startPhotons();
         }
         
         lightOn = true;
@@ -469,7 +472,7 @@ var resetButtonEnabled = false;
     
     var mrCarrot = new carrot();
 
-    var lightOn = false;
+    var lightOn = true;
 
 
     function plantAnimation() {
@@ -481,6 +484,11 @@ var resetButtonEnabled = false;
                 start();
             } else {
                 if (lightOn) {
+                    
+                    if (!photonsEnabled) {
+                        startPhotons();
+                    }
+                    
                     glucoseIndex++;
                     drawGraph(weekNumber, glucoseIndex);
                     
@@ -603,16 +611,10 @@ var resetButtonEnabled = false;
         }
     }
     
-    function calculateGlucose(glucoseIndex) {
-        var glucose = 0;
-        
-        glucose = (10 * Math.pow(1.15, glucoseIndex)) - 10;
-        
-        return glucose;
-    }
-    
     function initializeGraph() {
-        glucoseData = [[0, 0]];
+        glucoseCreatedData = [[0, 0]];
+        glucoseUsedData = [[0, 0]];
+        glucoseStoredData = [[0, 0]];
         
         chartOptions = {
             chart: {
@@ -641,12 +643,36 @@ var resetButtonEnabled = false;
             series: [
                 {
                     name: 'Glucose Created',
-                    data: glucoseData
+                    data: glucoseCreatedData
+                },
+                {
+                    name: 'Glucose Used',
+                    data: glucoseUsedData
+                },
+                {
+                    name: 'Glucose Stored',
+                    data: glucoseStoredData
                 }
             ]
         };
         
         chart = new Highcharts.Chart(chartOptions);
+    }
+    
+    function calculateGlucoseCreated(glucoseIndex) {
+        var glucose = 0;
+        
+        glucose = (10 * Math.pow(1.15, glucoseIndex)) - 10;
+        
+        return glucose;
+    }
+    
+    function calculateGlucoseUsed(glucoseIndex) {
+        var glucose = 0;
+        
+        glucose = (10 * Math.pow(1.10, glucoseIndex)) - 10;
+        
+        return glucose;
     }
     
     function drawGraph(weekNumber, glucoseIndex) {
@@ -656,16 +682,35 @@ var resetButtonEnabled = false;
         for (var x = 0; x <= weekNumber; x++) {
             var dataPoint = [];
             
-            var y = calculateGlucose(x);
+            var y = calculateGlucoseCreated(x);
             
             dataPoint.push(x);
             dataPoint.push(y);
             data.push(dataPoint);
         }
         */
-        var glucoseAmount = calculateGlucose(glucoseIndex);
-        var dataPoint = [weekNumber, glucoseAmount];
-        glucoseData.push(dataPoint);
+        var glucoseCreated = calculateGlucoseCreated(glucoseIndex);
+        var glucoseUsed = calculateGlucoseUsed(weekNumber);
+        var glucoseStored = glucoseCreated - glucoseUsed;
         
-        chart.series[0].setData(glucoseData);
+        
+        var glucoseCreatedDataPoint = [weekNumber, glucoseCreated];
+        glucoseCreatedData.push(glucoseCreatedDataPoint);
+        
+        var glucoseUsedDataPoint = [weekNumber, glucoseUsed];
+        glucoseUsedData.push(glucoseUsedDataPoint);
+        
+        var glucoseStoredDataPoint = [weekNumber, glucoseStored];
+        glucoseStoredData.push(glucoseStoredDataPoint);
+        
+        chart.series[0].setData(glucoseCreatedData);
+        chart.series[1].setData(glucoseUsedData);
+        chart.series[2].setData(glucoseStoredData);
+        
+        if (glucoseStored < 0) {
+            start();
+            alert('Your plant has died :(');
+        }
+        
+        return glucoseStored;
     }
