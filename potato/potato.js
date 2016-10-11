@@ -1,7 +1,13 @@
 
-var buttons = {};
 
 var draw = null;
+
+var buttons = {};
+
+var plantDiedRect = null;
+var plantDiedText = null;
+var endReachedRect = null;
+var endReachedText = null;
 
 var running = false;
 
@@ -23,28 +29,77 @@ var maxGlucose = 200;
 
 var weekNumber = 0;
 var maxWeeks = 20;
+
 var glucoseCreated = 0;
+var glucoseUsed = 0;
+var glucoseStored = 0;
+
+var initialGlucoseCreated = 10;
+var initialGlucoseUsed = 6;
+var initialGlucoseStored = 4;
+
 var glucoseIndex = 0;
 var glucoseCreatedData = [];
 var glucoseUsedData = [];
 var glucoseStoredData = [];
 
 var startButtonEnabled = true;
-var turnLightOffButtonEnabled = false;
-var turnLightOnButtonEnabled = true;
+var turnLightOffButtonEnabled = true;
+var turnLightOnButtonEnabled = false;
 var resetButtonEnabled = false;
+
+var data = null;
+var isNewTrial = true;
+
+var wiseEnabled = false;
+var api = null;
+var appObj = null;
+
+    function enableStartButton(enable) {
+        
+        if (enable) {
+            buttons.startButton.button.attr({'fill-opacity': 1});
+            /*
+            buttons.startButton.button.off('click');
+            buttons.startButton.button.on('click', function() {
+                start();
+            });
+            buttons.startButton.buttonText.off('click');
+            buttons.startButton.buttonText.on('click', function() {
+                start();
+            });
+            */
+        } else {
+            buttons.startButton.button.attr({'fill-opacity': 0});
+            /*
+            buttons.startButton.button.off('click');
+            buttons.startButton.buttonText.off('click');
+            */
+        }
+        
+        startButtonEnabled = enable;
+    }
 
     function enableTurnLightOnButton(enable) {
         
         if (enable) {
             buttons.lightOnButton.button.attr({'fill-opacity': 1});
+            /*
             buttons.lightOnButton.button.off('click');
             buttons.lightOnButton.button.on('click', function() {
                 turnLightOn();
             });
+            buttons.lightOnButton.buttonText.off('click');
+            buttons.lightOnButton.buttonText.on('click', function() {
+                turnLightOn();
+            });
+            */
         } else {
             buttons.lightOnButton.button.attr({'fill-opacity': 0});
+            /*
             buttons.lightOnButton.button.off('click');
+            buttons.lightOnButton.buttonText.off('click');
+            */
         }
         
         turnLightOnButtonEnabled = enable;
@@ -53,13 +108,22 @@ var resetButtonEnabled = false;
     function enableTurnLightOffButton(enable) {
         if (enable) {
             buttons.lightOffButton.button.attr({'fill-opacity': 1});
+            /*
             buttons.lightOffButton.button.off('click');
             buttons.lightOffButton.button.on('click', function() {
                 turnLightOff();
             });
+            buttons.lightOffButton.buttonText.off('click');
+            buttons.lightOffButton.buttonText.on('click', function() {
+                turnLightOff();
+            });
+            */
         } else {
             buttons.lightOffButton.button.attr({'fill-opacity': 0});
+            /*
             buttons.lightOffButton.button.off('click');
+            buttons.lightOffButton.buttonText.off('click');
+            */
         }
         
         turnLightOffButtonEnabled = enable;
@@ -68,20 +132,34 @@ var resetButtonEnabled = false;
     function enableResetButton(enable) {
         if (enable) {
             buttons.resetButton.button.attr({'fill-opacity': 1});
+            /*
             buttons.resetButton.button.off('click');
             buttons.resetButton.button.on('click', function() {
                 reset();
             });
+            buttons.resetButton.buttonText.on('click', function() {
+                reset();
+            });
+            */
         } else {
             buttons.resetButton.button.attr({'fill-opacity': 0});
+            /*
             buttons.resetButton.button.off('click');
+            buttons.resetButton.buttonText.off('click');
+            */
         }
         
         resetButtonEnabled = enable;
     }
 
     function init() {
+        initializeData();
         initializeGraph();
+        
+        glucoseCreated = initialGlucoseCreated;
+        glucoseUsed = initialGlucoseUsed;
+        glucoseStored = initialGlucoseStored;
+        
     draw = SVG('board');
 
     //document.getElementById("glucoseDisplay").innerHTML = 0;
@@ -115,47 +193,94 @@ var resetButtonEnabled = false;
     buttons = {
       startButton: {
         
-        button: draw.rect(150,30).x(430).y(30).radius(10).fill('white').stroke({width:2}).opacity(1).attr({
+        button: draw.rect(150,30).x(430).y(30).radius(10).fill('yellow').stroke({width:2}).opacity(1).attr({
           'fill-opacity': 1
         }).click(function() {
-          start()
+            if (startButtonEnabled) {
+                var text = buttons.startButton.buttonText.text();
+                
+                if (text == 'Start') {
+                    addEvent('startButtonClicked');
+                    start();
+                } else if (text == 'Pause') {
+                    addEvent('pauseButtonClicked');
+                    pause();
+                } else if (text == 'Resume') {
+                    addEvent('resumeButtonClicked');
+                    resume();
+                }
+            }
         }),
         buttonText: draw.text('Start').x(485).y(35).font({size: 18}).click(function() {
-          start()
+            if (startButtonEnabled) {
+                var text = buttons.startButton.buttonText.text();
+                
+                if (text == 'Start') {
+                    addEvent('startButtonClicked');
+                    start();
+                } else if (text == 'Pause') {
+                    addEvent('pauseButtonClicked');
+                    pause();
+                } else if (text == 'Resume') {
+                    addEvent('resumeButtonClicked');
+                    resume();
+                }
+                
+                start();
+            }
         })
       },
       lightOnButton: {
-        button: draw.rect(150,30).x(430).y(70).radius(10).fill('white').stroke({width:2}).opacity(1).attr({
+        button: draw.rect(150,30).x(430).y(70).radius(10).fill('yellow').stroke({width:2}).opacity(1).attr({
           'fill-opacity': 0
         }).click(function() {
-          //turnOn()
-          turnLightOn();
+            //turnOn()
+          
+            if (turnLightOnButtonEnabled) {
+                addEvent('turnLightOnButtonClicked');
+                turnLightOn();
+            }
         }),
         buttonText: draw.text('Turn Light ON').x(451).y(75).font({size: 18}).click(function() {
-          //turnOn()
-          turnLightOn();
+            //turnOn()
+            if (turnLightOnButtonEnabled) {
+                addEvent('turnLightOnButtonClicked');
+                turnLightOn();
+            }
         })
       },
       lightOffButton: {
-        button: draw.rect(150,30).x(430).y(110).radius(10).fill('white').stroke({width:2}).opacity(1).attr({
+        button: draw.rect(150,30).x(430).y(110).radius(10).fill('yellow').stroke({width:2}).opacity(1).attr({
           'fill-opacity': 0
         }).click(function() {
-          //turnOff()
-          turnLightOff();
+            //turnOff()
+            if (turnLightOffButtonEnabled) {
+                addEvent('turnLightOffButtonClicked');
+                turnLightOff();
+            }
         }),
         buttonText: draw.text('Turn Light OFF').x(445).y(115).font({size: 18}).click(function() {
-          //turnOff()
-          turnLightOff();
+            //turnOff()
+            if (turnLightOffButtonEnabled) {
+                addEvent('turnLightOffButtonClicked');
+                turnLightOff();
+            }
         })
       },
       resetButton: {
-          button: draw.rect(150,30).x(430).y(150).radius(10).fill('white').stroke({width:2}).opacity(1).attr({
+          button: draw.rect(150,30).x(430).y(150).radius(10).fill('yellow').stroke({width:2}).opacity(1).attr({
             'fill-opacity': 0
           }).click(function() {
-            reset();
+              if (resetButtonEnabled) {
+                  addEvent('resetButtonClicked');
+                  reset();
+              }
           }),
           buttonText: draw.text('Reset').x(480).y(155).font({size: 18}).click(function() {
-            reset();
+              if (resetButtonEnabled) {
+                  addEvent('resetButtonClicked');
+                  reset();
+              }
           })
       }
     }
@@ -255,62 +380,175 @@ var resetButtonEnabled = false;
     showLeafs(1);
     showCarrot(1);
     
+    plantDiedRect = draw.rect(500, 100).x(50).y(200).fill('red').stroke({width:2}).opacity(1).attr({
+        'fill-opacity': 1
+    });
+    
+    plantDiedText = draw.text('The plant has died').x(100).y(210).font({size: 48});
+    
+    plantDiedRect.hide();
+    plantDiedText.hide();
+    
+    endReachedRect = draw.rect(500, 100).x(50).y(200).fill('blue').stroke({width:2}).opacity(1).attr({
+        'fill-opacity': 1
+    });
+    
+    endReachedText = draw.text('Simulation ended').x(115).y(210).font({size: 48});
+    
+    endReachedRect.hide();
+    endReachedText.hide();
+    
+    
+        wiseEnabled=!(window.parent==window);
+        
+        if(wiseEnabled){
+            api=window.parent.wiseAPI();
+            appObj=window.parent.webApp;
+        }
     }
     
 
     
-    function start() {
+    function start0() {
+        
+        if (data == null) {
+            initializeData();
+        }
+        
         if (!resetButtonEnabled) {
             enableResetButton(true);
         }
-      if (running) {
-          buttons.startButton.buttonText.text('Start').x(485).y(35);
-          // we are currently running so we will now pause
-          running = false;
-          
-          //stopPhotons();
-          stopPhotons();
-          
-          //turnLightOff();
-          clearInterval(intervalId);
-          intervalId = null;
-      } else {
-          buttons.startButton.buttonText.text('Pause').x(480).y(35);
-          // we are not currently running so we will now run
-          running = true;
-          
-          //stopPhotons();
-          
-          if (turnLightOnWhenStart) {
-              //turnLightOn();
-              startPhotons();
-          }
-          
-          //startLight();
-          //lightOn = true;
-          
-          
-          if (intervalId == null) {
-              //timer for animation, calls plantAnimation every 3 seconds
-              intervalId = window.setInterval(plantAnimation, 1000);
-          }
-      }
+        
+        if (running) {
+            buttons.startButton.buttonText.text('Start').x(485).y(35);
+            // we are currently running so we will now pause
+            running = false;
+            
+            //stopPhotons();
+            stopPhotons();
+            
+            //turnLightOff();
+            clearInterval(intervalId);
+            intervalId = null;
+        } else {
+            buttons.startButton.buttonText.text('Pause').x(480).y(35);
+            // we are not currently running so we will now run
+            running = true;
+            
+            //stopPhotons();
+            
+            if (turnLightOnWhenStart) {
+                //turnLightOn();
+                startPhotons();
+            }
+            
+            //startLight();
+            //lightOn = true;
+            
+            
+            if (intervalId == null) {
+                //timer for animation, calls plantAnimation every 3 seconds
+                intervalId = window.setInterval(plantAnimation, 1000);
+            }
+        }
+        
+        if (isNewTrial) {
+            saveNewTrial();
+            isNewTrial = false;
+        } else {
+            saveUpdatedTrial();
+        }
+    }
+    
+    function start() {
+        
+        if (data == null) {
+            initializeData();
+        }
+        
+        if (!resetButtonEnabled) {
+            enableResetButton(true);
+        }
+        
+        resume();
+        
+        if (isNewTrial) {
+            saveNewTrial();
+            isNewTrial = false;
+        }
+    }
+    
+    function resume() {
+        if (!running) {
+            buttons.startButton.buttonText.text('Pause').x(480).y(35);
+            // we are not currently running so we will now run
+            running = true;
+            
+            //stopPhotons();
+            
+            if (turnLightOnWhenStart) {
+                //turnLightOn();
+                startPhotons();
+            }
+            
+            //startLight();
+            //lightOn = true;
+            
+            
+            if (intervalId == null) {
+                //timer for animation, calls plantAnimation every 3 seconds
+                intervalId = window.setInterval(plantAnimation, 2000);
+            }
+        }
+    }
+    
+    function pause() {
+        if (running) {
+            buttons.startButton.buttonText.text('Resume').x(472).y(35);
+            // we are currently running so we will now pause
+            running = false;
+            
+            //stopPhotons();
+            stopPhotons();
+            
+            //turnLightOff();
+            clearInterval(intervalId);
+            intervalId = null;
+        }
     }
     
     function reset() {
         
+        endTrial();
+        
         if (running) {
-            start();
+            pause();
         }
         
+        buttons.startButton.buttonText.text('Start').x(485).y(35);
+        
         weekNumber = 0;
-        glucoseCreated = 0;
+        glucoseCreated = initialGlucoseCreated;
+        glucoseUsed = initialGlucoseUsed;
+        glucoseStored = initialGlucoseStored;
         glucoseIndex = 0;
         
+        initializeData();
         initializeGraph();
         showLeafs(1);
         showCarrot(1);
         turnLightOn();
+        
+        enableStartButton(true);
+        enableTurnLightOnButton(false);
+        enableTurnLightOffButton(true);
+        enableResetButton(false);
+        
+        plantDiedRect.hide();
+        plantDiedText.hide();
+        
+        endReachedRect.hide();
+        endReachedText.hide();
     }
 
     function turnOn() {
@@ -394,6 +632,8 @@ var resetButtonEnabled = false;
         overlay = draw.rect(600, 800).attr({
           'fill-opacity': 0
         }).back()
+        
+        //saveUpdatedTrial();
     }
     
     function turnLightOff() {
@@ -412,6 +652,8 @@ var resetButtonEnabled = false;
           fill: 'black',
           'fill-opacity': '0.3'
         })
+        
+        //saveUpdatedTrial();
     }
 
     function lightAnimation0() {
@@ -481,7 +723,10 @@ var resetButtonEnabled = false;
             weekNumber++;
             
             if (weekNumber > maxWeeks) {
-                start();
+                pause();
+                //addEvent('endReached');
+                endReached();
+                endTrial();
             } else {
                 if (lightOn) {
                     
@@ -489,13 +734,17 @@ var resetButtonEnabled = false;
                         startPhotons();
                     }
                     
+                    incrementGlucose();
                     glucoseIndex++;
-                    drawGraph(weekNumber, glucoseIndex);
+                    glucoseStored = drawGraph(weekNumber, glucoseIndex);
                     
                     var leafNum = Math.floor(glucoseIndex / 3);
-                    showLeafs(leafNum + 1);
+                    //showLeafs(leafNum + 1);
+                    //showLeafs(glucoseStored);
+                    //showLeafs(leafNum + 1);
+                    showLeafs(glucoseIndex + 1);
                     
-                    var carrotNum = Math.floor(glucoseIndex / 4);
+                    var carrotNum = Math.floor(glucoseIndex / 2);
                     showCarrot(carrotNum + 1);
                     
                   //rounds down to get index of leaf that should be animated
@@ -530,10 +779,33 @@ var resetButtonEnabled = false;
                   glucoseAnimation()
                 }
                 if (!lightOn) {
-                    drawGraph(weekNumber, glucoseIndex);
+                    glucoseIndex--;
+                    decrementGlucose();
+                    
+                    var glucoseStored = drawGraph(weekNumber, glucoseIndex);
+                    
+                    /*
+                    if (glucoseStored <= 0) {
+                        start();
+                        alert('Your plant has died :(');
+                    }
+                    */
                     
                     var leafNum = Math.floor(glucoseIndex / 3);
-                    showLeafs(leafNum + 1);
+                    //var leafNum = glucoseIndex;
+                    //showLeafs(leafNum + 1);
+                    showLeafs(glucoseIndex + 1);
+                    
+                    if (glucoseStored <= 0) {
+                        //start();
+                        //alert('Your plant has died :(');
+                        pause();
+                        //alert('Your plant has died :(');
+                        showLeafs(-1);
+                        //addEvent('plantDied');
+                        plantDied();
+                        endTrial();
+                    }
                     
                     /*
                   if (mrCarrot.glucoseStored < 0) {
@@ -596,6 +868,11 @@ var resetButtonEnabled = false;
     
     function showCarrot(carrotNumber) {
         //console.log('carrotNumber=' + carrotNumber);
+        
+        if (carrotNumber > carrots.length) {
+            carrotNumber = carrots.length;
+        }
+        
         for (var c = 0; c < carrots.length; c++) {
             var carrot = carrots[c];
             
@@ -612,9 +889,9 @@ var resetButtonEnabled = false;
     }
     
     function initializeGraph() {
-        glucoseCreatedData = [[0, 0]];
-        glucoseUsedData = [[0, 0]];
-        glucoseStoredData = [[0, 0]];
+        glucoseCreatedData = [[0, initialGlucoseCreated]];
+        glucoseUsedData = [[0, initialGlucoseUsed]];
+        glucoseStoredData = [[0, initialGlucoseStored]];
         
         chartOptions = {
             chart: {
@@ -643,14 +920,17 @@ var resetButtonEnabled = false;
             series: [
                 {
                     name: 'Glucose Created',
+                    color: 'orange',
                     data: glucoseCreatedData
                 },
                 {
                     name: 'Glucose Used',
+                    color: 'blue',
                     data: glucoseUsedData
                 },
                 {
                     name: 'Glucose Stored',
+                    color: 'green',
                     data: glucoseStoredData
                 }
             ]
@@ -662,7 +942,9 @@ var resetButtonEnabled = false;
     function calculateGlucoseCreated(glucoseIndex) {
         var glucose = 0;
         
-        glucose = (10 * Math.pow(1.15, glucoseIndex)) - 10;
+        //glucose = (10 * Math.pow(1.15, glucoseIndex)) - 10;
+        
+        glucose = 10 * glucoseIndex;
         
         return glucose;
     }
@@ -670,7 +952,8 @@ var resetButtonEnabled = false;
     function calculateGlucoseUsed(glucoseIndex) {
         var glucose = 0;
         
-        glucose = (10 * Math.pow(1.10, glucoseIndex)) - 10;
+        //glucose = (10 * Math.pow(1.10, glucoseIndex)) - 10;
+        glucose = 6 * glucoseIndex;
         
         return glucose;
     }
@@ -689,9 +972,12 @@ var resetButtonEnabled = false;
             data.push(dataPoint);
         }
         */
+        /*
         var glucoseCreated = calculateGlucoseCreated(glucoseIndex);
         var glucoseUsed = calculateGlucoseUsed(weekNumber);
         var glucoseStored = glucoseCreated - glucoseUsed;
+        */
+        
         
         
         var glucoseCreatedDataPoint = [weekNumber, glucoseCreated];
@@ -707,10 +993,101 @@ var resetButtonEnabled = false;
         chart.series[1].setData(glucoseUsedData);
         chart.series[2].setData(glucoseStoredData);
         
+        
         if (glucoseStored < 0) {
-            start();
-            alert('Your plant has died :(');
+            //pause();
+            //alert('Your plant has died :(');
+            //console.log('Your plant has died :(');
         }
         
+        
         return glucoseStored;
+    }
+    
+    function incrementGlucose() {
+        glucoseCreated += 10;
+        glucoseUsed += 6;
+        glucoseStored = glucoseCreated - glucoseUsed;
+    }
+    
+    function decrementGlucose() {
+        glucoseUsed += 6;
+        glucoseStored = glucoseCreated - glucoseUsed;
+    }
+    
+    function save0() {
+        //this.api.save(saveObj,function(){console.log("after save"); console.log(this.api.getLatestState());}.bind(this),function(){console.log("Save Failed");});
+        
+        data.glucoseCreatedData = glucoseCreatedData;
+        data.glucoseUsedData = glucoseUsedData;
+        data.glucoseStoredData = glucoseStoredData;
+        
+        if (wiseEnabled) {
+            this.api.save(data);
+        }
+    }
+    
+    function saveNewTrial() {
+        data.glucoseCreatedData = glucoseCreatedData;
+        data.glucoseUsedData = glucoseUsedData;
+        data.glucoseStoredData = glucoseStoredData;
+        
+        if (wiseEnabled) {
+            this.api.save(data);
+        }
+    }
+    
+    function saveUpdatedTrial() {
+        data.glucoseCreatedData = glucoseCreatedData;
+        data.glucoseUsedData = glucoseUsedData;
+        data.glucoseStoredData = glucoseStoredData;
+        
+        if (wiseEnabled) {
+            this.api.overwriteLatestState(data);
+        }
+    }
+    
+    function startTrial() {
+        
+    }
+
+    function endTrial() {
+        enableStartButton(false);
+        enableTurnLightOnButton(false);
+        enableTurnLightOffButton(false);
+        
+        saveUpdatedTrial();
+    }
+    
+    function initializeData() {
+        data = {};
+        data.glucoseCreatedData = [];
+        data.glucoseUsedData = [];
+        data.glucoseStoredData = [];
+        data.events = [];
+        
+        isNewTrial = true;
+    }
+    
+    function addEvent(eventName) {
+        
+        var timestamp = new Date().getTime();
+        
+        var event = {};
+        event.name = eventName;
+        event.timestamp = timestamp;
+        
+        data.events.push(event);
+    }
+    
+    function plantDied() {
+        addEvent('plantDied');
+        plantDiedRect.show();
+        plantDiedText.show();
+    }
+    
+    function endReached() {
+        addEvent('endReached');
+        endReachedRect.show();
+        endReachedText.show();
     }
