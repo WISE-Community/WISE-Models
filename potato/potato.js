@@ -35,8 +35,8 @@ var glucoseUsed = 0;
 var glucoseStored = 0;
 
 var initialGlucoseCreated = 10;
-var initialGlucoseUsed = 6;
-var initialGlucoseStored = 4;
+var initialGlucoseUsed = 4;
+var initialGlucoseStored = 6;
 
 var glucoseIndex = 0;
 var glucoseCreatedData = [];
@@ -54,6 +54,10 @@ var isNewTrial = true;
 var wiseEnabled = false;
 var api = null;
 var appObj = null;
+
+var trials = [];
+
+var plotBands = [];
 
     function enableStartButton(enable) {
         
@@ -156,6 +160,10 @@ var appObj = null;
         initializeData();
         initializeGraph();
         
+        if (parent != null && parent.node != null) {
+            parent.node.trials = trials;
+        }
+        
         glucoseCreated = initialGlucoseCreated;
         glucoseUsed = initialGlucoseUsed;
         glucoseStored = initialGlucoseStored;
@@ -225,8 +233,6 @@ var appObj = null;
                     addEvent('resumeButtonClicked');
                     resume();
                 }
-                
-                start();
             }
         })
       },
@@ -402,8 +408,10 @@ var appObj = null;
         wiseEnabled=!(window.parent==window);
         
         if(wiseEnabled){
-            api=window.parent.wiseAPI();
-            appObj=window.parent.webApp;
+            if (window.parent != null && window.parent.wiseAPI != null) {
+                api = window.parent.wiseAPI();
+                appObj = window.parent.webApp;
+            }
         }
     }
     
@@ -470,6 +478,7 @@ var appObj = null;
             enableResetButton(true);
         }
         
+        startPlotBand(0, 'yellow');
         resume();
         
         if (isNewTrial) {
@@ -898,6 +907,13 @@ var appObj = null;
                 renderTo: 'highchartsDiv',
                 type: 'line',
             },
+            plotOptions: {
+                line: {
+                    marker: {
+                        enabled: false
+                    }
+                }
+            },
             title: {
                 text: 'Glucose Over Time',
                 x: -20 //center
@@ -913,6 +929,9 @@ var appObj = null;
             yAxis: {
                 title: {
                     text: 'Amount of Glucose'
+                },
+                labels: {
+                    enabled: false
                 },
                 min: 0,
                 max: 200
@@ -1006,25 +1025,13 @@ var appObj = null;
     
     function incrementGlucose() {
         glucoseCreated += 10;
-        glucoseUsed += 6;
+        glucoseUsed += 4;
         glucoseStored = glucoseCreated - glucoseUsed;
     }
     
     function decrementGlucose() {
-        glucoseUsed += 6;
+        glucoseUsed += 4;
         glucoseStored = glucoseCreated - glucoseUsed;
-    }
-    
-    function save0() {
-        //this.api.save(saveObj,function(){console.log("after save"); console.log(this.api.getLatestState());}.bind(this),function(){console.log("Save Failed");});
-        
-        data.glucoseCreatedData = glucoseCreatedData;
-        data.glucoseUsedData = glucoseUsedData;
-        data.glucoseStoredData = glucoseStoredData;
-        
-        if (wiseEnabled) {
-            this.api.save(data);
-        }
     }
     
     function saveNewTrial() {
@@ -1033,7 +1040,8 @@ var appObj = null;
         data.glucoseStoredData = glucoseStoredData;
         
         if (wiseEnabled) {
-            this.api.save(data);
+            //this.api.save(data);
+            trials.push(data);
         }
     }
     
@@ -1043,7 +1051,7 @@ var appObj = null;
         data.glucoseStoredData = glucoseStoredData;
         
         if (wiseEnabled) {
-            this.api.overwriteLatestState(data);
+            //this.api.overwriteLatestState(data);
         }
     }
     
@@ -1090,4 +1098,23 @@ var appObj = null;
         addEvent('endReached');
         endReachedRect.show();
         endReachedText.show();
+    }
+
+    function startPlotBand(week, color) {
+        
+        var plotBand = {};
+        plotBand.from = week;
+        plotBand.to = week;
+        plotBand.color = color;
+        
+        plotBands.push(plotBand);
+    }
+    
+    function updatePlotBand(week) {
+        
+    }
+    
+    function endPlotBand(week) {
+        
+        
     }
