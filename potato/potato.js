@@ -756,6 +756,13 @@ var plotBands = [];
                     var carrotNum = Math.floor(glucoseIndex / 2);
                     showCarrot(carrotNum + 1);
                     
+                    var plotBand = {};
+                    plotBand.from = weekNumber - 1;
+                    plotBand.to = weekNumber;
+                    plotBand.color = 'yellow';
+                    
+                    chart.xAxis[0].addPlotBand(plotBand);
+                    
                   //rounds down to get index of leaf that should be animated
                   //var leafNum = Math.floor(mrCarrot.glucoseStored / 10);
                   //var leafNum = Math.floor(mrCarrot.glucoseStored / (maxGlucose / leafs.length));
@@ -804,6 +811,13 @@ var plotBands = [];
                     //var leafNum = glucoseIndex;
                     //showLeafs(leafNum + 1);
                     showLeafs(glucoseIndex + 1);
+                    
+                    var plotBand = {};
+                    plotBand.from = weekNumber - 1;
+                    plotBand.to = weekNumber;
+                    plotBand.color = 'lightgrey';
+                    
+                    chart.xAxis[0].addPlotBand(plotBand);
                     
                     if (glucoseStored <= 0) {
                         //start();
