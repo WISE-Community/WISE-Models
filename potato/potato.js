@@ -1062,7 +1062,7 @@ function initializeGraph() {
         },
         series: [
             {
-                name: 'Glucose Created',
+                name: 'Glucose Made',
                 color: 'orange',
                 data: glucoseCreatedData
             },
