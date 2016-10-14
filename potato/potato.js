@@ -37,8 +37,11 @@ var lightOn = true;
 // array that holds the photon image objects
 var photons = [];
 
-// array that holds the leaf image objects
-var leaves = [];
+/*
+ * array that holds the leaf groups (a leaf group consists of a leaf image,
+ * and two glucose images)
+ */
+var leafGroups = [];
 
 // array that holds the carrot image objects
 var carrots = [];
@@ -228,63 +231,312 @@ function createLightBulbs() {
  */
 function createLeaves() {
     
-    var leaf1 = draw.image('./leaf1.png').attr({
+    var leaf1 = draw.image('./leaf1_0.png').attr({
         'x': 150,
         'y': 270,
         'opacity': 0
     });
     
-    var leaf2 = draw.image('./leaf2.png').attr({
-        'x': 310,
-        'y': 285,
+    var leaf1Glucose1 = draw.image('./glucose.png', 20, 20).attr({
+        'x': 250,
+        'y': 335,
         'opacity': 0
     });
     
-    var leaf3 = draw.image('./leaf3.png').attr({
+    var leaf1Glucose2 = draw.image('./glucose.png', 20, 20).attr({
+        'x': 260,
+        'y': 290,
+        'opacity': 0
+    });
+    
+    var leafGroup1 = {
+        leaf: leaf1,
+        glucose1: leaf1Glucose1,
+        glucose2: leaf1Glucose2
+    };
+    
+    var leaf2 = draw.image('./leaf2_0.png').attr({
+        'x': 310,
+        'y': 285,
+        'opacity': 1
+    });
+    
+    var leaf2Glucose1 = draw.image('./glucose.png', 20, 20).attr({
+        'x': 350,
+        'y': 310,
+        'opacity': 1
+    });
+    
+    var leaf2Glucose2 = draw.image('./glucose.png', 20, 20).attr({
+        'x': 380,
+        'y': 340,
+        'opacity': 0
+    });
+    
+    var leafGroup2 = {
+        leaf: leaf2,
+        glucose1: leaf2Glucose1,
+        glucose2: leaf2Glucose2
+    };
+    
+    var leaf10 = draw.image('./leaf10_0.png', 150).attr({
+        'x': 170,
+        'y': 200,
+        'opacity': 0
+    });
+    
+    var leaf10Glucose1 = draw.image('./glucose.png', 20, 20).attr({
+        'x': 220,
+        'y': 300,
+        'opacity': 0
+    });
+    
+    var leaf10Glucose2 = draw.image('./glucose.png', 20, 20).attr({
+        'x': 250,
+        'y': 280,
+        'opacity': 0
+    });
+    
+    var leafGroup10 = {
+        leaf: leaf10,
+        glucose1: leaf10Glucose1,
+        glucose2: leaf10Glucose2
+    };
+    
+    var leaf3 = draw.image('./leaf3_0.png').attr({
         'x': 155,
         'y': 200,
         'opacity': 0
     });
     
-    var leaf4 = draw.image('./leaf4.png').attr({
+    var leaf3Glucose1 = draw.image('./glucose.png', 20, 20).attr({
+        'x': 240,
+        'y': 260,
+        'opacity': 0
+    });
+    
+    var leaf3Glucose2 = draw.image('./glucose.png', 20, 20).attr({
+        'x': 280,
+        'y': 220,
+        'opacity': 0
+    });
+    
+    var leafGroup3 = {
+        leaf: leaf3,
+        glucose1: leaf3Glucose1,
+        glucose2: leaf3Glucose2
+    };
+    
+    var leaf4 = draw.image('./leaf4_0.png').attr({
         'x': 310,
         'y': 235,
         'opacity': 0
     });
     
-    var leaf5 = draw.image('./leaf5.png').attr({
+    var leaf4Glucose1 = draw.image('./glucose.png', 20, 20).attr({
+        'x': 360,
+        'y': 280,
+        'opacity': 0
+    });
+    
+    var leaf4Glucose2 = draw.image('./glucose.png', 20, 20).attr({
+        'x': 380,
+        'y': 240,
+        'opacity': 0
+    });
+    
+    var leafGroup4 = {
+        leaf: leaf4,
+        glucose1: leaf4Glucose1,
+        glucose2: leaf4Glucose2
+    };
+    
+    var leaf5 = draw.image('./leaf5_0.png').attr({
         'x': 180,
         'y': 130,
         'opacity': 0
     });
     
-    var leaf6 = draw.image('./leaf6.png').attr({
+    var leaf5Glucose1 = draw.image('./glucose.png', 20, 20).attr({
+        'x': 250,
+        'y': 210,
+        'opacity': 0
+    });
+    
+    var leaf5Glucose2 = draw.image('./glucose.png', 20, 20).attr({
+        'x': 260,
+        'y': 170,
+        'opacity': 0
+    });
+    
+    var leafGroup5 = {
+        leaf: leaf5,
+        glucose1: leaf5Glucose1,
+        glucose2: leaf5Glucose2
+    };
+    
+    var leaf6 = draw.image('./leaf6_0.png').attr({
         'x': 300,
         'y': 200,
         'opacity': 0
     });
+    
+    var leaf6Glucose1 = draw.image('./glucose.png', 20, 20).attr({
+        'x': 330,
+        'y': 250,
+        'opacity': 0
+    });
+    
+    var leaf6Glucose2 = draw.image('./glucose.png', 20, 20).attr({
+        'x': 340,
+        'y': 210,
+        'opacity': 0
+    });
+    
+    var leafGroup6 = {
+        leaf: leaf6,
+        glucose1: leaf6Glucose1,
+        glucose2: leaf6Glucose2
+    };
+    
+    var leaf8 = draw.image('./leaf8_0.png', 170).attr({
+        'x': 260,
+        'y': 110,
+        'opacity': 0
+    });
+    
+    var leaf8Glucose1 = draw.image('./glucose.png', 20, 20).attr({
+        'x': 320,
+        'y': 200,
+        'opacity': 0
+    });
+    
+    var leaf8Glucose2 = draw.image('./glucose.png', 20, 20).attr({
+        'x': 370,
+        'y': 200,
+        'opacity': 0
+    });
+    
+    var leafGroup8 = {
+        leaf: leaf8,
+        glucose1: leaf8Glucose1,
+        glucose2: leaf8Glucose2
+    };
     
     // var leaf7 = draw.image('./leaf7.png').attr({
     //   'x': 200,
     //   'y': 80
     // });
     
-    var leaf8 = draw.image('./leaf8.png', 170).attr({
-        'x': 260,
-        'y': 110,
-        'opacity': 0
-    });
-    
-    var leaf9 = draw.image('./leaf9.png', 250).attr({
+    var leaf9 = draw.image('./leaf9_0.png', 250).attr({
         'x': 210,
         'y': 30,
         'opacity': 0
     });
-
-    leaves = [leaf2, leaf1, leaf3, leaf4, leaf6, leaf5, leaf9, leaf8];
     
-    // show the first leaf
-    showLeaves(1);
+    var leaf9Glucose1 = draw.image('./glucose.png', 20, 20).attr({
+        'x': 300,
+        'y': 130,
+        'opacity': 0
+    });
+    
+    var leaf9Glucose2 = draw.image('./glucose.png', 20, 20).attr({
+        'x': 340,
+        'y': 110,
+        'opacity': 0
+    });
+    
+    var leafGroup9 = {
+        leaf: leaf9,
+        glucose1: leaf9Glucose1,
+        glucose2: leaf9Glucose2
+    };
+    
+    // an array of leaf groups. each group contains a leaf and two glucose.
+    leafGroups = [
+        leafGroup2,
+        leafGroup1,
+        leafGroup3,
+        leafGroup4,
+        leafGroup6,
+        leafGroup5,
+        leafGroup9,
+        leafGroup8,
+        leafGroup10
+    ];
+    
+    // show the first leaf with one glucose
+    initializeLeaves();
+}
+
+/**
+ * Remove all the leaves and glucose
+ */
+function removeLeaves() {
+    
+    // loop through all the leaf groups
+    for (var l = 0; l < leafGroups.length; l++) {
+        var leafGroup = leafGroups[l];
+        
+        if (leafGroup != null) {
+            var leaf = leafGroup.leaf;
+            var glucose1 = leafGroup.glucose1;
+            var glucose2 = leafGroup.glucose2;
+            
+            // remove the leaf and two glucose
+            leaf.remove();
+            glucose1.remove();
+            glucose2.remove();
+        }
+    }
+}
+
+/**
+ * Initialize the leaves by only showing the first leaf and its first glucose
+ */
+function initializeLeaves() {
+    
+    // loop through all the leaf groups
+    for (var l = 0; l < leafGroups.length; l++) {
+        var leafGroup = leafGroups[l];
+        
+        if (leafGroup != null) {
+            var leaf = leafGroup.leaf;
+            var glucose1 = leafGroup.glucose1;
+            var glucose2 = leafGroup.glucose2;
+            
+            if (l == 0) {
+                // show the first leaf
+                leaf.attr({
+                    'opacity': 1
+                });
+                
+                // show the first glucose of the first leaf
+                glucose1.attr({
+                    'opacity': 1
+                });
+                
+                // hide the second glucose of the first leaf
+                glucose2.attr({
+                    'opacity': 0
+                });
+            } else {
+                // hide the leaf and two glucose of all other leaves
+                
+                leaf.animate().attr({
+                    'opacity': 0
+                });
+                
+                glucose1.animate().attr({
+                    'opacity': 0
+                });
+                
+                glucose2.animate().attr({
+                    'opacity': 0
+                });
+            }
+        }
+    }
 }
 
 /**
@@ -665,8 +917,28 @@ function reset() {
     // initialize the graph
     initializeGraph();
     
-    // initialize the leaves and carrot
-    showLeaves(1);
+    /*
+     * remove all the leaves and glucose. we need to remove the leaves and 
+     * glucose instead of just hiding them because if we hide the leaves and 
+     * glucose, glucose may still show up if there was a delay in showing the 
+     * glucose caused by calling.
+     * 
+     * glucose2.animate({delay: '1s'}).attr({
+     *     'opacity': 1
+     * });
+     */
+    removeLeaves();
+    
+    // create the leaves again since we have just removed all of them
+    createLeaves();
+    
+    /*
+     * initialize the leaves so that only the first leaf is displayed with
+     * one glucose
+     */
+    initializeLeaves();
+    
+    // show the first carrot phase
     showCarrot(1);
     
     // turn the light on
@@ -862,7 +1134,8 @@ function plantAnimation() {
                 //var leafNum = Math.floor(glucoseIndex / 3);
                 
                 // show the appropriate number of leaves
-                showLeaves(glucoseIndex + 1);
+                //showLeaves(glucoseIndex + 1);
+                showLeaves(Math.floor((glucoseIndex + 1) / 2));
                 
                 // show the appropriate stage of the carrot
                 var carrotNum = Math.floor(glucoseIndex / 2);
@@ -897,7 +1170,8 @@ function plantAnimation() {
                 //var leafNum = Math.floor(glucoseIndex / 3);
                 
                 // show the appropriate number of leaves
-                showLeaves(glucoseIndex + 1);
+                //showLeaves(glucoseIndex + 1);
+                showLeaves(Math.floor((glucoseIndex + 1) / 2));
                 
                 /*
                  * make the background of the graph grey for this week to
@@ -942,7 +1216,7 @@ function glucoseAnimation() {
         'x': 300,
         'y': 370,
         'opacity': 0
-    })
+    });
     
     // move the glucose image and make it fade away
     glucose.animate().move(300, 450).attr({
@@ -963,24 +1237,77 @@ function glucoseAnimation() {
  */
 function showLeaves(numberOfLeaves) {
     
-    // loop through all the leaves
-    for (var l = 0; l < leaves.length; l++) {
+    // loop through all the leaf groups
+    for (var l = 0; l < leafGroups.length; l++) {
         
-        // get a leaf
-        var leaf = leaves[l];
+        var leafGroup = leafGroups[l];
         
-        if (l <= (numberOfLeaves - 1)) {
-            // show this leaf
-            leaf.animate().attr({
-                'opacity': 1
-            });
-        } else {
-            // do not show this leaf
-            leaf.animate().attr({
-                'opacity': 0
-            });
+        if (leafGroup != null) {
+            
+            // get a leaf and its two glucose
+            var leaf = leafGroup.leaf;
+            var glucose1 = leafGroup.glucose1;
+            var glucose2 = leafGroup.glucose2;
+            
+            if (l <= (numberOfLeaves - 1)) {
+                // show the leaf and its two glucose
+                showLeaf(leaf, glucose1, glucose2);
+            } else {
+                // hide the leaf and its two glucose
+                hideLeaf(leaf, glucose1, glucose2);
+            }
         }
     }
+}
+
+/**
+ * Show the leaf and its two glucose
+ * @param leaf the leaf
+ * @param glucose1 the first glucose on the leaf
+ * @param glucose2 the second glucose on the leaf
+ */
+function showLeaf(leaf, glucose1, glucose2) {
+    
+    // show the leaf
+    leaf.animate().attr({
+        'opacity': 1
+    });
+    
+    // show the first glucose
+    glucose1.animate().attr({
+        'opacity': 1
+    }).after(function() {
+        
+        // show the second glucose 1 second later
+        glucose2.animate({delay: '1s'}).attr({
+            'opacity': 1
+        });
+    });
+}
+
+/**
+ * Hide the leaf and its two glucose
+ * @param leaf the leaf
+ * @param glucose1 the first glucose on the leaf
+ * @param glucose2 the second glucose on the leaf
+ */
+function hideLeaf(leaf, glucose1, glucose2) {
+    
+    // hide the second glucose
+    glucose2.animate().attr({
+        'opacity': 0
+    }).after(function() {
+        
+        // hide the first glucose 1 second later
+        glucose1.animate({delay: '1s'}).attr({
+            'opacity': 0
+        });
+        
+        // hide the leaf 1 second later
+        leaf.animate({delay: '1s'}).attr({
+            'opacity': 0
+        });
+    });
 }
 
 /**
@@ -1218,6 +1545,10 @@ function plantDied() {
     // create the plant died event
     addEvent('plantDied');
     
+    // move the plant died elements in front of everything
+    plantDiedRect.front();
+    plantDiedText.front();
+    
     // show the plant died message
     plantDiedRect.show();
     plantDiedText.show();
@@ -1229,6 +1560,10 @@ function plantDied() {
 function endReached() {
     // create the simulation ended event
     addEvent('simulationEnded');
+    
+    // move the simulation ended elements in front of everything
+    simulationEndedRect.front();
+    simulationEndedText.front();
     
     // show the simulation ended message
     simulationEndedRect.show();
