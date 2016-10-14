@@ -89,7 +89,7 @@ var glucoseStored = 0;
 // the starting glucose amounts
 var initialGlucoseCreated = 10;
 var initialGlucoseUsed = 2;
-var initialGlucoseStored = 6;
+var initialGlucoseStored = 8;
 
 // the amount of glucose to add or subtract each week
 var glucoseCreatedIncrement = 10;
@@ -1148,7 +1148,7 @@ function plantAnimation() {
                 var plotBand = {};
                 plotBand.from = weekNumber - 1;
                 plotBand.to = weekNumber;
-                plotBand.color = 'yellow';
+                plotBand.color = '#fff9a5';
                 chart.xAxis[0].addPlotBand(plotBand);
                 
                 // show the glucose animation
@@ -1180,7 +1180,7 @@ function plantAnimation() {
                 var plotBand = {};
                 plotBand.from = weekNumber - 1;
                 plotBand.to = weekNumber;
-                plotBand.color = 'lightgrey';
+                plotBand.color = '#dddddd';
                 chart.xAxis[0].addPlotBand(plotBand);
                 
                 if (glucoseStored <= 0) {
@@ -1357,6 +1357,7 @@ function initializeGraph() {
         chart: {
             renderTo: 'highchartsDiv',
             type: 'line',
+            width: '320'
         },
         plotOptions: {
             line: {
@@ -1374,7 +1375,7 @@ function initializeGraph() {
                 text: 'Time (Weeks)'
             },
             min: 0,
-            max: 20,
+            max: 21,
             tickInterval: 1
         },
         yAxis: {
@@ -1388,22 +1389,25 @@ function initializeGraph() {
             max: 220
         },
         tooltip: {
-            enabled: false
+            enabled: true
         },
         series: [
             {
                 name: 'Glucose Made',
-                color: 'orange',
+                color: '#f17d00',
+                lineWidth: 3,
                 data: glucoseCreatedData
             },
             {
                 name: 'Glucose Used',
-                color: 'blue',
+                color: '#459db6',
+                lineWidth: 3,
                 data: glucoseUsedData
             },
             {
                 name: 'Glucose Stored',
-                color: 'green',
+                color: '#72ae2e',
+                lineWidth: 3,
                 data: glucoseStoredData
             }
         ]
@@ -1468,9 +1472,10 @@ function saveNewTrial() {
     trialData.glucoseUsedData = glucoseUsedData;
     trialData.glucoseStoredData = glucoseStoredData;
     
-    if (wiseEnabled) {
-        //this.api.save(trialData);
-        trials.push(trialData);
+    trials.push(trialData);
+    
+    if (wiseAPI != null) {
+        wiseAPI.save(trialData);
     }
 }
 
@@ -1484,8 +1489,8 @@ function saveUpdatedTrial() {
     trialData.glucoseUsedData = glucoseUsedData;
     trialData.glucoseStoredData = glucoseStoredData;
     
-    if (wiseEnabled) {
-        //this.api.overwriteLatestState(trialData);
+    if (wiseAPI != null) {
+        wiseAPI.overwriteLatestState(trialData);
     }
 }
 
