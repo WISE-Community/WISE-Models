@@ -1389,7 +1389,7 @@ function initializeGraph() {
             max: 220
         },
         tooltip: {
-            enabled: true
+            enabled: false
         },
         series: [
             {
