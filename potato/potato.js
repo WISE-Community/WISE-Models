@@ -1387,6 +1387,9 @@ function initializeGraph() {
             min: 0,
             max: 220
         },
+        tooltip: {
+            enabled: false
+        },
         series: [
             {
                 name: 'Glucose Made',
