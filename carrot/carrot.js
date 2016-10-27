@@ -118,19 +118,64 @@ var isNewTrial = true;
 // an array of trial data objects
 var trials = [];
 
-// whether this model is being used in WISE
-var wiseEnabled = false;
-
-// the WISE API object used for saving data to WISE
+// the WISE API object used for saving data to WISE4
 var wiseAPI = null;
 
-// the WISE webapp object
+// the WISE webapp object in WISE4
 var wiseWebAppObj = null;
+
+// flag for whether we are using the model in WISE4
+var wise4 = false;
+
+// flag for whether we are using the model in WISE5
+var wise5 = false;
+
+/*
+ * flag for whether the simulation has ended. the simulation ends when the plant
+ * dies or the time ends.
+ */
+var simulationEnded = false;
+
+// work from other components in this node
+var studentWorkFromThisNode = null;
+
+// work from other components
+var studentWorkFromOtherComponents = null;
 
 /**
  * Initialize the model
  */
 function init() {
+    
+    // check if the model is being used in WISE4
+    if (window.parent != null && window.parent.wiseAPI != null) {
+        /*
+         * the wiseAPI object is in the parent which means this model is being
+         * used in WISE4
+         */
+        wise4 = true;
+        
+        // obtain the WISE API and webApp object
+        wiseAPI = window.parent.wiseAPI();
+        wiseWebAppObj = window.parent.webApp;
+    }
+    
+    // check if the model is being used in WISE5
+    if (window.frameElement != null) {
+        var iframeId = window.frameElement.getAttribute('id');
+    
+        if (iframeId != null && iframeId.indexOf('componentApp') != -1) {
+            /*
+             * the iframe id is something like 'componentApp_kcb5ikb3wl' which means
+             * this model is being used in WISE5
+             */
+            wise5 = true;
+        }
+    }
+    
+    if (wise5) {
+        getStudentWork();
+    }
     
     // initialize the trial data
     initializeTrialData();
@@ -178,17 +223,6 @@ function init() {
     
     // create the simulation ended message
     createSimulationEndedMessage();
-
-    // check if this model is being run in WISE
-    wiseEnabled = !(window.parent == window);
-
-    if(wiseEnabled) {
-        if (window.parent != null && window.parent.wiseAPI != null) {
-            // obtain the WISE API and webApp object
-            wiseAPI = window.parent.wiseAPI();
-            wiseWebAppObj = window.parent.webApp;
-        }
-    }
 }
 
 /**
@@ -824,8 +858,16 @@ function start() {
     resume();
     
     if (isNewTrial) {
-        // we are starting a new trial so we will save a new trial
-        saveNewTrial();
+        // we are starting a new trial
+        
+        // set the data arrays into the trial
+        trialData.glucoseCreatedData = glucoseCreatedData;
+        trialData.glucoseUsedData = glucoseUsedData;
+        trialData.glucoseStoredData = glucoseStoredData;
+        
+        // add the new trial to the array of trials
+        trials.push(trialData);
+        
         isNewTrial = false;
     }
 }
@@ -957,6 +999,14 @@ function reset() {
     // hide the 'Simulation Ended' message
     simulationEndedRect.hide();
     simulationEndedText.hide();
+    
+    // set this flag back to false because we are going to start a new trial
+    simulationEnded = false;
+    
+    if (wise5) {
+        // get the student work from other components
+        getStudentWork();
+    }
 }
 
 /**
@@ -1347,11 +1397,6 @@ function showCarrot(carrotNumber) {
  */
 function initializeGraph() {
     
-    // initialize the glucose lines
-    glucoseCreatedData = [[0, initialGlucoseCreated]];
-    glucoseUsedData = [[0, initialGlucoseUsed]];
-    glucoseStoredData = [[0, initialGlucoseStored]];
-    
     // set the chart options
     chartOptions = {
         chart: {
@@ -1463,34 +1508,28 @@ function updateGlucose(createGlucose) {
 }
 
 /**
- * Save a new trial
+ * Save the student data to WISE
  */
-function saveNewTrial() {
+function save() {
     
-    // update the glucose array data
-    trialData.glucoseCreatedData = glucoseCreatedData;
-    trialData.glucoseUsedData = glucoseUsedData;
-    trialData.glucoseStoredData = glucoseStoredData;
-    
-    trials.push(trialData);
-    
-    if (wiseAPI != null) {
-        wiseAPI.save(trialData);
-    }
-}
-
-/**
- * Save an updated trial
- */
-function saveUpdatedTrial() {
-    
-    // update the glucose array data
-    trialData.glucoseCreatedData = glucoseCreatedData;
-    trialData.glucoseUsedData = glucoseUsedData;
-    trialData.glucoseStoredData = glucoseStoredData;
-    
-    if (wiseAPI != null) {
-        wiseAPI.overwriteLatestState(trialData);
+    if (wise4) {
+        // this model is being used in WISE4
+        
+        if (wiseAPI != null) {
+            // save the trial data to WISE
+            wiseAPI.save(trialData);
+        }
+    } else if (wise5) {
+        // this mode is being used in WISE5
+        
+        // create a component state
+        var componentState = {};
+        componentState.isAutoSave = false;
+        componentState.isSubmit = false;
+        componentState.studentData = trialData;
+        
+        // save the component state to WISE
+        saveWISE5State(componentState);
     }
 }
 
@@ -1511,18 +1550,40 @@ function endTrial() {
     // enable the reset button
     enableResetButton(true);
     
-    // save the updated trial
-    saveUpdatedTrial();
+    /* 
+     * Check if the simulation has already ended.
+     * endTrial() is called when
+     * 1. the plant dies
+     * 2. the time reaches the end
+     * 3. the student clicks reset
+     * We want to save student work when these events occur with one exception.
+     * If the plant dies or the time reaches the end, we do not want the subsequent
+     * reset click to save the work again. This is why we need to check if the
+     * simulation has previously ended (and therefore already saved) before saving.
+     */
+    if (!simulationEnded) {
+        // save the student data to WISE
+        save();
+    }
+    
+    simulationEnded = true;
 }
 
 /**
  * Initialize the trial data
  */
 function initializeTrialData() {
+    
+    // initialize the glucose data lines
+    glucoseCreatedData = [[0, initialGlucoseCreated]];
+    glucoseUsedData = [[0, initialGlucoseUsed]];
+    glucoseStoredData = [[0, initialGlucoseStored]];
+    
+    // create the trial
     trialData = {};
-    trialData.glucoseCreatedData = [];
-    trialData.glucoseUsedData = [];
-    trialData.glucoseStoredData = [];
+    trialData.glucoseCreatedData = glucoseCreatedData;
+    trialData.glucoseUsedData = glucoseUsedData;
+    trialData.glucoseStoredData = glucoseStoredData;
     trialData.events = [];
     
     isNewTrial = true;
@@ -1577,3 +1638,139 @@ function endReached() {
     simulationEndedRect.show();
     simulationEndedText.show();
 }
+
+/**
+ * Send an event to the parent
+ * @param event the event object
+ */
+function saveWISE5Event(event) {
+    event.messageType = 'event';
+    sendMessage(event);
+}
+
+/**
+ * Send a component state to the parent
+ * @param componentState the component state
+ */
+function saveWISE5State(componentState) {
+    componentState.messageType = 'studentWork';
+    sendMessage(componentState);
+}
+
+/**
+ * Get student work from other components by asking the parent for the work
+ */
+function getStudentWork() {
+    
+    // make a message to request the other student work
+    var message = {
+        messageType: "getStudentWork"
+    };
+    
+    // send the message to request the other student work
+    sendMessage(message);
+}
+
+/**
+ * Send a message to the parent
+ * @param the message to send to the parent
+ */
+function sendMessage(message) {
+    parent.postMessage(message, "*");
+}
+
+/**
+ * Receive a message from the parent
+ * @param message the message from the parent
+ */
+function receiveMessage(message) {
+    
+    if (message != null) {
+        var messageData = message.data;
+        
+        if (messageData != null) {
+            if (messageData.messageType == 'studentWork') {
+                /*
+                 * we have received a message that contains student work from
+                 * other components
+                 */
+                this.studentWorkFromThisNode = messageData.studentWorkFromThisNode;
+                this.studentWorkFromOtherComponents = messageData.studentWorkFromOtherComponents;
+                
+            } else if (messageData.messageType == 'nodeSubmitClicked') {
+                /*
+                 * the student has clicked the submit button and the student
+                 * work has been included in the message data
+                 */
+                this.studentWorkFromThisNode = messageData.studentWorkFromThisNode;
+                this.studentWorkFromOtherComponents = messageData.studentWorkFromOtherComponents;
+            } else if (messageData.messageType == 'componentStateSaved') {
+                var componentState = messageData.componentState;
+            }
+        }
+    }
+}
+
+/**
+ * Get the student work for a given node id and component id
+ * @param nodeId the node id
+ * @param componentId the component id
+ * @return the component state for the component. if there is no work for
+ * the component, an object with a node id field and component id field will
+ * be returned.
+ */
+function getStudentWorkByNodeIdAndComponentId(nodeId, componentId) {
+    
+    var componentState = null;
+    
+    if (nodeId != null && componentId != null) {
+        if (this.studentWorkFromThisNode != null) {
+            
+            // loop through the component states from this node
+            for (var c = 0; c < this.studentWorkFromThisNode.length; c++) {
+                
+                // get a component state
+                var tempComponentState = this.studentWorkFromThisNode[c];
+                
+                if (tempComponentState != null) {
+                    var tempNodeId = tempComponentState.nodeId;
+                    var tempComponentId = tempComponentState.componentId;
+                    
+                    if (nodeId == tempNodeId && componentId == tempComponentId) {
+                        // we have found the component state we are looking for
+                        componentState = tempComponentState;
+                        break;
+                    }
+                }
+            }
+        }
+        
+        if (studentWork == null && this.studentWorkFromOtherComponents != null) {
+            
+            // loop through the component states from other nodes
+            for (var c = 0; c < this.studentWorkFromOtherComponents.length; c++) {
+                
+                // get a component state
+                var tempComponentState = this.studentWorkFromOtherComponents[c];
+                
+                if (tempComponentState != null) {
+                    if (tempComponentState != null) {
+                        var tempNodeId = tempComponentState.nodeId;
+                        var tempComponentId = tempComponentState.componentId;
+                        
+                        if (nodeId == tempNodeId && componentId == tempComponentId) {
+                            // we have found the component state we are looking for
+                            componentState = tempComponentState;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    return componentState;
+}
+
+// listen for messages from the parent
+window.addEventListener('message', receiveMessage);
