@@ -1745,7 +1745,7 @@ function getStudentWorkByNodeIdAndComponentId(nodeId, componentId) {
             }
         }
         
-        if (studentWork == null && this.studentWorkFromOtherComponents != null) {
+        if (componentState == null && this.studentWorkFromOtherComponents != null) {
             
             // loop through the component states from other nodes
             for (var c = 0; c < this.studentWorkFromOtherComponents.length; c++) {
