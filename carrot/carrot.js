@@ -1272,7 +1272,7 @@ function glucoseAnimation() {
     glucose.animate().move(300, 450).attr({
         'opacity': 1
     }).after(function() {
-        this.animate().move(310, 500).attr({
+        this.animate().move(310, 470).attr({
             'opacity': 0
         }).after(function() {
             this.remove();
