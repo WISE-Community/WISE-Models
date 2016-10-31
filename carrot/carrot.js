@@ -1189,7 +1189,7 @@ function plantAnimation() {
                 
                 // show the appropriate stage of the carrot
                 var carrotNum = Math.floor(glucoseIndex / 2);
-                showCarrot(carrotNum + 1);
+                //showCarrot(carrotNum + 1);
                 
                 /*
                  * make the background of the graph yellow for this week to
