@@ -24,6 +24,43 @@ var resetButtonText = null;
 var plantDiedRect = null;
 var plantDiedText = null;
 
+//What feedback policy to use - options are defined experiments (currently, 2a and 2b)
+/// default, or none (null works here too, indicating none).
+var feedbackPolicy = "experiment2a";
+
+//elements for displaying a feedback message
+var feedbackRect = null;
+var feedbackText = [];
+var feedbackShowing = false;
+var feedbackInstructions = ["Click start again to start your new trial."];
+var feedbackMessageNeverTurnsLightOff = ["You've never run the simulation with the","light off. Try experimenting with turning ", "the light off during a simulation to see", "what happens."];
+var feedbackMessageOnlyShortTrials = ["All of your trials have been very short.", "Try letting the simulation run", "for more time."];
+var feedbackMessagePlantNeverDied = ["You've run several trials, but never","seen what makes the plant die.", "See if you can make a simulation", "where the plant dies."];
+var feedbackMessageLongTrialRunningTime = ["You've been running simulations for a","long time. Are you still gaining information", "as you run more trials?"];
+var feedbackMessageMoveOnOrAsk = ["You've already collected enough information","from the simulation. Keep working through","the questions and other steps. If","you're stuck, ask your teacher for help."];
+var feedbackMessageDoFourWeeksOnTrial = ["Now that you've experimented with the ", "simulation a bit, try turning the light on for ", "four weeks and then turning it off. Watch ", "what happens to the plant and to the","glucose levels."];
+
+//Tracking variables for whether the trial is an appropriate one to consider feedback
+var minTrialsBeforeFeedback = 2;
+var intervalBetweenFeedbackTrials = 2;
+var lastFeedbackTrial = -1;
+
+//Variables relevant for what feedback to give - these
+//could be recalculated by going through trials, but it seemed
+//reasonable to cache as we go
+var trialWithLightOffOccurred = false;
+var longestTrial = 0;
+var totalWeeksRun = 0;//How many weeks of trial data have been recorded across all simulations
+var plantHasEverDied = false;
+var shortTrialCutoff = 2000;
+var weeksRunCutoff = 60;//After the student has run the simulation for at least this number of weeks, the feedback message prompts her to consider whether she's still learning.
+
+//Tried to do this all with maps but got error on construction or error when actually setting key-values, so went back to objects
+var policySpecificFeedbackInfo = {templateMatches: {}}; //object for storing information for feedback that may be relevant only to a single feedback policy
+//Templates we care about - trials that are matches will be stored in policySpecificFeedbackInfo under templateMatches
+var templatesByFeedbackPolicy ={experiment2b: [[-1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]}
+var templateNamesByFeedbackPolicy ={experiment2b:["fourWeeksOn"]};
+
 // the simulation ended message elements
 var simulationEndedRect = null;
 var simulationEndedText = null;
@@ -220,6 +257,9 @@ function init() {
 
     // create the plant died message
     createPlantDiedMessage();
+    
+    // create the feedback box - message gets set when feedback is triggered
+    createFeedbackRectangle();
     
     // create the simulation ended message
     createSimulationEndedMessage();
@@ -640,6 +680,25 @@ function createPlantDiedMessage() {
 }
 
 /**
+ * Create the feedback rectangle; showFeedback should be called with a message to show
+ * the feedback with a particular message.
+ */
+function createFeedbackRectangle() {
+
+    // create the message rectangle
+    feedbackRect = draw.rect(500, 300).x(50).y(200).fill('LightYellow ').stroke({width:2}).opacity(1).attr({
+        'fill-opacity': 1
+    });
+
+    // create the message text
+    feedbackText = [];
+
+    // hide the elements until we want to show them
+    feedbackRect.hide();
+}
+
+
+/**
  * Create the simulation ended message
  */
 function createSimulationEndedMessage() {
@@ -849,6 +908,29 @@ function start() {
         initializeTrialData();
     }
     
+    //Show feedback if it's a new trial, we aren't already showing feedback, and there's a
+    //feedback message available
+    if(!feedbackShowing && isNewTrial)  {
+        var feedbackMessage = getFeedbackMessage();
+        if(feedbackMessage != "") {
+            showFeedback(feedbackMessage);
+            // Make dummy data arrays - feedback is a "trial" but no simulation for it
+            trialData.glucoseCreatedData = glucoseCreatedData;
+            trialData.glucoseUsedData = glucoseUsedData;
+            trialData.glucoseStoredData = glucoseStoredData;
+            trials.push(trialData);
+            //Save to WISE
+            save();
+            feedbackShowing = true;
+            return;
+        }
+    } else if(feedbackShowing) {
+        // hide the 'Feedback' message
+        feedbackRect.hide();
+        hideFeedbackText();
+        feedbackShowing = false;
+    }
+    
     if (!resetButtonEnabled) {
         // enable the reset button
         enableResetButton(true);
@@ -871,6 +953,9 @@ function start() {
         isNewTrial = false;
     }
 }
+
+
+
 
 /**
  * Resume the simulation
@@ -1000,6 +1085,10 @@ function reset() {
     simulationEndedRect.hide();
     simulationEndedText.hide();
     
+    // hide the 'Feedback' message
+    feedbackRect.hide();
+    hideFeedbackText();
+    
     // set this flag back to false because we are going to start a new trial
     simulationEnded = false;
     
@@ -1007,6 +1096,245 @@ function reset() {
         // get the student work from other components
         getStudentWork();
     }
+}
+
+/**
+ * Looks at what trials have already been done and if relevant,
+ * gets a feedback message
+ */
+function getFeedbackMessage() {
+    var numTrials = getTrials();
+    //Check if we've done more than the minimum trials required prior to
+    //feedback and also whether it's been at least intervalBetweenFeedbackTrials
+    //since our last feedback trial. The -1 is because the feedback itself added
+    //to the trial count.
+    if(feedbackPolicy == null || feedbackPolicy == "none") {
+        //Don't show feedback
+        return "";
+    } else if(feedbackPolicy == "experiment2a") {
+        //Try turning the light on and off. Strategy feedback should tell them to try both if they haven't 
+        //done that already after 2 runs. Also, if they run the model for more than 60 total weeks, it should 
+        //tell them to move on.
+        if(getTrials() >= 2) {
+            if(!trialWithLightOffOccurred) {
+                return feedbackMessageNeverTurnsLightOff;
+            } else if(totalWeeksRun > 60) {
+                return feedbackMessageMoveOnOrAsk;
+            }
+            
+        }
+    } else if(feedbackPolicy == "experiment2b") {
+        //Leave the light on for four weeks and then turn it off and let the plant die. 
+        //Strategy feedback should just tell the students to do that if they don't do it on 
+        //their own after, say, running the model in any configuration for more than 6 weeks. 
+        //Plus, after the students do that, maybe let them run the same experiment once more, and 
+        //after that if if they're still running it, tell them they don't need to run the model 
+        //any more - either move on or ask the teacher for help.
+        if(totalWeeksRun >= 6) {
+            if("fourWeeksOn" in policySpecificFeedbackInfo.templateMatches) {
+                //They've done the requested trial at least once
+                //Check if they've had the chance to try it once more (indicated
+                //by having done one more trial after the match. If not, let them
+                //keep going; if so, then tell them to move on.
+                if(getTrials() > policySpecificFeedbackInfo.templateMatches["fourWeeksOn"][0]) {
+                    return feedbackMessageMoveOnOrAsk;
+                }
+            } else {
+                //They haven't done the requested trial - tell them to do so
+                return feedbackMessageDoFourWeeksOnTrial;
+            } 
+        } 
+    } else {
+        if(numTrials >= minTrialsBeforeFeedback &&
+                (lastFeedbackTrial < 0 || (numTrials- 1 - lastFeedbackTrial) >= intervalBetweenFeedbackTrials) ) {
+            if(!trialWithLightOffOccurred && lightOn) {
+                return feedbackMessageNeverTurnsLightOff;
+            } else if(longestTrial < shortTrialCutoff) {
+                return feedbackMessageOnlyShortTrials;
+            } else if(!plantHasEverDied) {
+                return feedbackMessagePlantNeverDied;
+            } else if(totalWeeksRun > weeksRunCutoff) {
+                return feedbackMessageLongTrialRunningTime;
+            }
+        } 
+    }
+    return "";
+
+}
+
+/**
+ * Checks whether the trial matches the template provided. Templates
+ * should be 21 weeks long (max trial length) and should have an integer
+ * at each spot in the array. -1 means we don't care about whether the light was
+ * on that week (light on, off, or plant dead are all fine). 0 means we care
+ * and the light must be off or the plant has died. 1 means we 
+ * care and the light must be on. 2 means the plant should be dead (either it just died 
+ * or the week doesn't exist in the trial). We are measuring this by transitions,
+ * so "week 1 light is on" is measured as whether the glucose created went up from
+ * week 0 to week 1. Thus, the value at week 0 in the template is ignored. 
+ * 
+ * Returns true if the trial matches the template,
+ * false otherwise.
+ */
+function trialMatchesTemplate(trialData, template) {
+    for(var i = 1; i < template.length; i++) {
+        if(template[i] == 0) {//Want plant dead or light off
+            //Check whether this exists in the trial
+            //if plant isn't dead and made glucse this week, light is on - doesn't match
+            if(trialData.glucoseCreatedData.length > i && trialData.glucoseCreatedData[i][1] - trialData.glucoseCreatedData[i-1][1] > 0) {
+                return false;
+            }
+        } else if(template[i] == 1) {//Want light on, plant can't be dead
+            //Check whether this exists in the trial
+            //Either plant is already dead or no glucose made this week, so light is off - doesn't match
+            if(trialData.glucoseCreatedData.length <= i || trialData.glucoseCreatedData[i][1] - trialData.glucoseCreatedData[i-1][1] <= 0) {
+                return false;
+            }
+        } else if(template[i] == 2) {//Want plant dead
+            //Plant either died this week or is already dead
+            if(trialData.glucoseStoredData.length > i && trialData.glucoseStoredData[i] >= 0) {
+                //Plant is still alive and has glucose - doesn't match
+                return false;
+            }
+        }
+
+    }
+    return true;
+
+}
+
+
+/**
+ * Records information for the latest trial in the global variables
+ * tracking information that affects what feedback message to give
+ */
+function recordInfoForFeedback(trialData) {
+    //Light off
+    var lightOffForTrial = trialIncludesLightOff(trialData);
+    trialWithLightOffOccurred = trialWithLightOffOccurred || lightOffForTrial;
+
+    //Timing info
+    var timeForTrial = getTrialTime(trialData);
+    if(timeForTrial > longestTrial) {
+        longestTrial = timeForTrial;
+    }
+
+    //Total running time, measured in weeks
+    totalWeeksRun += trialData.glucoseCreatedData.length - 1//-1 because 0th week is always stored
+
+    //Plant death occurred
+    var plantEverDied = plantDiedInTrial(trialData);
+    plantHasEverDied = plantHasEverDied || plantEverDied;
+
+    //Record any policy specific info
+    if(feedbackPolicy != null) {
+        if(typeof templatesByFeedbackPolicy[feedbackPolicy] != "undefined") {
+            var templatesToCheck = templatesByFeedbackPolicy[feedbackPolicy];
+            for(var i = 0; i < templatesToCheck.length; i++) {
+                if(trialMatchesTemplate(trialData, templatesToCheck[i])) {
+                    var templateName = templateNamesByFeedbackPolicy[feedbackPolicy][i];
+                    if(!policySpecificFeedbackInfo.templateMatches.hasOwnProperty(templateName)) {
+                        policySpecificFeedbackInfo.templateMatches[templateName] = [];
+                    }
+                    //Template matches are just lists of trial numbers where the trials matched
+                    policySpecificFeedbackInfo.templateMatches[templateName].push(getTrials());  
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Check if trial has included time with the simulation running
+ * and the light off.
+ */
+function trialIncludesLightOff(trial) {
+    //Iterate through the array of events
+    var events = trial.events;
+    var running = false;
+    var lightTurnedOff = false;
+    for(var i = 0; i < events.length; i++) {
+        var curEvent = events[i];
+        var curName = curEvent.name;
+        if(curName === 'startButtonClicked') {
+            running = true;
+            if(lightTurnedOff) {
+                return true;
+            }
+        } else if(curName === 'turnLightOffButtonClicked') {
+            lightTurnedOff = true;
+            if(running) {
+                return true;
+            }
+        } else if(curName == 'turnLightOnButtonClicked') {
+            lightTurnedOff = false;
+        } else if(curName == 'pauseButtonClicked') {
+            running = false;
+        } else if(curName == 'resumeButtonClicked') {
+            running = true;
+        }
+
+    }
+    return false;
+
+}
+
+/**
+ * Return the number of milliseconds taken for the trial
+ * Define as amount of time where the simulation is actually
+ * running (not paused).
+ */
+function getTrialTime(trial) {
+    //Iterate through the array of events
+    var events = trial.events;
+    var running = false;
+    var startTime = null;
+    var totalTime = 0;
+    for(var i = 0; i < events.length; i++) {
+        var curEvent = events[i];
+        var curName = curEvent.name;
+        var lastEventTime = curEvent.timestamp;
+        if(curName === 'startButtonClicked') {
+            running = true;
+            startTime = curEvent.timestamp;
+        } else if(curName == 'pauseButtonClicked') {
+            running = false;
+            totalTime += (lastEventTime - startTime);
+        } else if(curName == 'resumeButtonClicked') {
+            running = true;
+            startTime = curEvent.timestamp;
+        } else if(curName == 'plantDied') {
+            running = false;
+            totalTime += (lastEventTime - startTime);
+        } else if(curName == 'resetButtonClicked') {
+            if(running) {
+                totalTime += (lastEventTime - startTime);
+            }
+        }   
+    }
+    return totalTime;
+}
+
+/**
+ * Returns true if the plant died during the trial represented by trialData
+ */
+function plantDiedInTrial(trialData) {
+    var events = trialData.events;
+    for(var i = 0; i < events.length; i++) {
+        if(events[i].name === 'plantDied') {
+            return true;
+        }
+
+    }
+    return false;
+
+}
+
+/**
+ * Get the number of trials
+ */
+function getTrials() {
+    return trials.length;
 }
 
 /**
@@ -1550,6 +1878,9 @@ function endTrial() {
     // enable the reset button
     enableResetButton(true);
     
+    // record tracking variables for strategy
+    recordInfoForFeedback(trialData);
+    
     /* 
      * Check if the simulation has already ended.
      * endTrial() is called when
@@ -1621,6 +1952,49 @@ function plantDied() {
     // show the plant died message
     plantDiedRect.show();
     plantDiedText.show();
+}
+
+/**
+ * Called when feedback should be shown
+ */
+function showFeedback(feedbackMessage) {
+    //Record that feedback is being shown this trial
+    lastFeedbackTrial = getTrials();
+    // create the feedback shown event
+    addEvent('Feedback shown: ' + feedbackMessage);
+
+    // move the feedback elements in front of everything
+    feedbackRect.front();
+    //feedbackText.front();
+
+    // create the message text
+    feedbackText = [];
+    var startingYValue = 210;
+    var totalLines = feedbackMessage.length;
+    if(feedbackMessage != feedbackMessageMoveOnOrAsk) {
+        totalLines += feedbackInstructions.length;
+    }
+    for(var i = 0; i < totalLines; i++) {
+        var curYValue = startingYValue + i*50;
+        var curLine;
+        if(i < feedbackMessage.length) {
+            curLine = feedbackMessage[i];
+        } else {
+            curLine = feedbackInstructions[i - feedbackMessage.length];
+        }
+        var curText = draw.text(curLine).x(80).y(curYValue).font({size: 24});
+        feedbackText.push(curText);
+    }
+    feedbackRect.show();
+}
+
+/**
+ * Hide all the lines of the feedback text message.
+ */
+function hideFeedbackText() {
+    for(var i = 0; i < feedbackText.length; i++) {
+        feedbackText[i].hide();
+    }
 }
 
 /**
