@@ -944,8 +944,13 @@ function start() {
             //trialData.glucoseUsedData = glucoseUsedData;
             //trialData.glucoseStoredData = glucoseStoredData;
             //trials.push(trialData);
+            
             //Save to WISE
-            //save();
+            save();
+            
+            // initialize the trial data
+            initializeTrialData();
+            
             feedbackShowing = true;
             return;
         }
