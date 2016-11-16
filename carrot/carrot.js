@@ -26,7 +26,7 @@ var plantDiedText = null;
 
 //What feedback policy to use - options are defined experiments (currently, 2a and 2b)
 /// default, or none (null works here too, indicating none).
-var feedbackPolicy = "experiment2a";
+var feedbackPolicy = null;
 
 //elements for displaying a feedback message
 var feedbackRect = null;
@@ -179,10 +179,35 @@ var studentWorkFromThisNode = null;
 // work from other components
 var studentWorkFromOtherComponents = null;
 
+// the parameters for initializing the model
+var parameters = {};
+
+// whether to show the graph
+var showGraph = true;
+
 /**
  * Initialize the model
  */
 function init() {
+    
+    // parse the URL parameters
+    parameters = parseURLParameters();
+    
+    if (parameters['feedbackPolicy'] != null) {
+        // get the feedbackPolicy from the URL parameters
+        feedbackPolicy = parameters['feedbackPolicy'];
+    }
+    
+    if (parameters['showGraph'] != null) {
+        // get the showGraph value from the URL parameters
+        showGraph = parameters['showGraph'];
+    }
+    
+    if (showGraph) {
+        $('#highchartsDiv').show();
+    } else {
+        $('#highchartsDiv').hide();
+    }
     
     // check if the model is being used in WISE4
     if (window.parent != null && window.parent.wiseAPI != null) {
@@ -915,12 +940,12 @@ function start() {
         if(feedbackMessage != "") {
             showFeedback(feedbackMessage);
             // Make dummy data arrays - feedback is a "trial" but no simulation for it
-            trialData.glucoseCreatedData = glucoseCreatedData;
-            trialData.glucoseUsedData = glucoseUsedData;
-            trialData.glucoseStoredData = glucoseStoredData;
-            trials.push(trialData);
+            //trialData.glucoseCreatedData = glucoseCreatedData;
+            //trialData.glucoseUsedData = glucoseUsedData;
+            //trialData.glucoseStoredData = glucoseStoredData;
+            //trials.push(trialData);
             //Save to WISE
-            save();
+            //save();
             feedbackShowing = true;
             return;
         }
@@ -1517,7 +1542,7 @@ function plantAnimation() {
                 
                 // show the appropriate stage of the carrot
                 var carrotNum = Math.floor(glucoseIndex / 2);
-                showCarrot(carrotNum + 1);
+                //showCarrot(carrotNum + 1);
                 
                 /*
                  * make the background of the graph yellow for this week to
@@ -1600,7 +1625,7 @@ function glucoseAnimation() {
     glucose.animate().move(300, 450).attr({
         'opacity': 1
     }).after(function() {
-        this.animate().move(310, 500).attr({
+        this.animate().move(310, 470).attr({
             'opacity': 0
         }).after(function() {
             this.remove();
@@ -2144,6 +2169,93 @@ function getStudentWorkByNodeIdAndComponentId(nodeId, componentId) {
     }
     
     return componentState;
+}
+
+/**
+ * Parse the GET URL parameters
+ * @return an object containing the key/value pairs of the parameter names/values
+ */
+function parseURLParameters() {
+    
+    var parameters = {};
+    
+    /*
+     * get the text in the URL starting with the ?
+     * e.g. 
+     * If the full URL is
+     * "http://wise.berkeley.edu/curriculum/12345/assets/mymodel.html?feedbackPolicy=experiment2b&showGraph=false"
+     * search would be this
+     * "?feedbackPolicy=experiment2b&showGraph=false"
+     */
+    var search = location.search;
+    
+    if (search != null && search != '') {
+        
+        if (search.indexOf('?') == 0) {
+            /*
+             * remove the ?
+             * e.g.
+             * "feedbackPolicy=experiment2b&showGraph=false"
+             */
+            search = search.substring(1);
+        }
+        
+        /*
+         * split the string at &
+         * e.g.
+         * parameterPairs[0]="feedbackPolicy=experiment2b"
+         * parameterPairs[1]="showGraph=false"
+         */
+        var parameterPairs = search.split('&');
+        
+        if (parameterPairs != null) {
+            
+            for (var p = 0; p < parameterPairs.length; p++) {
+                var parameterPairString = parameterPairs[p];
+                
+                if (parameterPairString != null) {
+                    
+                    /*
+                     * split the string at =
+                     * e.g.
+                     * parameterPair[0]="feedbackPolicy"
+                     * parameterPair[1]="experiment2b"
+                     */
+                    var parameterPair = parameterPairString.split('=');
+                    
+                    if (parameterPair != null) {
+                        var parameterName = parameterPair[0];
+                        var parameterValue = parameterPair[1];
+                        
+                        if (parameterValue == "true") {
+                            /*
+                             * the value is the string "true" so we will convert
+                             * it from a string to a boolean value
+                             */
+                            parameterValue = true;
+                        } else if (parameterValue == "false") {
+                            /*
+                             * the value is the string "false" so we will convert
+                             * it from a string to a boolean value
+                             */
+                            parameterValue = false;
+                        } else if (!isNaN(parameterValue)) {
+                            /*
+                             * the value is a number so we will convert it from 
+                             * a string to a number
+                             */
+                            parameterValue = parseFloat(parameterValue);
+                        }
+                        
+                        // set the parameter into our parameters object
+                        parameters[parameterName] = parameterValue;
+                    }
+                }
+            }
+        }
+    }
+    
+    return parameters;
 }
 
 // listen for messages from the parent
