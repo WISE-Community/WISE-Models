@@ -56,7 +56,7 @@ Globals [
   action-properties
   old-pull-down
   old-material1
-  old-material2
+  ;old-material2
   old-model-tools
   old-graph-tools
   old-actions
@@ -187,15 +187,14 @@ end
 to onOff
   if mode = "Running" [
     make-heat-flow
-    every (.005 * grid-xmax)[
-      add-points-to-graph]
+
   ] ; this slows down point creation as the scale gets larger
   ;every .05 [
   ;  act-on-mouse-events]                  ; needs to be fast or a click can be missed
   every .2 [
     act-on-pull-down-changes
     act-on-material1-chooser                         ; check for user actions
-    act-on-material2-chooser                         ; check for user actions
+    ;act-on-material2-chooser                         ; check for user actions
 
 ;    act-on-slider-changes                ; supports only the temperature
     update-thermometer-reading            ; report temperature results
@@ -207,8 +206,8 @@ to initialize-model
   if empty? half-state-list [stop]
   set left-pointer 0
   draw-half-state true (item left-pointer half-state-list)
-  set right-pointer 0
-  draw-half-state false (item right-pointer half-state-list)
+  ;set right-pointer 0
+  ;draw-half-state false (item right-pointer half-state-list)
 end
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -250,13 +249,13 @@ to act-on-material1-chooser
   ]
 end
 
-to act-on-material2-chooser
-   if old-material2 = "Air (No Jacket)" [stop]  ; don't allow user to switch from air...this is a limitation from the old model.
-   if old-material2 != material2 [
-   let old-material-color get-property material-properties old-material2 0 2
-   let new-color get-property material-properties material2 0 2          ; material is a pull-down that gives a name
+;to act-on-material2-chooser
+;   if old-material2 = "Air (No Jacket)" [stop]  ; don't allow user to switch from air...this is a limitation from the old model.
+;   if old-material2 != material2 [
+;   let old-material-color get-property material-properties old-material2 0 2
+;   let new-color get-property material-properties material2 0 2          ; material is a pull-down that gives a name
    ; read the material at the mouse and give all such material on the same half the material-color of the variable material
-   let new-conductivity get-property material-properties material2 0 3
+;   let new-conductivity get-property material-properties material2 0 3
    ;let local-material-color 0
    ;let clicked-in-left? in-left-half? mouse-xcor mouse-ycor  ; logical used to determine which half-model was clicked
    ;ask patch mouse-xcor mouse-ycor [set local-material-color material-color]
@@ -264,47 +263,42 @@ to act-on-material2-chooser
    ;if local-material-color = silver-color [stop]   ; cannot change the 'silver' beverage
    ;if local-material-color = air-color [stop]      ; cannot change the surround
    ; change the material-color of all patches of this type, only on the side clicked
-   let maxu -1e8 let minv 1e8
-   ask patches with [(material-color = old-material-color)] [
-    if not in-left-half? pxcor pycor [
-      if pxcor > maxu [set maxu pxcor]
-      if pycor < minv [set minv pycor]
-      set conductivity new-conductivity
-      set material-color new-color
-      set pcolor new-color]
-   ]
-   if maxu != -1e8 and minv != 1e8 [
-     ask one-of sprites-on patch (maxu - 1) (minv + 1) [
-       set label-color black
-       set label material2 ]
-   ]
+;   let maxu -1e8 let minv 1e8
+;   ask patches with [(material-color = old-material-color)] [
+;    if not in-left-half? pxcor pycor [
+;      if pxcor > maxu [set maxu pxcor]
+;      if pycor < minv [set minv pycor]
+;      set conductivity new-conductivity
+;      set material-color new-color
+;      set pcolor new-color]
+;   ]
+;   if maxu != -1e8 and minv != 1e8 [
+;     ask one-of sprites-on patch (maxu - 1) (minv + 1) [
+;       set label-color black
+;       set label material2 ]
+;   ]
+;
+;  set old-material2 material2
 
-   set old-material2 material2
-
-   stop
-  ]
-end
+;   stop
+;  ]
+;end
 
 to initialize-globals
   ; the following provide data for the pull-downs. The first item must match one of the options of a pull-down
   ; the second item (item number 1) must be a tip to help the user understand the option
   set material-properties [   ; note: the last number is the relative thermal time constant ("conductivity")
-    ["Silver" "" 9.9 400]
-    ["Aluminium" "" 9 300]
-    ["Teflon" "" 37 25]
-    ["Lead" "" 7 100]
-    ["Wood" "Draw wood in the model" brown 8]
-    ["Granite" "" 127 80]
+    ["Aluminum" "" 9 200]
+    ["Canvas" "" 37 5]
+    ["Wood" "Draw wood in the model" brown 3]
+    ["Clay" "" red 30]
     ["Glass" "" 88 40]
     ["Cork" "Draw Cork in the model" 29 5]
-    ["Cardboard" "" 38 3]
     ["Styrofoam" "" 89 3]
-    ["Air" "Make the background air" 79 2.4]
-    ["Air (No Jacket)" "" 79 2.4]
-    ["Water" "Draw water in the model" sky 30]
-    ["Vacuum" "Create a vacuum" grey 0]]
+    ]
 
-   set half-state-list [[] [[37 -53 -7 -39 7] [9.9 -50 -4 -42 4] ["Thermometer" -46 0 25 0] ] [[37 -53 -7 -39 7] [29 -51 -5 -41 5][9.9 -50 -4 -42 4] ["Thermometer" -46 0 25 0]  ]]
+   ;set half-state-list [[] [[37 -53 -7 -39 7] [9.9 -50 -4 -42 4] ["Thermometer" -46 0 25 0] ] [[37 -53 -7 -39 7] [29 -51 -5 -41 5][9.9 -50 -4 -42 4] ["Thermometer" -46 0 25 0]  ]]
+   set half-state-list [[] [[37 -7 -7 7 7] [9.9 -4 -4 4 4] ["Thermometer" 0 0 25 0] ]]
      ; removed ["Thermometer" -47 -12 55 0]["Thermometer" -47 -12 55 0]
    set ratio 120 / max-pxcor       ; the original design had max-pxcor = 120
                                    ; ratio is used to scale drawings
@@ -329,8 +323,8 @@ to initialize-globals
   set temperature 20
 
     ; drawing window variables
-  set separator -5
-  set divider round (.5 * (separator + min-pxcor))
+  set separator max-pxcor ; -5
+  set divider max-pxcor ; round (.5 * (separator + min-pxcor))
   set ptch-size 3.41 * ratio      ; the original design had patch-size 3.41
   set default-temp 20
   set T-units "°C"
@@ -340,7 +334,7 @@ to initialize-globals
   set moving-square-one? false        ; list of half-states--the description of half of the model window
   set current-half-state []       ; fills with object definitions as the author creates a model
   set left-pointer 0        ; pointers into half-states
-  set right-pointer 0
+  ;set right-pointer 0
 
   set v-margin 4                ; space at the top and bottom of the world with no sprites
   set mode "Ready"
@@ -365,12 +359,12 @@ end
 to initialize-pull-downs
   set old-pull-down ""         ; used to keep track of which pull-down was previously used
   set material1 "Glass"
-  set material2 "Glass"
+  ;set material2 "Glass"
   set actions "Show Material Only"
   set actions "None"
   set model-tools "None"
   set old-material1 material1
-  set old-material2 material2
+  ;set old-material2 material2
   set old-model-tools model-tools
   set old-actions actions
   handle-actions-pull-down
@@ -614,9 +608,6 @@ to act-on-pull-down-changes   ; called by on/off
 ;    let data first under-rectangle ; turn on rectangle using the first item in the under-rectangle list
 ;    draw-rectangle first data item 1 data item 2 data item 3 data]]
 
-  if not (old-graph-tools = graph-tools) [
-    set old-graph-tools graph-tools
-    handle-graph-tools]
 end
 
 ;to handle-temp-range-pull-down
@@ -695,18 +686,6 @@ to handle-actions-pull-down  ; show tip, set color by temp/material, etc
     ask thermometer-labels [set label-color white]
     set view "Temperature Overlay"
     set actions "None"]
-end
-
-to handle-graph-tools  ; called if a graph tool is selected
-  if graph-tools = "Autoscale" [
-    ifelse any? graph-dots
-      [set grid-xmin min [x-val] of graph-dots
-       set grid-xmax max [x-val] of graph-dots
-       set grid-ymin min [y-val] of graph-dots
-       set grid-ymax max [y-val] of graph-dots
-       rescale-grid]
-      [stop]]
-  set graph-tools "--------"
 end
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1098,243 +1077,7 @@ to-report get-color [mat-name]  ; find the color number for the material named m
 end
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;;;;;;; scale and grid-drawing routines ;;;;;;;;;;;;;;
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-to draw-grid  ; draws the grid
-  ; inputs (all globals) are the grid screen boundaries, the desired ranges of x and y, the intended number of tic marks in the x-direction,
-  ; the axis labels, and the colors of the grid and labels
-  ; Draws and labels the graphing grid
-  ; outputs are the transformation coefs which are stored in the second position in their respective lists
-  ask grid-dots [die] ; clear the grid
-;  draw-verticals   ; draws the vertical lines and the x-axis
-;  draw-horizontals ; draws the horizontal lines and the y-axis
-end
-
-to draw-verticals ; draws the vertical lines and labels them along x-axis
-  let xTarget (grid-umax - grid-umin ) * ptch-size * .8 * ratio / grid-separation     ;  sets the target number of tics based on the size of the graphing area
-                                                    ; allocates about grid-separation pixels per tic
-  let a ticMarks grid-xMin grid-xMax xTarget        ; a now contains graph-xmin, graph-xmax, and n-xtics (ticmarks is a procedure)
-  set grid-xmin first a set grid-xmax item 1 a
-  ; compute the transformation coeficients in u=mx+b
-  set mx (grid-umax - grid-umin) / (grid-xmax - grid-xmin)
-  set bx grid-umin - mx * grid-xmin
-  let n-xtics last a
-  let dxx (grid-xmax - grid-xmin) / (n-xtics - 1)
-  let x grid-xmin
-  repeat n-xtics [   ; draw and label the verticals one at a time
-    let w 0
-    let u mx * x + bx
-    create-grid-dots 1 [
-      set size 0
-      setxy u grid-vmax  ; place at the top of the grid
-      set w who ]
-    create-grid-dots 1 [ ; place a linked dot at the bottom
-      set size 0
-      setxy u grid-vmin - tic-length
-      create-link-with grid-dot w [
-        set thickness line-width
-        set color grid-color
-        if abs (x - grid-xmin ) < .01 * dxx or
-            abs (x - grid-xmax ) < .01 * dxx [
-          set thickness 2 * line-width ]]]   ; make edges wider
-    create-grid-dots 1 [      ; used to place the value
-      set size 0
-      set label precision x 3
-      set label-color grid-label-color
-      setxy u + 1 grid-vmin - (tic-length + 2 )]
-    set x x + dxx ]
-  create-grid-dots 1 [    ; label the axis
-    set size 0
-    let u .5 * (grid-umax + grid-umin) + 1.3 * length grid-xlabel / ratio
-    setxy u grid-vmin - 9 / ratio
-    set label grid-xlabel
-    set label-color grid-label-color]
-end
-
-to draw-horizontals ; draws the horizontal lines and labels them along the y-axis
-  let yTarget (grid-vmax - grid-vmin ) * ptch-size * ratio / grid-separation      ;  sets the target number of tics based on the size of the graphing area
-                                                    ; allocates about grid-separation pixels per tic
-  let a ticMarks grid-yMin grid-yMax yTarget        ; a now contains graph-xmin, graph-xmax, x-interval, and n-xtics
-  set grid-ymin first a
-  set grid-ymax item 1 a
-  ; compute the transformation coeficients in u=mx+b
-  set my (grid-vmax - grid-vmin) / (grid-ymax - grid-ymin)
-  set by grid-vmin - my * grid-ymin
-  let n-ytics last a
-  let dyy (grid-ymax - grid-ymin) / (n-ytics - 1)
-  let y grid-ymin
-  repeat n-ytics [   ; draw and label the horizontals one at a time
-    let w 0
-    let v my * y + by
-    create-grid-dots 1 [
-      set size 0
-      setxy grid-umax v ; place a dot at the right of the grid
-      set w who ]
-    create-grid-dots 1 [
-      set size 0
-      setxy (grid-umin - tic-length) v  ; place a second dot tic-length to the left of the grid
-      set label precision y 3
-      set label-color grid-label-color
-      create-link-with grid-dot w [     ; connect the dots to make a grid line and tic
-        set thickness line-width
-        set color grid-color
-        if abs (y - grid-ymin ) < .01 * dyy or
-            abs (y - grid-ymax ) < .01 * dyy [
-          set thickness 2 * line-width ]]]   ; make edges wider
-    set y y + dyy ]
-  create-grid-dots 1 [ ; label the y-axis
-    set size 0
-    set label grid-ylabel
-    set label-color grid-label-color
-    let u grid-umin + 1.5 * length grid-ylabel / ratio
-    setxy u grid-vmax + 3 / ratio]
-end
-
-to-report ticMarks [zMin zMax targetNumber]
-     ; Computes the scaling parameters.
-     ; Inputs are:
-     ;     the beginning of the scale
-     ;     The end of the scale
-     ;     The target number of tic marks in the scale
-     ; returns a list:
-     ;    The first item is the beginning of the scale (rounded down to an even number)
-     ;    The second item is the end of the scale (rounded up)
-     ;    The third item is the actual number of tics (differnet from nTics)
-   if ( zMax < zMin ) [                       ; swap if in the wrong order
-     let z zMax
-     set zMax zMin
-     set zMin z ]
-      ; compute the target interval between scale divisions (tic marks) in problem coordinates.
-      ; note that if there are N tic marks, there are N-1 intervals.
-   let dz  (zMax - zMin) / (targetNumber - 1) ; the value of the interval for the target number of tics
-   let y log dz 10                            ; compute the log base 10 of dz
-   let a floor y                              ; round y down to the nearest smaller integer
-   let z y - a                                ; z is the fractional part of the log
-   let r 0
-   ifelse z < .15                             ; if z is less than .15 set r to 1
-     [set r 1]
-     [ifelse z < .5                           ; otherwise if it is less than .5 set r to 2
-        [set r  2]
-        [ifelse  z < .85                      ; otherwise if it is less that .85 set r to 5
-          [set r 5 ]                          ; and if all else fails, set r to 10
-          [set r 10 ]]]                       ; r is the nearest 'nice' number to z: 1, 2, 5 or 10
-   set dz  r * 10 ^ a                         ; dz is now the "corrected" tic interval
-   let k floor (zMin / dz)
-   let lowtic k * dz
-   let ntics 1 + ceiling (zMax / dz ) - k     ; the actual number of tic marks
-   let hitic lowtic + dz * (ntics - 1)
-   report (list lowtic hitic ntics)
-end
-
-to place-point [x y c]   ; places the point x,y on the grid as a dot of color c
-  if x > grid-xmax [
-    set grid-xmax grid-xmin + 1.5 * (grid-xmax - grid-xmin)
-    rescale-grid]
-  if y > grid-ymax [
-    set grid-ymax grid-ymin + 1.5 * (grid-ymax - grid-ymin)
-    rescale-grid]
-  if y < grid-ymin [
-    set grid-ymin grid-ymax - 1.5 * (grid-ymax - grid-ymin)
-    rescale-grid]
-  let u mx * x + bx
-  let v my * y + by
-  create-graph-dots 1 [ht
-    set x-val x set y-val y ; save the problem coordinates
-    set size 1.6 / ratio
-    set shape "dot"
-    set color c
-    if in-grid? u v [ st
-      setxy u v ]]
-end
-
-to rescale-grid    ; redraws the grid and any points using the globals grid-xmin, grid-ymin,  etc....
-;  draw-grid
-  ask graph-dots [
-    let u mx * x-val + bx
-    let v my * y-val + by
-    ifelse in-grid? u v
-      [st setxy u v ]
-      [ht]]
-end
-
-to add-points-to-graph      ; reads all active thermometers, up to max-number-of-thermometers
-                            ; uses (timer - time-zero) for the x-axis
-  let i 0
-  while [i < max-number-of-thermometers ][
-    let y 0
-    if item i thermometers-used? [         ; max-number-of-thermometers is a list. if an item is true, the thermometer is in use
-      let therm-color item i thermometer-colors
-      ask thermometers with [color = therm-color] [
-        set y patch-temp]
-      ;place-point (timer - (delay + time-zero)) y therm-color
-      save-trial-data (timer - (delay + time-zero)) y therm-color
-      ]
-    set i i + 1 ]
-end
-
-to save-trial-data [x y c]
-  let trial last trials
-  let done? false
-
-  let i 0
-  while [i < max-number-of-thermometers and not done? ][
-    if item i thermometers-used? [         ; max-number-of-thermometers is a list. if an item is true, the thermometer is in use
-      let therm-color item i thermometer-colors
-
-      let currentSeriesData item i trial
-      let currentSeriesDataColor item 0 currentSeriesData ; color will be the first element in the list
-      if currentSeriesDataColor = c [
-        set currentSeriesData lput (list (precision x 3) (precision y 3)) currentSeriesData     ; append new dataset to this list
-        set trial replace-item i trial currentSeriesData
-        set done? true
-      ]
-    ]
-    set i i + 1
-  ]
-  set trials replace-item ((length trials) - 1) trials trial
-
-  ;if not table:has-key? trial c [
-    ;table:put trial c []
-  ;]
-  ;let dataPointsForColor table:get trial c
-  ;set dataPointsForColor sentence dataPointsForColor (list (list x y))
-  ;table:put trial c dataPointsForColor   ; replace with updated dataPoints
-  ;let numTrials length trials
-  ;set trials replace-item (numTrials - 1) trials trial
-
-
-end
-
-to reset-graph       ; sets graph into its default condition ppp
-  set grid-ymax 20   ;  HACK
-  ask graph-dots with [size = 4][die]     ;
-  ; Graph variables
-  ; define grid coordinates and labels
-  ; define graphing window
-  set duration 30    ; default duration of a run in seconds
-  set wind-umin separator
-  set wind-umax max-pxcor   ; the left and right window area that contains the grid
-  set wind-vmin min-pycor                        ; the top and bottom of the window
-  set wind-vmax max-pycor
-  ; now set the default grid values and draw the grid
-  set edge 4 / ratio set edge+ 11 / ratio    ; used to reserve space between graph and grid
-  set grid-umin wind-umin + (edge+ + 3 / ratio)
-  set grid-umax wind-umax - (edge + 2 / ratio)
-  set grid-vmin wind-vmin + (edge+ + .5 / ratio)
-  set grid-vmax wind-vmax - (edge + 4 / ratio)   ; leave room for vertical axis label.
-  set grid-separation 35 * ratio    ; the approximate number of pixels per grid line
-  set grid-xmin 0
-  set grid-xmax duration
-  set grid-xlabel "Time (s)"
-  set grid-ymin 0
-;  set grid-ymax 105
-  set grid-ylabel "Temperature (°C)"
-  set tic-length 1 / ratio   ; the distance a tic mark extends beyond the axis
-  set line-width .5 / ratio   ; the thin lines that make up the grid ***
-  rescale-grid
-end
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;;;;;;;;;;   Button Actions    ;;;;;;;;;;;;;;;;;;;;
@@ -1354,22 +1097,22 @@ to next-left ; use left-pointer to select the next state for the left half of th
   output-print "When you have the setup you want, set the temperature of each object."
 end
 
-to next-right; use the right-pointer to select the next state on the right half of the model window
-  erase-half false  ; erase the right half of the model space
-  set right-pointer right-pointer + 1
-  if right-pointer >= length half-state-list [set right-pointer 0]
-  draw-half-state false (item right-pointer half-state-list)
-  clear-output
-  output-print "When you have the setup you want, set the materials you will use."
-end
+;to next-right; use the right-pointer to select the next state on the right half of the model window
+;  erase-half false  ; erase the right half of the model space
+;  set right-pointer right-pointer + 1
+;  if right-pointer >= length half-state-list [set right-pointer 0]
+;  draw-half-state false (item right-pointer half-state-list)
+;  clear-output
+;  output-print "When you have the setup you want, set the materials you will use."
+;end
 
 to setup-one-layer
   erase-half true    ; erase the left side of the model space
   draw-half-state true (item 1 half-state-list)
   set old-material1 "Teflon"
-  erase-half false    ; erase the right side of the model space
-  draw-half-state false (item 1 half-state-list)
-  set old-material2 "Teflon"
+  ;erase-half false    ; erase the right side of the model space
+  ;draw-half-state false (item 1 half-state-list)
+  ;set old-material2 "Teflon"
 
   clear-output
   output-print "First, be sure that the 'On/Off' button is on and shows dark blue."
@@ -1380,8 +1123,8 @@ end
 to setup-two-layers
   erase-half true    ; erase the left side of the model space
   draw-half-state true (item 2 half-state-list)
-  erase-half false    ; erase the left side of the model space
-  draw-half-state false (item 2 half-state-list)
+  ;erase-half false    ; erase the left side of the model space
+  ;draw-half-state false (item 2 half-state-list)
   clear-output
   output-print "First, be sure that the 'On/Off' button is on and shows dark blue."
   output-print "Next, select a material like 'Wood' and apply it to a jacket."
@@ -1496,10 +1239,10 @@ to run-experiment
         if i = 0 [
           set thermometerMaterial material1
         ]
+        ;if i = 1 [
+        ;  set thermometerMaterial material2
+        ;]
         if i = 1 [
-          set thermometerMaterial material2
-        ]
-        if i = 2 [
           set thermometerMaterial "Room"
         ]
 
@@ -1515,30 +1258,31 @@ to run-experiment
   ask titles [die]
   create-titles 1 [
     set w who
-    setxy -52 17
+    setxy min-pxcor + 8 17
     set label-color black
     set label word "Experiment " experiment-number]
-  let mc [material-color] of patch -46 6
+  let mc [material-color] of patch (min-pxcor + 14) 6
   let mat-left get-property material-properties mc 2 0
-  set mc [material-color] of patch -18 6
-  let mat-right get-property material-properties mc 2 0
+  ;set mc [material-color] of patch -18 6
+  ;let mat-right get-property material-properties mc 2 0
   create-titles 1 [       ; show the outer left material
-    setxy -52 14.2
+    setxy min-pxcor + 8 14.2
     set label-color orange
     set label word "Orange: " mat-left]
-  create-titles 1 [
-    set label-color green
-    setxy -52 12
-    set label word "Green: " mat-right]
+  ;create-titles 1 [
+  ;  set label-color green
+  ;  setxy min-pxcor + 8 12
+  ;  set label word "Green: " mat-right]
   if not one-layer? [
-    set mc [material-color] of patch -46 5
+    set mc [material-color] of patch (min-pxcor + 14) 5
     let mat-left-inner get-property material-properties mc 2 0
-    set mc [material-color] of patch -18 5
-    let mat-right-inner get-property material-properties mc 2 0
+    ;set mc [material-color] of patch -18 5
+    ;let mat-right-inner get-property material-properties mc 2 0
     ask title (w + 1) [
       set label (word label "/" mat-left-inner)]
-    ask title (w + 2) [
-      set label (word label "/" mat-right-inner)]]
+    ;ask title (w + 2) [
+    ;  set label (word label "/" mat-right-inner)]]
+  ]
   ask titles [
     set shape "dot"
     set size .1]
@@ -1704,7 +1448,7 @@ end
 
 to set-temp [temp]
   let local-material-color 0
-  ask patch -46 0 [set local-material-color material-color]
+  ask patch 0 0 [set local-material-color material-color]
   ; change the temperature of all patches of this type, only on the side clicked.
   ask patches with [(material-color = local-material-color)] [
     set patch-temp temp]
@@ -1804,16 +1548,13 @@ end
 
 
 
-
-
-
 @#$#@#$#@
 GRAPHICS-WINDOW
 33
 39
-865
+278
 348
-60
+15
 20
 6.8
 1
@@ -1825,8 +1566,8 @@ GRAPHICS-WINDOW
 0
 0
 1
--60
-60
+-15
+15
 -20
 20
 0
@@ -1836,10 +1577,10 @@ ticks
 30.0
 
 BUTTON
-40
-427
-198
-460
+37
+415
+92
+448
 ON
 onOff
 T
@@ -1853,20 +1594,20 @@ NIL
 1
 
 CHOOSER
-52
-353
-186
-398
+38
+357
+140
+402
 Material1
 Material1
 "Aluminium" "Cardboard" "Glass" "Cork" "Lead" "Teflon" "Wood"
-6
+2
 
 BUTTON
-440
-354
-564
-388
+104
+415
+175
+449
 Run/Pause
 Run-experiment
 NIL
@@ -1880,10 +1621,10 @@ NIL
 1
 
 BUTTON
-576
-354
-691
-387
+183
+416
+238
+449
 Reset
 Reset
 NIL
@@ -1895,16 +1636,6 @@ NIL
 NIL
 NIL
 1
-
-CHOOSER
-265
-354
-403
-399
-Material2
-Material2
-"Aluminium" "Cardboard" "Glass" "Cork" "Lead" "Teflon" "Wood"
-5
 
 @#$#@#$#@
 ## WHAT IS IT?

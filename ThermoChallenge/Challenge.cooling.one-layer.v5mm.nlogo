@@ -447,6 +447,7 @@ to make-heat-flow              ; purposely simple, straight code to maximize tim
     ask neighbors4 [
       let con min list conductivity my-con        ; the smallest conductivity controls the flow--keeps heat from leaking into the vacuum
       set q q + con * (patch-temp - my-temp) ]    ; inflow if this neighboring patch is hotter
+    print q
     set patch-temp patch-temp + flow-speed * q ]  ; flow-speed determines how fast the simulation is
   color-sprites                                   ; sprites show the color temperature of the patches under them
 end
@@ -1723,7 +1724,6 @@ to save-research-data [button]
    let new-data (list "New Dataset" (precision timer 1) button packaged-data)
    set research-data word research-data new-data
 end
-
 
 
 
