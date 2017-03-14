@@ -82,39 +82,6 @@ function IFrameEndpoint() {
           post(postMessageQueue.shift());
         }
       }
-      /*
-      if (!initialized) {
-            if (messageData.messageType == 'studentWork') {
-                if (messageData.studentWorkFromThisNode != null && messageData.studentWorkFromThisNode.length > 0) {
-                    var latestComponentState = messageData.studentWorkFromThisNode[messageData.studentWorkFromThisNode.length - 1];
-            
-                    if (latestComponentState != null) {
-                        var studentData = latestComponentState.studentData;
-                
-                        if (studentData != null) {
-                            if (studentData.state != null) {
-                                var state = studentData.state;
-                                //restoreGameState(state);
-                                messageData.type = 'codap-game';
-                                messageData.content = {
-                                    messageType: 'call',
-                                    uuid: 'evlpp5x4xn',
-                                    value: {
-                                        operation: 'restoreState',
-                                        args: {
-                                            state: state
-                                        }
-                                    }
-                                };
-                                parentOrigin = message.origin;
-                            }
-                        }
-                    }
-                }
-                initialized = true;
-          }
-      }
-      */
 
       // Perhaps-redundantly insist on checking origin as well as source window of message.
       if (message.origin === parentOrigin) {
