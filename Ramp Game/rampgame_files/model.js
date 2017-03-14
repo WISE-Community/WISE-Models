@@ -68,6 +68,13 @@ if (typeof StrictMath === "undefined" || StrictMath === null) {
 ;
 ;
 ;
+
+/*
+ * global boolean value that keeps track of whether the student data
+ * was initialized
+ */
+initialized = false;
+
 Globals.init(84);
 Breeds.add("DRAWING-DOTS", "drawing-dot");
 Breeds.get("DRAWING-DOTS").vars =[""];
@@ -246,6 +253,8 @@ function initialize() {
   setupNewRun();
   world.resetTicks();
   world.resetTimer();
+  initializeTableData();
+  getLatestStudentWork();
 }
 function defineWindow() {
   Globals.setGlobal(7, (world.minPxcor + 2));
@@ -549,6 +558,7 @@ function startRun() {
   }
   if ((Globals.getGlobal(23) >= 0)) {
     prettyPrint("Place the car on the ramp.");
+    startButton.disabled = false;
     dataExportLogEvent("User tried to start with car on the level floor.", "", "", "");
     return;
   }
@@ -566,17 +576,28 @@ function startRun() {
   dataExportLogEvent((Dump("") + Dump("User started the model with the following level and step: ") + Dump(Globals.getGlobal(42)) + Dump(" ") + Dump(Globals.getGlobal(43)) + Dump(".")), createRunParameterList(endpoint), "", "");
   Globals.setGlobal(12, true);
   Globals.setGlobal(29, 0);
+  initialized = true;
 }
 function getNextStep() {
   setupButton.disabled = false;
   var upperBreak = ((2 * Globals.getGlobal(54)) / 3);
   var lowerBreak = (Globals.getGlobal(54) / 4);
   Globals.setGlobal(73, true);
+  
+  if (Globals.getGlobal(55) == 6) {
+    // relax the scoring on the last challenge to prevent challenges from being impossible to complete
+    upperBreak = lowerBreak;
+  }
   if ((Globals.getGlobal(41) > upperBreak)) {
+    // the student successfully stopped the car in the range
     myClearOutput();
     prettyPrint((Dump("") + Dump("Congratulations! You earned ") + Dump(Globals.getGlobal(41)) + Dump(" points! You advance a step and the target gets smaller.")));
     Globals.setGlobal(69, (Globals.getGlobal(43) + 1));
-    if ((Globals.getGlobal(69) > Globals.getGlobal(55))) {
+    if ((Globals.getGlobal(69) > Globals.getGlobal(55)) || Prims.equality(Globals.getGlobal(42), 1)) {
+      /*
+       * the current step number is greater than the max step number for the current challenge
+       * or the we are on the first challenge
+       */
       if ((Globals.getGlobal(42) < Globals.getGlobal(62))) {
         myClearOutput();
         prettyPrint((Dump("") + Dump("Congratulations! You earned ") + Dump(Globals.getGlobal(41)) + Dump(" points! You advance to a new challenge!!")));
@@ -584,6 +605,7 @@ function getNextStep() {
         Globals.setGlobal(27, true);
         Globals.setGlobal(69, 1);
         Globals.setGlobal(70, (Globals.getGlobal(42) + 1));
+        saveTrial(true);
         return;
       }
       if ((Globals.getGlobal(70) >= Globals.getGlobal(62))) {
@@ -598,16 +620,20 @@ function getNextStep() {
         }
       }
     }
+    saveTrial(true);
     return;
   }
-  if ((Globals.getGlobal(41) > lowerBreak)) {
+  if ((Globals.getGlobal(41) >= lowerBreak)) {
+    // the student successfully stopped the car in the range
     myClearOutput();
     Globals.setGlobal(73, false);
     prettyPrint((Dump("") + Dump("OK! You earned ") + Dump(Globals.getGlobal(41)) + Dump(" points. Try again.")));
     prettyPrint((Dump("") + Dump("You have to get ") + Dump(StrictMath.round(upperBreak)) + Dump(" points to advance.")));
+    saveTrial(true);
     return;
   }
   if ((Globals.getGlobal(41) < lowerBreak)) {
+    // the student did not stop the car in the range
     Globals.setGlobal(73, false);
     myClearOutput();
     var m = (Dump("") + Dump("Not so good. You score ") + Dump(Globals.getGlobal(41)) + Dump(" points."));
@@ -615,10 +641,11 @@ function getNextStep() {
       m = (Dump("") + Dump(m) + Dump(" Since your score was less than ") + Dump(StrictMath.round(lowerBreak)) + Dump(" you now get a larger target."));
     }
     prettyPrint(m);
-    Globals.setGlobal(69, (Globals.getGlobal(43) - 1));
+    //Globals.setGlobal(69, (Globals.getGlobal(43) - 1));
     if (Prims.equality(Globals.getGlobal(43), 1)) {
       Globals.setGlobal(69, 1);
     }
+    saveTrial(false);
   }
 }
 function setupGame() {
@@ -640,7 +667,7 @@ function setupGameLevel() {
     Globals.setGlobal(48, true);
     Globals.setGlobal(49, false);
     Globals.setGlobal(26, false);
-    Globals.setGlobal(55, 3);
+    Globals.setGlobal(55, 1);
     Globals.setGlobal(57, 0.4);
     Globals.setGlobal(58, 0.15);
     Globals.setGlobal(74, true);
@@ -717,7 +744,7 @@ function setupGameStep() {
     Globals.setGlobal(75, Prims.mod((Globals.getGlobal(75) + 1), Prims.length(Globals.getGlobal(77))));
   }
   Globals.setGlobal(56, Prims.item(Globals.getGlobal(75), Globals.getGlobal(77)));
-  Globals.setGlobal(59, (Globals.getGlobal(57) + (((Globals.getGlobal(58) - Globals.getGlobal(57)) * (Globals.getGlobal(43) - 1)) / (Globals.getGlobal(55) - 1))));
+  Globals.setGlobal(59, (Globals.getGlobal(57) + (((Globals.getGlobal(58) - Globals.getGlobal(57)) * (Globals.getGlobal(43) - 1)) / Prims.max([(Globals.getGlobal(55) - 1), 1]))));
   if (((Globals.getGlobal(59) + Globals.getGlobal(56)) > 4.3)) {
     Globals.setGlobal(59, (4.3 - Globals.getGlobal(56)));
   }
@@ -957,3 +984,399 @@ function restoreGameState(state) {
   return { success: true };
 
 }
+
+/**
+ * Get the game state array
+ * @return the game state array
+ */
+function getGameStateArray() {
+  var arr = [];
+  
+  // loop through all the global variables
+  for (i = 0; i <= 84; i++) {
+    // add the global variable value to the array
+    arr.push(Globals.getGlobal(i));
+  }
+  return arr;
+}
+
+// a global array containing the series objects where the index is the challenge number
+challengeToSeries = [];
+
+// the global table data
+tableData = [];
+
+/**
+ * Get the series for the given challenge
+ * @param challengeNumber the challenge number
+ * @return the series for a challenge number
+ */
+function getChallengeSeries(challengeNumber) {
+    if (challengeToSeries[challengeNumber] == null) {
+        // initialize the series for the challenge
+        var series = {};
+        
+        series.name = 'Challenge ' + challengeNumber;
+        series.data = [];
+        
+        if (challengeNumber == 1) {
+            series.color = 'red';
+            series.marker = {};
+            series.marker.symbol = 'circle';
+        } else if (challengeNumber == 2) {
+            series.color = 'red';
+            series.marker = {};
+            series.marker.symbol = 'triangle';
+        } else if (challengeNumber == 3) {
+            series.color = 'green';
+            series.marker = {};
+            series.marker.symbol = 'circle';
+        } else if (challengeNumber == 4) {
+            series.color = 'blue';
+            series.marker = {};
+            series.marker.symbol = 'circle';
+        } else if (challengeNumber == 5) {
+            series.color = '#8B008B';
+            series.marker = {};
+            series.marker.symbol = 'circle';
+        }
+        
+        challengeToSeries[challengeNumber] = series;
+    }
+    
+    return challengeToSeries[challengeNumber];
+}
+
+/**
+ * Save the trial
+ * @param success whether the student stopped the car on the target
+ */
+function saveTrial(success) {
+    
+    var studentData = {};
+    
+    // get the relevant variables
+    var challenge = Globals.getGlobal(42);
+    var step = Globals.getGlobal(43);
+    var height = Globals.getGlobal(34);
+    var mass = Globals.getGlobal(20);
+    var friction = Globals.getGlobal(0);
+    var distance = Prims.precision(Globals.getGlobal(68), 2);
+    
+    // set the variables into the student data
+    studentData.challenge = challenge;
+    studentData.step = step;
+    studentData.height = height;
+    studentData.mass = mass;
+    studentData.friction = friction;
+    studentData.distance = distance;
+    studentData.success = success;
+    
+    // get the game state array which contains all the global variables
+    gameStateArray = getGameStateArray();
+    
+    /*
+     * set this value to false otherwise the model will not run when the student data is
+     * reloaded the next time the student visits the step
+     */
+    gameStateArray[13] = false;
+    
+    // get the JSON string of the game state
+    studentData.state = JSON.stringify(gameStateArray);
+    
+    // get the series for the current challenge
+    series = getChallengeSeries(studentData.challenge);
+    
+    // add the new data point to the series for the current challenge
+    series.data.push([height, distance]);
+    
+    // create a trial
+    studentData.trial = {};
+    
+    // create an array to hold multiple series
+    studentData.trial.series = [];
+    
+    // loop through all the challenges
+    for (var x = 1; x <= 5; x++) {
+    
+        // get a series for a given challenge
+        var series = getChallengeSeries(x);
+        
+        // check that the series has data
+        if (series != null && series.data != null && series.data.length > 0) {
+            // add the series to the trial
+            studentData.trial.series.push(series);
+        }
+    }
+    
+    // add a new row to the table
+    addTableRow(challenge, step, height, mass, friction, distance);
+    
+    // set the table data into the student data
+    studentData.tableData = tableData;
+    
+    // create the component state
+    var componentState = {};
+    componentState.studentData = studentData;
+    
+    // save the component state to WISE
+    saveWISE5State(componentState);
+}
+
+/**
+ * Restore the graph data
+ * @param studentData the student data
+ */
+function restoreGraphData(studentData) {
+
+    if (studentData != null) {
+    
+        // get all of the series
+        var series = studentData.trial.series;
+        
+        if (series != null) {
+        
+            // loop through all of the series. each series is a challenge.
+            for (var x = 0; x < series.length; x++) {
+            
+                // get a series
+                var tempSeries = series[x];
+                
+                // set the series into the challenge to series data structure
+                challengeToSeries[x + 1] = tempSeries;
+            }
+        }
+    }
+}
+
+/**
+ * Initialize the table data
+ */
+function initializeTableData() {
+    tableData = [];
+    
+    // create the header row
+    var headerRow = [];
+    
+    // create the Challenge header cell
+    var challengeCell = {};
+    challengeCell.text = 'Challenge';
+    challengeCell.editable = false;
+    headerRow.push(challengeCell);
+    
+    // create the Step header cell
+    var stepCell = {};
+    stepCell.text = 'Step';
+    stepCell.editable = false;
+    headerRow.push(stepCell);
+    
+    // create the Height header cell
+    var heightCell = {};
+    heightCell.text = 'Height';
+    heightCell.editable = false;
+    headerRow.push(heightCell);
+    
+    // create the Mass header cell
+    var massCell = {};
+    massCell.text = 'Mass';
+    massCell.editable = false;
+    headerRow.push(massCell);
+    
+    // create the Friction header cell
+    var frictionCell = {};
+    frictionCell.text = 'Friction';
+    frictionCell.editable = false;
+    headerRow.push(frictionCell);
+    
+    // create the Distance header cell
+    var distanceCell = {};
+    distanceCell.text = 'Distance';
+    distanceCell.editable = false;
+    headerRow.push(distanceCell);
+    
+    // add the header row to the table
+    tableData.push(headerRow);
+}
+
+/**
+ * Restore the table data
+ * @param studentData the student data
+ */
+function restoreTableData(studentData) {
+    
+    if (studentData != null && studentData.tableData != null) {
+        // set the table data into the global table data variable
+        tableData = studentData.tableData;
+    }
+}
+
+/**
+ * Add a row to the table data
+ * @param challenge the challenge number
+ * @param step the step number
+ * @param height the height car
+ * @param mass the mass of the car
+ * @param friction the amount of friction
+ * @param distance the distance the car travelled 
+ */
+function addTableRow(challenge, step, height, mass, friction, distance) {
+    var row = [];
+    
+    // create the challenge cell
+    var challengeCell = {};
+    challengeCell.text = challenge;
+    challengeCell.editable = false;
+    row.push(challengeCell);
+    
+    // create the step cell
+    var stepCell = {};
+    stepCell.text = step;
+    stepCell.editable = false;
+    row.push(stepCell);
+    
+    // create the height cell
+    var heightCell = {};
+    heightCell.text = height;
+    heightCell.editable = false;
+    row.push(heightCell);
+    
+    // create the mass cell
+    var massCell = {};
+    massCell.text = mass;
+    massCell.editable = false;
+    row.push(massCell);
+    
+    // create the friction cell
+    var frictionCell = {};
+    frictionCell.text = friction;
+    frictionCell.editable = false;
+    row.push(frictionCell);
+    
+    // create the distance cell
+    var distanceCell = {};
+    distanceCell.text = distance;
+    distanceCell.editable = false;
+    row.push(distanceCell);
+    
+    // add the row to the table
+    tableData.push(row);
+}
+
+/**
+ * Send an event to the parent
+ * @param event the event object
+ */
+function saveWISE5Event(event) {
+    event.messageType = 'event';
+    sendMessage(event);
+}
+
+/**
+ * Send a component state to the parent
+ * @param componentState the component state
+ */
+function saveWISE5State(componentState) {
+    componentState.messageType = 'studentWork';
+    sendMessage(componentState);
+}
+
+/**
+ * Get student work from other components by asking the parent for the work
+ */
+function getStudentWork(params) {
+
+    // make a message to request the other student work
+    var message = {
+        messageType: "getStudentWork",
+        getStudentWorkParams: params
+    };
+
+    // send the message to request the other student work
+    sendMessage(message);
+}
+
+/**
+ * Get the latest student work for this component
+ */
+function getLatestStudentWork() {
+    
+    // make a message to request the latest student work
+    var message = {
+        messageType: "getLatestStudentWork"
+    };
+    
+    // send the message to request the latest student work
+    sendMessage(message);
+}
+
+/**
+ * Send a message to the parent
+ * @param the message to send to the parent
+ */
+function sendMessage(message) {
+    parent.postMessage(message, "*");
+}
+
+/**
+ * Receive a message from the parent
+ * @param message the message from the parent
+ */
+function receiveMessage(message) {
+
+    if (message != null) {
+        var messageData = message.data;
+
+        if (messageData != null) {
+            if (messageData.messageType == 'latestStudentWork') {
+                /*
+                 * we requested the latest student work so that we can re-populate the
+                 * student work. this message is the response that includes the latest
+                 * student work.
+                 */
+            
+                // make sure we have not already initialized the student data
+                if (!initialized) {
+                    // we have not initialized the student data yet
+                    
+                    // get the latest student work
+                    var latestStudentWork = messageData.latestStudentWork;
+                
+                    if (latestStudentWork != null) {
+                    
+                        // get the student data
+                        var studentData = latestStudentWork.studentData;
+                        
+                        if (studentData != null) {
+                            if (studentData.state != null) {
+                                // get the game state from the student data
+                                var state = studentData.state;
+                                
+                                // restore the game state
+                                restoreGameState(state);
+                                
+                                // restore the table data
+                                restoreTableData(studentData);
+                                
+                                // restore the graph data
+                                restoreGraphData(studentData);
+                                
+                                // set the initialized flag to true
+                                initialized = true;
+                            }
+                        }
+                    }
+                }
+            } else if (messageData.messageType == 'studentWork') {
+                /*
+                 * the student work from this step has just been saved and the latest 
+                 * student work has been included in the message data
+                 */
+                this.latestStudentWorkFromThisComponent = messageData.latestStudentWorkFromThisComponent;
+                this.latestStudentWorkFromThisNode = messageData.latestStudentWorkFromThisNode;
+            }
+        }
+    }
+}
+
+// listen for messages from the parent
+window.addEventListener('message', receiveMessage);

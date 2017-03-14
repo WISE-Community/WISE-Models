@@ -1,0 +1,46 @@
+
+<!-- saved from url=(0078)https://inquiryspace-resources.concord.org/rampgame-state-saving/rampgame.html -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+    <script>useGoogleGraph = false
+      // This affects how often screen updates are collected and worked through in hertz
+      var visualRefreshPerSecond = 30;
+      // This affects how tight the calculation loop is in hertz
+      var calculationRefreshPerSecond = 40;
+    </script>
+    <!--
+    Uncomment if you'd like to use google graphs!
+    <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    <script>useGoogleGraph = true</script>
+    -->
+    <script type="text/javascript" src="./rampgame_files/iframe-phone.js"></script>
+  </head>
+  <body style="background-color:white">
+
+    <div style="display:none">
+    <label>speed<input id="speed-slider" type="range" min="0" max="8" step=".01" style="width: 400px"></label>
+    ticks: <span id="tick-counter">2073</span>
+    </div>
+
+    <div class="view-container" style="position:relative;top:0px">
+      <pre id="output" style="background-color:white;width:423px;height:203px;border:1px solid black;position:absolute;left:218px;top:177px;z-index:5;overflow:auto">You can now analyze your data. Press the
+'Analyze Data' button.
+</pre>
+    <div class="view-layers" style="width: 643px; position: absolute; height: 425px; top: 0px; left: 0px;"><canvas width="623" height="178" style="width: 100%; position: absolute; top: 0px; left: 0px; z-index: 2;"></canvas><canvas width="1246" height="356" style="width: 100%; z-index: 0;"></canvas><canvas width="1869" height="534" style="width: 100%; position: absolute; top: 0px; left: 0px; z-index: 3;"></canvas></div><button disabled="" style="position: absolute; font-size: 10pt; z-index: 5; width: 113px; height: 34px; top: 224px; left: 98px;">Setup new run</button><button style="position: absolute; font-size: 10pt; z-index: 5; width: 211px; height: 34px; top: 190px; left: 0px;" disabled="">Start</button><div style="position: absolute; font-size: 10pt; font-family: sans-serif; width: 201px; height: 33px; top: 269px; left: 5px; z-index: 5;"><input type="range" max="0.4" min="0.005" step="0.005" disabled="" style="width: 100%; display: none;"><div style="float: right;"></div><div>Friction</div></div><div style="position: absolute; font-size: 10pt; background-color: rgb(194, 237, 203); font-family: sans-serif; width: 129px; height: 45px; top: 1px; left: 136px;"><div style="margin: 4px; position: relative;">Height above floor</div><div style="background-color: white; position: relative; margin: 4px; padding: 2px;">0 m</div></div><div style="position: absolute; font-size: 10pt; background-color: rgb(194, 237, 203); font-family: sans-serif; width: 138px; height: 45px; top: 1px; left: 266px;"><div style="margin: 4px; position: relative;">Distance to the right</div><div style="background-color: white; position: relative; margin: 4px; padding: 2px;">2.54 m</div></div><div style="position: absolute; font-size: 10pt; background-color: rgb(194, 237, 203); font-family: sans-serif; width: 101px; height: 49px; top: 318px; left: 0px;"><div style="margin: 4px; position: relative;">Total score</div><div style="background-color: white; position: relative; margin: 4px; padding: 2px;">0</div></div><div style="position: absolute; font-size: 10pt; background-color: rgb(194, 237, 203); font-family: sans-serif; width: 109px; height: 49px; top: 318px; left: 102px;"><div style="margin: 4px; position: relative;">Score last run</div><div style="background-color: white; position: relative; margin: 4px; padding: 2px;">&nbsp;</div></div><div style="position: absolute; font-size: 10pt; background-color: rgb(194, 237, 203); font-family: sans-serif; width: 101px; height: 49px; top: 368px; left: 0px;"><div style="margin: 4px; position: relative;">Challenge</div><div style="background-color: white; position: relative; margin: 4px; padding: 2px;">1 of 5</div></div><div style="position: absolute; font-size: 10pt; background-color: rgb(194, 237, 203); font-family: sans-serif; width: 109px; height: 49px; top: 368px; left: 102px;"><div style="margin: 4px; position: relative;">Step</div><div style="background-color: white; position: relative; margin: 4px; padding: 2px;">1 of 3</div></div><button style="position: absolute; font-size: 10pt; z-index: 5; width: 98px; height: 34px; top: 224px; left: 0px;">Analyze data</button><div style="position: absolute; font-size: 10pt; background-color: rgb(194, 237, 203); font-family: sans-serif; width: 79px; height: 45px; top: 1px; left: 405px;"><div style="margin: 4px; position: relative;">Car mass</div><div style="background-color: white; position: relative; margin: 4px; padding: 2px;">100 g</div></div><div style="position: absolute; font-size: 10pt; background-color: rgb(194, 237, 203); font-family: sans-serif; width: 66px; height: 45px; top: 1px; left: 485px;"><div style="margin: 4px; position: relative;">Friction</div><div style="background-color: white; position: relative; margin: 4px; padding: 2px;"></div></div><button style="position: absolute; font-size: 10pt; z-index: 5; width: 92px; height: 47px; top: 0px; left: 551px;">Help</button></div>
+
+    <div id="powered-by-wrapper" style="position:absolute; top: 405px; left: 505px;">
+      <a href="https://ccl.northwestern.edu/netlogo/">
+        <img style="vertical-align: middle;" alt="NetLogo" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAIGNIUk0AAHolAACAgwAA+f8AAIDpAAB1MAAA6mAAADqYAAAXb5JfxUYAAANcSURBVHjarJRdaFxFFMd/M/dj7252uxubKms+bGprVyIVbNMWWqkQqtLUSpQWfSiV+oVFTcE3DeiDgvoiUSiCYLH2oVoLtQ+iaaIWWtE2FKGkkSrkq5svN+sm7ma/7p3x4W42lEbjQw8MM8yc87/nzPnNFVprbqWJXyMyXuMqx1Ni6N3ny3cX8tOHNLoBUMvESoFI2Xbs4zeO1lzREpSrMSNS1zkBDv6uo1/noz1H7mpvS4SjprAl2AZYEqzKbEowBAgBAkjPKX2599JjT7R0bj412D0JYNplPSBD1G2SmR/e6u1ikEHG2vYiGxoJmxAyIGSCI8GpCItKimtvl2JtfGujDNkX6epuAhCjNeAZxM1ocPy2Qh4toGQ5DLU+ysiuA2S3P0KgJkjAgEAlQylAA64CG/jlUk6//ng4cNWmLK0yOPNMnG99Rs9LQINVKrD+wmke7upg55PrWP3eYcwrlykpKCkoelDy/HVegQhoABNAepbACwjOt72gZkJhypX70YDWEEklue+rbnYc2MiGp1upPfYReiJJUUG58gFXu4udch1wHcjFIgy0HyIjb2yvBpT2F6t+6+f+D15lW8c9JDo7iPSdgVIRLUqL2AyHDQAOf9hfbqxvMF98eT3RuTS1avHyl+Stcphe2chP9+4k/t3RbXVl3W+Ws17FY56/w3VcbO/koS/eZLoAqrQMxADZMTYOfwpwoWjL4+bCYcgssMqGOzPD6CIkZ/3SxTJ0ayFIN6/BnBrZb2XdE1JUgkJWkfrUNRJnPyc16zsbgPyXIUJBpvc+y89nk/S8/4nek3NPGeBWMwzGvhUPnP6RubRLwfODlqqx3LSCyee2MnlwMwA2RwgO5qouVcHmksUdJweYyi8hZkrUjgT5t/ejNq0jBsSqNWsKyT9uFtxw7Bs585d3g46KOeT2bWHmtd14KyP+5mzqpsYU3OyioACMhGiqPTMocsrHId9cy9BLDzKxq8X3ctMwlV6yKSHL4fr4dd0DeQBTBUgUkvpE1kVPbqkX117ZzuSaFf4zyfz5n9A4lk0yNU7vyb7jTy1kmFGipejKvh6h9n0W995ZPTu227hqmCz33xXgFV1v9NzI96NfjndWt7XWCB/7BSICFWL+j3lAofpCtfYFb6X9MwCJZ07mUsXRGwAAAABJRU5ErkJggg==">
+        <span style="font-size: 14px;">powered by NetLogo</span>
+      </a>
+    </div>
+
+<script type="text/javascript" src="./rampgame_files/codap.js"></script>
+    <script type="text/javascript" src="./rampgame_files/engine.js"></script>
+    <script type="text/javascript" src="./rampgame_files/agent-model.js"></script>
+    <script type="text/javascript" src="./rampgame_files/beak.js"></script>
+    <script type="text/javascript" src="./rampgame_files/model.js"></script>
+    <script type="text/javascript" src="./rampgame_files/ui.js"></script>
+  
+
+</body></html>
