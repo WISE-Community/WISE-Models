@@ -63567,9 +63567,32 @@ Line -7500403 true 150 150 210 180
   $(".netlogo-output-area").bind("DOMSubtreeModified",function(event){
     console.log("output subtree", event);
     // Should match "End" or "Table"
-    if ($(this).html().substring(0,4) == "Tick" || $(this).html().substring(0,3) == "End" || $(this).html().substring(0,5) == "Table"){
+    if ($(this).html().indexOf("End") != -1 || $(this).html().substring(0,3) == "End" || $(this).html().substring(0,5) == "Table") {
+    
+      /*
+       * The trial has ended so we will save this component state to WISE.
+       * This will save to the component state to the server.
+       */
       var state = {};
       state.messageType = "studentWork";
+      state.isAutoSave = false;
+      state.isSubmit = false;
+      state.studentData = {};
+      state.studentData.globalValues = getGlobalValues();
+      state.studentData.tableData = getTableData();
+      state.studentData.trial = getGraphData();
+      
+      saveWISE5State(state);      
+    } else if ($(this).html().substring(0,4) == "Tick"){
+    
+      /*
+       * Send this component state to WISE. This will not actually
+       * save anything to the server. This is just used to send 
+       * the student data to other components in the step such
+       * as graph components.
+       */
+      var state = {};
+      state.messageType = "studentDataChanged";
       state.isAutoSave = false;
       state.isSubmit = false;
       state.studentData = {};
