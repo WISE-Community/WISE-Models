@@ -8,16 +8,106 @@ var correct1 = false;
 var correct2 = false;
 var correct3 = false;
 
-//boxes- true: filled, false: empty
-var isFilled1 = false;
-var isFilled2 = false;
-var isFilled3 = false;
+//boxes
+var box1;
+var box2;
+var box3;
+
+//answers
+var element1;
+var element2;
+var element3;
+
+//elements
+var lightEnergy;
+var carbonDioxide;
+var water;
+var sugar;
+var oxygen;
+var soil;
+var heatEnergy;
 
 //number of tries
 var tries = 0;
-/**
-* Create the background
-*/
+
+class Element {
+	constructor(x, y, image, text, textY) {
+		this.origX = x;
+		this.origY = y;
+		this.x = x;
+		this.y = y;
+		this.image = draw.image(image, 140, 140);
+		this.text1 = text;
+		this.text = draw.text(text).x(70).y(textY).font({size: 24, family: 'Roboto', anchor: 'middle', weight: 'bold'});
+		this.red = draw.image('./red.svg', 140, 140);
+		this.red.front().hide();
+		this.group = draw.group();
+		this.group.add(this.image);
+		this.group.add(this.text);
+		this.group.add(this.red);
+		this.group.x(x);
+		this.group.y(y);
+		var self = this;
+		self.group.draggable(function(x, y) {
+			this.front();
+			return { x: x < 1060 && x > 0, y: y < 760 && y > 0}
+		}).on("dragend", function() {
+			if (this.x() > (box1.x - 70)  && this.x() < (box1.x + 70)  && this.y() > (box1.y - 70) && this.y() < (box1.y + 70)) {
+				this.move(box1.x, box1.y);
+				if (element1 && element1 != self) {
+					element1.group.animate(100, '-', 0).move(element1.origX, element1.origY);
+				}
+				element1 = self;
+			} else if (this.x() > (box2.x - 70)  && this.x() < (box2.x + 70)  && this.y() > (box2.y - 70) && this.y() < (box2.y + 70)) {
+				this.move(box2.x, box2.y);
+				if (element2 && element2 != self) {
+					element2.group.animate(120, '-', 0).move(element2.origX, element2.origY);
+				}
+				element2 = self;
+			} else if (this.x() > (box3.x - 70)  && this.x() < (box3.x + 70)  && this.y() > (box3.y - 70) && this.y() < (box3.y + 70)) {
+				this.move(box3.x, box3.y);
+				if (element3 && element3 != self) {
+					element3.group.animate(140, '-', 0).move(element3.origX, element3.origY);
+				}
+				element3 = self;
+			} else {
+				this.move(self.origX, self.origY);
+			}
+			self.x = this.x();
+			self.y = this.y();
+		}).on("dragstart", function() {
+			if (self == element1) {
+				element1 = null;
+			} else if (self == element2) {
+				element2 = null;
+			} else if (self == element3) {
+				element3 = null;
+			}
+		});
+	}
+}
+
+class Box {
+	constructor(x, y) {
+		this.x = x;
+		this.y = y;
+		this.image = draw.image('./box.svg', 140, 140).attr({
+				'x': x,
+				'y': y,
+		});
+	}
+}
+
+function red(element) {
+	element.group.mouseover(function() {
+		element.red.show();
+	});
+	element.group.mouseout(function() {
+		element.red.hide();
+	});
+}
+
+//Create the background
 function createBackground() {
 	background = draw.image('./bg.svg', 1200, 900);
 }
@@ -40,21 +130,6 @@ function createRoots() {
 	roots = draw.image('./roots.svg', 460, 520).attr({
 		'x': 385,
 		'y': 370,
-	});
-}
-
-function createBoxes() {
-	box1 = draw.image('./box.svg', 140, 140).attr({
-		'x': 270,
-		'y': 350,
-	});
-	box2 = draw.image('./box.svg', 140, 140).attr({
-		'x': 270,
-		'y': 515,
-	});
-	box3 = draw.image('./box.svg', 140, 140).attr({
-		'x': 345,
-		'y': 750,
 	});
 }
 
@@ -85,6 +160,7 @@ function createCheck() {
 	})
 	checkGroup.click(function() {
 		tries++;
+		checkCorrect();
 		if (correct1 && correct2 && correct3) {
 			instructions.clear();
 			instructions.text = draw.text(function(add) {
@@ -105,19 +181,19 @@ function createCheck() {
 			dino.animate(500, '<', 10).move(810, 415);
 			dino.animate(400, '-', 0).move(750, 420);
 			dino.animate(200, '-', 10).move(750, 430);
-			dino.animate(600, '<', 0).move(710, 455);
+			dino.animate(600, '<', 0).move(710, 450);
 			background.hide();
 			shadow.hide();
 			check.hide();
 			check2.hide();
 			checkText.hide();
-			oxygenGroup.hide();
-			sugarGroup.hide();
-			soilGroup.hide();
-			heatEnergyGroup.hide();
-			carbonDioxideGroup.draggable(false);
-			lightEnergyGroup.draggable(false);
-			waterGroup.draggable(false);
+			oxygen.group.hide();
+			sugar.group.hide();
+			soil.group.hide();
+			heatEnergy.group.hide();
+			carbonDioxide.group.draggable(false);
+			lightEnergy.group.draggable(false);
+			water.group.draggable(false);
 		} else if (tries < 3){
 			reset();
 			if (tries == 1) {
@@ -141,424 +217,6 @@ function createCheck() {
 	})
 }
 
-function createLightEnergy() {
-	lightEnergyGroup = draw.nested();
-	lightEnergy = lightEnergyGroup.image('./lightenergy.svg', 140, 140).attr({
-		'x': 20,
-		'y': 135,
-	});
-	lightEnergyText = lightEnergyGroup.text('Light \n Energy').x(90).y(210).font({size: 24, family: 'Roboto', anchor: 'middle', weight: 'bold'});
-	lightEnergyRed = lightEnergyGroup.image('./red.svg', 140, 140).attr({
-		'x': 20,
-		'y': 135,
-	}).front().hide();
-}
-
-function lightEnergyDrag() {
-	lightEnergyGroup .draggable(function(x, y) {
-		this.front();
-		return { x: x < 1177, y: y < 762}
-	}).on("dragend", function() {
-		correct2 = false;
-		if (this.x() > 180  && this.x() < 320  && this.y() > 145 && this.y() < 285) {
-			if (isFilled1 == false) {
-				this.move(250, 215); //snap to box1
-				correct2 = true;
-				isFilled1 = true;
-			} else {
-				this.move(0, 0);
-			}
-		} else if (this.x() > 180  && this.x() < 320  && this.y() > 310 && this.y() < 450) {
-			if (isFilled2 == false) {
-				this.move(250, 380);  //snap to box2
-				correct2 = true;
-				isFilled2 = true;
-			} else {
-				this.move(0, 0);
-			}
-		} else if (this.x() > 255  && this.x() < 395  && this.y() > 545 && this.y() < 685) {
-			if (isFilled3 == false) {
-				this.move(325, 615); //snap to box3
-				isFilled3 = true;
-			} else {
-				this.move(0, 0);
-			}
-		} else {
-			this.move(0, 0);
-		}
-	}).on("dragstart", function() {
-		if (this.x() == 250 && this.y() == 215) {
-			isFilled1 = false;
-		} else if (this.x() == 250 && this.y() == 380) {
-			isFilled2 = false;
-		} else if (this.x() == 325 && this.y() == 615) {
-			isFilled3 = false;
-		}
-	});
-	lightEnergyGroup.mouseover(function() {
-		lightEnergyRed.show();
-	})
-	lightEnergyGroup.mouseout(function() {
-		lightEnergyRed.hide();
-	})
-}
-
-function createCarbonDioxide() {
-	carbonDioxideGroup = draw.nested();
-	carbonDioxide = carbonDioxideGroup.image('./carbondioxide.svg', 140, 140).attr({
-		'x': 165,
-		'y': 135,
-	});
-	carbonDioxideText = carbonDioxideGroup.text('Carbon \n Dioxide').x(235).y(210).font({size: 24, family: 'Roboto', anchor: 'middle', weight: 'bold'});
-	carbonDioxideRed = carbonDioxideGroup.image('./red.svg', 140, 140).attr({
-		'x': 165,
-		'y': 135,
-	}).front().hide();
-}
-function carbonDioxideDrag() {
-	carbonDioxideGroup.draggable(function(x, y) {
-		this.front();
-		return { x: x < 1032, y: y < 762}
-	}).on("dragend", function() {
-		correct1 = false;
-		if (this.x() > 35  && this.x() < 175  && this.y() > 145 && this.y() < 285) {
-			if (isFilled1 == false) {
-				this.move(105, 215);
-				correct1 = true; //snap to box1
-				isFilled1 = true;
-			} else {
-				this.move(0, 0);
-			}
-		} else if (this.x() > 35  && this.x() < 175  && this.y() > 310 && this.y() < 450) {
-			if (isFilled2 == false) {
-				this.move(105, 380);  //snap to box2
-				correct1 = true;
-				isFilled2 = true;
-			} else {
-				this.move(0, 0);
-			}
-		} else if (this.x() > 110  && this.x() < 250  && this.y() > 545 && this.y() < 685) {
-			if (isFilled3 == false) {
-				this.move(180, 615); //snap to box3
-				isFilled3 = true;
-			} else {
-				this.move(0, 0);
-			}
-		} else {
-			this.move(0, 0);
-		}
-	}).on("dragstart", function() {
-		if (this.x() == 105 && this.y() == 215) {
-			isFilled1 = false;
-		} else if (this.x() == 105 && this.y() == 380) {
-			isFilled2 = false;
-		} else if (this.x() == 180 && this.y() == 615) {
-			isFilled3 = false;
-		}
-	});
-	carbonDioxideGroup.mouseover(function() {
-		carbonDioxideRed.show();
-	})
-	carbonDioxideGroup.mouseout(function() {
-		carbonDioxideRed.hide();
-	})
-}
-
-function createOxygen() {
-	oxygenGroup = draw.nested();
-	oxygen = oxygenGroup.image('./oxygen.svg', 140, 140).attr({
-		'x': 310,
-		'y': 135,
-	});
-	oxygenText = oxygenGroup.text('Oxygen').x(380).y(220).font({size: 24, family: 'Roboto', anchor: 'middle', weight: 'bold'});
-	oxygenRed = oxygenGroup.image('./red.svg', 140, 140).attr({
-		'x': 310,
-		'y': 135,
-	}).front().hide();
-}
-function oxygenDrag() {
-	oxygenGroup.draggable(function(x, y) {
-		this.front();
-		return { x: x < 887, y: y < 762}
-	}).on("dragend", function() {
-		if (this.x() > -110  && this.x() < 30  && this.y() > 145 && this.y() < 285) {
-			if (!isFilled1) {
-				this.move(-40, 215); //snap to box1
-				isFilled1 = true;
-			} else {
-				this.move(0, 0);
-			}
-		} else if (this.x() > -110  && this.x() < 30  && this.y() > 310 && this.y() < 450) {
-			if (isFilled2 == false) {
-				this.move(-40, 380);  //snap to box2
-				isFilled2 = true;
-			} else {
-				this.move(0, 0);
-			}
-		} else if (this.x() > -35  && this.x() < 105  && this.y() > 545 && this.y() < 685) {
-			if (isFilled3 == false) {
-				this.move(35, 615); //snap to box3
-				isFilled3 = true;
-			} else {
-				this.move(0, 0);
-			}
-		} else {
-			this.move(0, 0);
-		}
-	}).on("dragstart", function() {
-		if (this.x() == -40 && this.y() == 215) {
-			isFilled1 = false;
-		} else if (this.x() == -40 && this.y() == 380) {
-			isFilled2 = false;
-		} else if (this.x() == 35 && this.y() == 615) {
-			isFilled3 = false;
-		}
-	});
-	oxygenGroup.mouseover(function() {
-		oxygenRed.show();
-	})
-	oxygenGroup.mouseout(function() {
-		oxygenRed.hide();
-	})
-}
-
-function createSugar() {
-	sugarGroup = draw.nested();
-	sugar = sugarGroup.image('./sugar.svg', 140, 140).attr({
-		'x': 455,
-		'y': 135,
-	});
-	sugarText = sugarGroup.text('Sugar').x(525).y(240).font({size: 24, family: 'Roboto', anchor: 'middle', weight: 'bold'});
-	sugarRed = sugarGroup.image('./red.svg', 140, 140).attr({
-		'x': 455,
-		'y': 135,
-	}).front().hide();
-}
-
-function sugarDrag() {
-	sugarGroup.draggable(function(x, y) {
-		this.front();
-		return { x: x < 742, y: y < 897}
-	}).on("dragend", function() {
-		if (this.x() > -255  && this.x() < -115  && this.y() > 145 && this.y() < 285) {
-			if (isFilled1 == false) {
-				this.move(-185, 215);//snap to box1
-				isFilled1 = true;
-			} else {
-				this.move(0, 0);
-			}
-		} else if (this.x() > -255  && this.x() < -115  && this.y() > 310 && this.y() < 450) {
-			if (isFilled2 == false) {
-				this.move(-185, 380);  //snap to box2
-				isFilled2 = true;
-			} else {
-				this.move(0, 0);
-			}
-		} else if (this.x() > -180  && this.x() < -40  && this.y() > 545 && this.y() < 685) {
-			if (isFilled3 == false) {
-				this.move(-110, 615); //snap to box3
-				isFilled3 = true;
-			} else {
-				this.move(0, 0);
-			}
-		} else {
-			this.move(0, 0);
-		}
-	}).on("dragstart", function() {
-		if (this.x() == -185 && this.y() == 215) {
-			isFilled1 = false;
-		} else if (this.x() == -185 && this.y() == 380) {
-			isFilled2 = false;
-		} else if (this.x() == -110 && this.y() == 615) {
-			isFilled3 = false;
-		}
-	});
-	sugarGroup.mouseover(function() {
-		sugarRed.show();
-	})
-	sugarGroup.mouseout(function() {
-		sugarRed.hide();
-	})
-}
-
-function createWater() {
-	waterGroup = draw.nested();
-	water = waterGroup.image('./water.svg', 140, 140).attr({
-		'x': 600,
-		'y': 135,
-	});
-	waterText = waterGroup.text('Water').x(670).y(230).font({size: 24, family: 'Roboto', anchor: 'middle', weight: 'bold'});
-	waterRed = waterGroup.image('./red.svg', 140, 140).attr({
-		'x': 600,
-		'y': 135,
-	}).front().hide();
-}
-
-function waterDrag() {
-	waterGroup.draggable(function(x, y) {
-		this.front();
-		return { x: x < 597, y: y < 762}
-	}).on("dragend", function() {
-		correct3 = false;
-		if (this.x() > -400  && this.x() < -260 && this.y() > 145 && this.y() < 285) {
-			if (isFilled1 == false) {
-				this.move(-330, 215); //snap to box1
-				isFilled1 = true;
-			} else {
-				this.move(0, 0);
-			}
-		} else if (this.x() > -400  && this.x() < -260 && this.y() > 310 && this.y() < 450) {
-			if (isFilled2 == false) {
-				this.move(-330, 380);  //snap to box2
-				isFilled2 = true;
-			} else {
-				this.move(0, 0);
-			}
-		} else if (this.x() > -325  && this.x() < -185 && this.y() > 545 && this.y() < 685) {
-			if (isFilled3 == false) {
-				this.move(-255, 615); //snap to box3
-				isFilled3 = true;
-				correct3 = true;
-			} else {
-				this.move(0, 0);
-			}
-		} else {
-			this.move(0, 0);
-		}
-	}).on("dragstart", function() {
-		if (this.x() == -330 && this.y() == 215) {
-			isFilled1 = false;
-		} else if (this.x() == -330 && this.y() == 380) {
-			isFilled2 = false;
-		} else if (this.x() == -255 && this.y() == 615) {
-			isFilled3 = false;
-		}
-	});
-	waterGroup.mouseover(function() {
-		waterRed.show();
-	})
-	waterGroup.mouseout(function() {
-		waterRed.hide();
-	})
-}
-
-function createSoil() {
-	soilGroup = draw.nested();
-	soil = soilGroup.image('./soil.svg', 140, 140).attr({
-		'x': 745,
-		'y': 135,
-	});
-	soilText = soilGroup.text('Soil').x(815).y(230).font({size: 24, family: 'Roboto', anchor: 'middle', weight: 'bold'});
-	soilRed = soilGroup.image('./red.svg', 140, 140).attr({
-		'x': 745,
-		'y': 135,
-	}).front().hide();
-}
-
-function soilDrag() {
-	soilGroup.draggable(function(x, y) {
-		this.front();
-		return { x: x < 452, y: y < 762}
-	}).on("dragend", function() {
-		if (this.x() > -545 && this.x() < -405  && this.y() > 145 && this.y() < 285) {
-			if (isFilled1 == false) {
-				this.move(-475, 215); //snap to box1
-				isFilled1 = true;
-			} else {
-				this.move(0, 0);
-			}
-		} else if (this.x() > -545 && this.x() < -405 && this.y() > 310 && this.y() < 450) {
-			if (isFilled2 == false) {
-				this.move(-475, 380);  //snap to box2
-				isFilled2 = true;
-			} else {
-				this.move(0, 0);
-			}
-		} else if (this.x() > -470 && this.x() < -330 && this.y() > 545 && this.y() < 685) {
-			if (isFilled3 == false) {
-				this.move(-400, 615); //snap to box3
-				isFilled3 = true;
-			} else {
-				this.move(0, 0);
-			}
-		} else {
-			this.move(0, 0);
-		}
-	}).on("dragstart", function() {
-		if (this.x() == -475 && this.y() == 215) {
-			isFilled1 = false;
-		} else if (this.x() == -475 && this.y() == 380) {
-			isFilled2 = false;
-		} else if (this.x() == -400 && this.y() == 615) {
-			isFilled3 = false;
-		}
-	});
-	soilGroup.mouseover(function() {
-		soilRed.show();
-	})
-	soilGroup.mouseout(function() {
-		soilRed.hide();
-	})
-}
-
-function createHeatEnergy() {
-	heatEnergyGroup = draw.nested();
-	heatEnergy = heatEnergyGroup.image('./heatenergy.svg', 140, 140).attr({
-		'x': 890,
-		'y': 135,
-	});
-	heatEnergyText = heatEnergyGroup.text('Heat \n Energy').x(960).y(210).font({size: 24, family: 'Roboto', anchor: 'middle', weight: 'bold'});
-	heatRed = heatEnergyGroup.image('./red.svg', 140, 140).attr({
-		'x': 890,
-		'y': 135,
-	}).front().hide();
-}
-
-function heatEnergyDrag() {
-	heatEnergyGroup.draggable(function(x, y) {
-		this.front();
-		return { x: x < 307, y: y < 762}
-	}).on("dragend", function() {
-		if (this.x() > -690 && this.x() < -550 && this.y() > 145 && this.y() < 285) {
-			if (isFilled1 == false) {
-				this.move(-620, 215); //snap to box1
-				isFilled1 = true;
-			} else {
-				this.move(0, 0);
-			}
-		} else if (this.x() > -690  && this.x() < -550 && this.y() > 310 && this.y() < 450) {
-			if (isFilled1 == false) {
-				this.move(-620, 380);  //snap to box2
-				isFilled2 = true;
-			} else {
-				this.move(0, 0);
-			}
-		} else if (this.x() > -615 && this.x() < -475 && this.y() > 545 && this.y() < 685) {
-			if (isFilled3 == false) {
-				this.move(-545, 615); //snap to box3
-				isFilled3 = true;
-			} else {
-				this.move(0, 0);
-			}
-		} else {
-			this.move(0, 0);
-		}
-	}).on("dragstart", function() {
-		if (this.x() == -620 && this.y() == 215) {
-			isFilled1 = false;
-		} else if (this.x() == -620 && this.y() == 380) {
-			isFilled2 = false;
-		} else if (this.x() == -545 && this.y() == 615) {
-			isFilled3 = false;
-		}
-	});
-	heatEnergyGroup.mouseover(function() {
-		heatRed.show();
-	})
-	heatEnergyGroup.mouseout(function() {
-		heatRed.hide();
-	})
-}
 
 function createTryButton() {
 	tryGroup = draw.nested();
@@ -577,28 +235,32 @@ function createFullTree() {
 	fullTree = draw.image('./fulltree.svg', 1200, 900).back();
 }
 
-//reset all but 3 correct ones
+//reset incorrect ones
 function reset() {
 	if (!correct1) {
-		carbonDioxideGroup.move(0, 0);
-		isFilled1 = false;
+		element1.group.move(element1.origX, element1.origY);
 	}
 	if (!correct2) {
-		lightEnergyGroup.move(0, 0);
-		isFilled2 = false;
+		element2.group.move(element2.origX, element2.origY);
 	}
 	if (!correct3) {
-		waterGroup.move(0, 0);
-		isFilled3 = false;
+		element3.group.move(element3.origX, element3.origY);
 	}
-	oxygenGroup.move(0, 0);
-	sugarGroup.move(0, 0);
-	soilGroup.move(0, 0);
-	heatEnergyGroup.move(0, 0);
+}
+
+function checkCorrect() {
+	if (element1 == lightEnergy || element1 == carbonDioxide) {
+		correct1 = true;
+	}
+	if (element2 == lightEnergy || element2 == carbonDioxide) {
+		correct2 = true;
+	}
+	if (element3 == water) {
+		correct3 = true;
+	}
 }
 
 function init() {
-
 	// create the SVG.js draw object
 	draw = SVG('model');
 
@@ -611,31 +273,27 @@ function init() {
 	createDino();
 
 	//create grey boxes
-	createBoxes();
+	box1 = new Box(270, 350);
+	box2 = new Box(270, 515);
+	box3 = new Box(345, 750);
 
 	createInstructions();
 
 	//create Check button
 	createCheck();
 
-	createHeatEnergy();
-	heatEnergyDrag();
+	//create elements
+	lightEnergy = new Element(20, 135, './lightenergy.svg', 'Light \n Energy', 70);
+	carbonDioxide = new Element(165, 135, './carbonDioxide.svg', 'Carbon \n Dioxide', 70);
+ 	water = new Element(310, 135, './water.svg', 'Water', 90);
+	sugar = new Element(455, 135, './sugar.svg', 'Sugar', 100);
+	oxygen = new Element(600, 135, './oxygen.svg', 'Oxygen', 90);
+	soil = new Element(745, 135, './soil.svg', 'Soil', 90);
+	heatEnergy = new Element(890, 135, './heatenergy.svg', 'Heat \n Energy', 70);
 
-	createSoil();
-	soilDrag();
+	var elements = [lightEnergy, carbonDioxide, water, sugar, oxygen, soil, heatEnergy];
 
-	createLightEnergy();
-	lightEnergyDrag();
-
-	createWater();
-	waterDrag();
-
-	createCarbonDioxide();
-	carbonDioxideDrag();
-
-	createOxygen();
-	oxygenDrag();
-
-	createSugar();
-	sugarDrag();
+	for (var i = 0; i < 8; i++) {
+    	red(elements[i]);
+	}
 }
