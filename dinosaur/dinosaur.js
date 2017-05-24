@@ -54,6 +54,7 @@ class Element {
 		this.group.add(this.red);
 		this.group.x(x);
 		this.group.y(y);
+		this.group.addClass('pointer');
 
 		//drag n drop functionality
 		var self = this;
@@ -280,13 +281,13 @@ function createFullTree() {
 
 //reset incorrect ones
 function reset() {
-	if (!correct1) {
+	if (!correct1 && element1 != null) {
 		element1.group.move(element1.origX, element1.origY);
 	}
-	if (!correct2) {
+	if (!correct2 && element2 != null) {
 		element2.group.move(element2.origX, element2.origY);
 	}
-	if (!correct3) {
+	if (!correct3 && element3 != null) {
 		element3.group.move(element3.origX, element3.origY);
 	}
 }
