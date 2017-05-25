@@ -208,7 +208,6 @@ function createCheck() {
         } else if (tries < 3) {
             reset();
             checkCorrect();
-            instructions.text('Oops! You seem to have left the box blank. \n Drag the one you think will help mitochondria start cellular respiration into the gray box \n and check your answer.').x(20).y(20).font({size: 22});
             //unsuccessful attempts and out of tries
         } else {
             instructions.text('Nice try, but that is not correct. This was your last chance. \n Click the \"Try Again\" button to restart the quiz!').x(20).y(20).font({size: 22});
@@ -302,6 +301,8 @@ function checkCorrect() {
             add.tspan('usable chemical energy ').fill('#0ace00').font({weight: 'bold'})
             add.tspan('during cellular respiration.')
         }).x(20).y(20).font({size: 22});
+        default:
+            instructions.text('Oops! You seem to have left the box blank. \n Drag the one you think will help mitochondria start cellular respiration into the gray box \n and check your answer.').x(20).y(20).font({size: 22});
     }
 }
 
