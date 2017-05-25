@@ -23,6 +23,12 @@ var chemicalEnergy;
 
 var mitochondrion;
 
+var glucose1;
+var oxygen1;
+var chemicalEnergy1;
+var carbonDioxide1;
+var water1;
+
 //number of tries
 var tries = 0;
 
@@ -38,7 +44,6 @@ class Element {
 
         //draw element
         this.image = draw.image(image, 140, 140);
-        this.txt = text;
         this.text = draw.text(text).x(70).y(textY).font({size: 24, family: 'Roboto', anchor: 'middle', weight: 'bold'});
         this.red = draw.image('./red.svg', 140, 140);
         this.red.front().hide();
@@ -78,6 +83,25 @@ class Element {
                 element = null;
             }
         });
+    }
+}
+
+class endElement {
+    constructor(x, y, image, text, textY) {
+        //current position
+        this.x = x;
+        this.y = y;
+
+        //draw element
+        this.image = draw.image(image, 120, 120);
+        this.text = draw.text(text).x(70).y(textY).font({size: 24, family: 'Roboto', anchor: 'middle', weight: 'bold'});
+
+        //create group
+        this.group = draw.group();
+        this.group.add(this.image);
+        this.group.add(this.text);
+        this.group.x(x);
+        this.group.y(y);
     }
 }
 
@@ -178,12 +202,13 @@ function createCheck() {
             //animation
             mitochondrion.x(-20);
             mitochondrion.y(-150);
-            console.log('here');
+            createEndElements();
 
             //unsuccessful attempt
         } else if (tries < 3) {
             reset();
             checkCorrect();
+            instructions.text('Oops! You seem to have left the box blank. \n Drag the one you think will help mitochondria start cellular respiration into the gray box \n and check your answer.').x(20).y(20).font({size: 22});
             //unsuccessful attempts and out of tries
         } else {
             instructions.text('Nice try, but that is not correct. This was your last chance. \n Click the \"Try Again\" button to restart the quiz!').x(20).y(20).font({size: 22});
@@ -292,6 +317,22 @@ function createTryButton() {
         location.reload();
     })
     tryGroup.addClass('pointer');
+}
+
+function createEndElements () {
+    enter = draw.image('./enter.svg', 300, 300).attr({
+        'x': 100,
+        'y': 0,
+    });
+    enterText = draw.text('Glucose and oxygen enter \n mitochondria.').x(120).y(120).font({size: 22});
+    glucose1 = new endElement(0, 250, './glucose1.svg', 'Glucose', 80);
+    glucose1.group.animate(2000, '-', 0).move(370, 300);
+    oxygen1 = new endElement(0, 350, './oxygen1.svg', 'Oxygen', 70);
+    oxygen1.group.animate(2000, '-', 0).move(350, 320);
+    chemicalEnergy1 = new endElement(805, 170, './chemicalenergy.svg', 'Usable \n Chemical \n Energy', 30);
+    carbonDioxide1 = new endElement(225, 170, './carbonDioxide.svg', 'Carbon \n Dioxide', 70);
+    water1ß = new endElement(515, 170, './water.svg', 'Water', 90);
+    //create arrows, end message, play again button, exit
 }
 
 function init() {
