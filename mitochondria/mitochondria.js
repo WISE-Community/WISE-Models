@@ -94,7 +94,7 @@ class endElement {
 
         //draw element
         this.image = draw.image(image, 120, 120);
-        this.text = draw.text(text).x(70).y(textY).font({size: 24, family: 'Roboto', anchor: 'middle', weight: 'bold'});
+        this.text = draw.text(text).x(60).y(textY).font({size: 24, family: 'Roboto', anchor: 'middle', weight: 'bold'});
 
         //create group
         this.group = draw.group();
@@ -200,8 +200,8 @@ function createCheck() {
             arrows.hide();
 
             //animation
-            mitochondrion.x(-20);
-            mitochondrion.y(-150);
+            mitochondrion.x(-50);
+            mitochondrion.y(-170);
             createEndElements();
 
             //unsuccessful attempt
@@ -224,6 +224,20 @@ function createCheck() {
         check2.hide();
         checkText.font({fill: '#FF9900'})
     })
+}
+
+//create the play again button and its functionality
+function createAgainButton() {
+	againGroup = draw.nested();
+	againButton = againGroup.image('./try.svg', 180, 90).attr({
+		'x': 950,
+		'y': 20,
+	});
+	againText = againGroup.text('Play Again').x(985).y(50).font({size: 22, family: 'Raleway'});
+	againGroup.click(function() {
+		location.reload();
+	})
+	againGroup.addClass('pointer');
 }
 
 //create the mitochondria
@@ -301,8 +315,9 @@ function checkCorrect() {
             add.tspan('usable chemical energy ').fill('#0ace00').font({weight: 'bold'})
             add.tspan('during cellular respiration.')
         }).x(20).y(20).font({size: 22});
+        break;
         default:
-            instructions.text('Oops! You seem to have left the box blank. \n Drag the one you think will help mitochondria start cellular respiration into the gray box \n and check your answer.').x(20).y(20).font({size: 22});
+        instructions.text('Oops! You seem to have left the box blank. \n Drag the one you think will help mitochondria start cellular respiration into the gray box \n and check your answer.').x(20).y(20).font({size: 22});
     }
 }
 
@@ -321,18 +336,52 @@ function createTryButton() {
 }
 
 function createEndElements () {
-    enter = draw.image('./enter.svg', 300, 300).attr({
-        'x': 100,
+    enter = draw.image('./enter.svg', 290, 290).attr({
+        'x': 105,
         'y': 0,
     });
     enterText = draw.text('Glucose and oxygen enter \n mitochondria.').x(120).y(120).font({size: 22});
-    glucose1 = new endElement(0, 250, './glucose1.svg', 'Glucose', 80);
-    glucose1.group.animate(2000, '-', 0).move(370, 300);
+    glucose1 = new endElement(0, 250, './glucose1.svg', 'Glucose', 100);
+    glucose1.group.animate(1800, '-', 0).move(370, 280);
     oxygen1 = new endElement(0, 350, './oxygen1.svg', 'Oxygen', 70);
-    oxygen1.group.animate(2000, '-', 0).move(350, 320);
-    chemicalEnergy1 = new endElement(805, 170, './chemicalenergy.svg', 'Usable \n Chemical \n Energy', 30);
-    carbonDioxide1 = new endElement(225, 170, './carbonDioxide.svg', 'Carbon \n Dioxide', 70);
-    water1ß = new endElement(515, 170, './water.svg', 'Water', 90);
+    oxygen1.group.animate(1800, '-', 0).move(350, 300).delay(200).queue(function(){
+        oxygen1.group.hide();
+        glucose1.group.hide();
+        enter.hide();
+        enterText.hide();
+        chemicalEnergy1 = new endElement(450, 280, './chemicalenergy1.svg', 'Usable \n Chemical \n Energy', 25);
+        chemicalEnergy1.group.delay(200).animate(2000, '-', 0).move(805, 145);
+        carbonDioxide1 = new endElement(480, 280, './carbonDioxide1.svg', 'Carbon \n Dioxide', 55);
+        carbonDioxide1.group.delay(200).animate(2000, '-', 0).move(830, 295);
+        water1 = new endElement(440, 290, './water1.svg', 'Water', 70);
+        water1.group.delay(200).animate(2000, '-', 0).move(805, 435);
+        exit = draw.image('./exit.svg', 570, 570).attr({
+            'x': 475,
+            'y': -185,
+        });
+        exitText = draw.text(function(add) {
+            add.tspan('During cellular respiration, mitochondria release ')
+            add.tspan('usable chemical energy').fill('#02a300').font({weight: 'bold'}).newLine();
+            add.tspan(', carbon dioxide, and water.')
+        }).x(500).y(80).font({size: 22});
+        this.dequeue();
+    }).delay(2400).queue(function(){
+        exit.hide();
+        exitText.hide();
+        arrows1 = draw.image('./arrows1.svg', 630, 280).attr({
+            'x': 200,
+            'y': 220,
+        });
+        end = draw.image('./end.svg', 410, 410).attr({
+            'x': 300,
+            'y': 100,
+        });
+        endText = draw.text('How does this happen? \n Where do carbon dioxide and water \n molecules come from?').x(315).y(260).font({size: 22, weight: 'bold'});
+        oxygen1.group.show().move(70, 215);
+        glucose1.group.show().move(70, 355);
+        createAgainButton();
+        this.dequeue();
+    });
     //create arrows, end message, play again button, exit
 }
 
