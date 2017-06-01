@@ -4,12 +4,12 @@
 var draw = null;
 
 //answers - true: correct, false: incorrect
-var correct1 = true;
-var correct2 = true;
-var correct3 = true;
-var correct4 = true;
-var correct5 = true;
-var correct6 = true;
+var correct1 = false;
+var correct2 = false;
+var correct3 = false;
+var correct4 = false;
+var correct5 = false;
+var correct6 = false;
 
 //gray box
 var box1;
@@ -210,7 +210,7 @@ function createCheck() {
 	//when check button is clicked
 	checkGroup.click(function() {
 		tries++;
-		//checkCorrect();
+		checkCorrect();
 		//successful attempt
 		if (correct1 && correct2 && correct3 && correct4 && correct5 && correct6) {
 			instructions.clear();
@@ -271,6 +271,49 @@ function createCheck() {
 		check2.hide();
 		checkText.font({fill: '#FF9900'})
 	})
+}
+
+//checks if the answers are correct
+function checkCorrect() {
+	if (element1 == lightEnergy) {
+		correct1 = true;
+	}
+    if (element2 == glucose || element2 == carbonDioxide) {
+		correct2 = true;
+	}
+	if (element3 == glucose || element3 == carbonDioxide) {
+		correct3 = true;
+	}
+    if (element4 == water || element4 == oxygen) {
+        correct4 = true;
+    }
+    if (element5 == water || element5 == oxygen) {
+        correct5 = true;
+    }
+    if (element6 == chemicalEnergy) {
+        correct6 = true;
+    }
+}
+//reset incorrect ones
+function reset() {
+	if (!correct1 && element1 != null) {
+		element1.group.move(element1.origX, element1.origY);
+	}
+	if (!correct2 && element2 != null) {
+		element2.group.move(element2.origX, element2.origY);
+	}
+	if (!correct3 && element3 != null) {
+		element3.group.move(element3.origX, element3.origY);
+	}
+    if (!correct4 && element4 != null) {
+		element4.group.move(element4.origX, element4.origY);
+	}
+    if (!correct5 && element5 != null) {
+		element5.group.move(element5.origX, element5.origY);
+	}
+    if (!correct6 && element6 != null) {
+		element6.group.move(element6.origX, element6.origY);
+	}
 }
 
 //create the try again button and its functionality
