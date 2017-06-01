@@ -245,19 +245,22 @@ function createCheck() {
             glucose.group.draggable(false);
             chemicalEnergy.group.draggable(false);
 
+            //make play again button
+            createAgainButton();
+
 		//unsuccessful attempt
 		} else if (tries < 3){
 			reset();
 			if (tries == 1) {
-				instructions.text('Try again. You have 2 more chances.');
+				instructions.text('Try again. You have 2 more chances.').x(20).y(20).font({size: 21});
 			}
 			if (tries == 2) {
-				instructions.text('Try again. You have 1 more chance.');
+				instructions.text('Try again. You have 1 more chance.').x(20).y(20).font({size: 21});
 			}
 
 		//unsuccessful attempts and out of tries
 		} else {
-			instructions.text('Nice try, but that is not correct. This was your last chance. \n Click the \"Try Again\" button to restart the quiz!');
+			instructions.text('Nice try, but that is not correct. This was your last chance. \n Click the \"Try Again\" button to restart the quiz!').x(20).y(20).font({size: 21});
 			shadow.hide();
 			check.hide();
 			check2.hide();
@@ -278,16 +281,16 @@ function checkCorrect() {
 	if (element1 == lightEnergy) {
 		correct1 = true;
 	}
-    if (element2 == glucose || element2 == carbonDioxide) {
+    if (element2 == glucose || element2 == oxygen) {
 		correct2 = true;
 	}
-	if (element3 == glucose || element3 == carbonDioxide) {
+	if (element3 == glucose || element3 == oxygen) {
 		correct3 = true;
 	}
-    if (element4 == water || element4 == oxygen) {
+    if (element4 == water || element4 == carbonDioxide) {
         correct4 = true;
     }
-    if (element5 == water || element5 == oxygen) {
+    if (element5 == water || element5 == carbonDioxide) {
         correct5 = true;
     }
     if (element6 == chemicalEnergy) {
@@ -323,12 +326,26 @@ function createTryButton() {
 		'x': 1020,
 		'y': 20,
 	});
-	tryText = tryGroup.text('Try Again').x(1037).y(33).font({size: 30, family: 'Raleway'});
+	tryText = tryGroup.text('Try Again').x(1052).y(40).font({size: 21, family: 'Raleway'});
 	tryGroup.click(function() {
 		location.reload();
 	})
 	tryGroup.addClass('pointer');
 }
+
+function createAgainButton() {
+	againGroup = draw.nested();
+	againButton = againGroup.image('./try.svg', 180, 90).attr({
+		'x': 950,
+		'y': 50,
+	});
+	againText = againGroup.text('Play Again').x(985).y(85).font({size: 22, family: 'Raleway'});
+	againGroup.click(function() {
+		location.reload();
+	})
+	againGroup.addClass('pointer');
+}
+
 
 function init() {
     // create the SVG.js draw object
