@@ -88,6 +88,39 @@ function createPlant() {
     }).hide();
 }
 
+function createBigLeaf() {
+    bigleaf = draw.group();
+    leafzoom = bigleaf.image('./leafzoom.svg', 70, 120).attr({
+        'x': 430,
+        'y': 495,
+    }).opacity(0);
+    leaflines = bigleaf.image('./leaflines.svg', 200, 330).attr({
+        'x': 435,
+        'y': 350,
+    }).opacity(0);
+    bigleaf.addClass('pointer');
+}
+
+function createCell() {
+    celllines = draw.image('./celllines.svg', 95, 250).attr({
+        'x': 200,
+        'y': 410,
+    }).opacity(0);
+    cell = draw.image('./cell.svg', 200, 200).attr({
+        'x': 250,
+        'y': 500,
+    }).opacity(0);
+    redBox = draw.image('./redBox.svg', 84, 55).attr({
+        'x': 985,
+        'y': 514,
+    }).hide();
+    yellowBox = draw.image('./yellowBox.svg', 84, 55).attr({
+        'x': 985,
+        'y': 514,
+    }).hide();
+    cellText = draw.text('Cells').x(900).y(230).fill('#F00').font({size: 30}).hide();
+}
+
 function createInstructions() {
     textbox = draw.image('./textbox.svg', 1180, 200).attr({
         'x': 10,
@@ -97,14 +130,14 @@ function createInstructions() {
         add.tspan('We know that cellular respiration happens in ')
         add.tspan('every cell.').font({weight: 'bold'})
         add.tspan('Let\'s explore exactly where it is occuring. Click on a leaf.').newLine()
-    }).x(50).y(50).font({size: 25});;
+    }).x(50).y(50).font({size: 30});
 }
 
 function animateLeaf1() {
     leaf1click.image.show();
     leaf1click.hover.hide();
     leaf1click.group.off('mouseover');
-    leaf1.animate(2000, '-', 0).move(410, 525).size(110).queue(function(){
+    leaf1.animate(1500, '-', 0).move(410, 525).size(110).queue(function(){
         microscope.hide();
         msleaf1 = draw.image('./msleaf1.svg', 450, 550).attr({
             'x': 220,
@@ -123,7 +156,7 @@ function animateLeaf2() {
     leaf2click.image.show();
     leaf2click.hover.hide();
     leaf2click.group.off('mouseover');
-    leaf2.animate(2000, '-', 0).move(420, 520).queue(function(){
+    leaf2.animate(1500, '-', 0).move(420, 520).queue(function(){
         microscope.hide();
         msleaf2 = draw.image('./msleaf2.svg', 450, 550).attr({
             'x': 220,
@@ -139,20 +172,13 @@ function animateLeaf2() {
 }
 
 function zoomLeaf() {
-    bigleaf = draw.group();
-    leafzoom = bigleaf.image('./leafzoom.svg', 70, 120).attr({
-        'x': 430,
-        'y': 495,
-    }).opacity(0);
-    leaflines = bigleaf.image('./leaflines.svg', 200, 330).attr({
-        'x': 435,
-        'y': 350,
-    }).opacity(0);
-    leafzoom.animate(2000, '-', 0).move(800, 330).size(210).opacity(1);
-    leaflines.animate(2000, '-', 0).size(440, 330).opacity(1);
-    instructions.text('With a microscope you can see what is happening inside the leaf. Click the box below.').y(50);
-    leafzoom.addClass('pointer');
-    leafzoom.click(leafCell);
+    leafzoom.animate(1500, '>', 0).move(800, 330).size(210).opacity(1);
+    leaflines.animate(1500, '>', 0).size(440, 330).opacity(1);
+    instructions.text(function(add) {
+        add.tspan('With a microscope you can see what is happening inside the leaf.')
+        add.tspan('Click the box below.').newLine()
+    }).x(50).y(50).font({size: 30});
+    bigleaf.click(leafCell);
 }
 
 function leafCell() {
@@ -167,7 +193,29 @@ function leafCell() {
         'x': 100,
         'y': 210,
     })
-    leafzoom.animate(1000, '>', 0).move(170, 400).size(140, 240);
+    instructions.text(function(add) {
+        add.tspan('This is inside the leaf. There are many cells inside the leaf.')
+        add.tspan('Click the red box below to find where cellular respiration is happening.').newLine()
+    }).x(50).y(50).font({size: 30});
+    leafzoom.animate(1000, '>', 0).move(140, 465).size(160, 260).delay(200).queue(function() {
+        celllines.animate(1900, '-', 0).move(200, 310).size(230, 470).opacity(1);
+        cell.animate(2000, '>', 0).move(420, 200).size(670).opacity(1);
+        this.dequeue();
+    }).delay(1950).queue(function() {
+        redBox.show();
+        cellText.show();
+        this.dequeue();
+    });
+}
+
+function plantCell() {
+    leafzoom.hide();
+    celllines.hide();
+    yellowBox.hide();
+    cellClick.group.off('mouseover');
+    cellClick.group.off('mouseout');
+    redBox.hide();
+    cell.animate(1000, '-', 0).move(-50, 450).size(600, 300);
 }
 
 function init() {
@@ -179,7 +227,10 @@ function init() {
     createInstructions();
     createMicroscope();
     createPlant();
+    createBigLeaf();
+    createCell();
 
     leaf1click = new Clickable(leaf1, leaf1hover, animateLeaf1);
     leaf2click = new Clickable(leaf2, leaf2hover, animateLeaf2);
+    cellClick = new Clickable(redBox, yellowBox, plantCell)
 }
