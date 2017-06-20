@@ -391,13 +391,13 @@ function setup() {
     createCheck();
 
     //create elements
-    lightEnergy = new Element(20, 135, './lightenergy.svg', $.i18n('lightEnergy'), 70);
+    lightEnergy = new Element(20, 135, './lightEnergy.svg', $.i18n('lightEnergy'), 70);
     carbonDioxide = new Element(165, 135, './carbonDioxide.svg', $.i18n('carbonDioxide'), 70);
     water = new Element(310, 135, './water.svg', $.i18n('water'), 90);
     sugar = new Element(455, 135, './sugar.svg', $.i18n('sugar'), 100);
     oxygen = new Element(600, 135, './oxygen.svg', $.i18n('oxygen'), 90);
     soil = new Element(745, 135, './soil.svg', $.i18n('soil'), 90);
-    heatEnergy = new Element(890, 135, './heatenergy.svg', $.i18n('heatEnergy'), 70);
+    heatEnergy = new Element(890, 135, './heatEnergy.svg', $.i18n('heatEnergy'), 70);
 
     var elements = [lightEnergy, carbonDioxide, water, sugar, oxygen, soil, heatEnergy];
 
