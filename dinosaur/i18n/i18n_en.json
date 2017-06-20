@@ -1,0 +1,19 @@
+{
+    "carbonDioxide": "Carbon\nDioxide",
+    "carbonDioxideText": "carbon dioxide",
+    "check": "Check!",
+    "clickAndDrag": "Click and drag the 3 necessary ingredients into the gray boxes below.\nWhen you are ready to see if your answer is right, click the \"check\" button.",
+    "greatJob": "Great job! Plants need light energy, carbon dioxide, and water to make their own food (a type of sugar).\nLet's go to the next step and explore how plants get these elements!",
+    "heatEnergy": "Heat\nEnergy",
+    "lightEnergy": "Light\nEnergy",
+    "lightEnergyText": "light energy",
+    "niceTry": "Nice try, but that is not correct. This was your last chance.\nClick the \"Try Again\" button to restart the quiz!",
+    "oxygen": "Oxygen",
+    "soil": "Soil",
+    "sugar": "Sugar",
+    "tryAgain": "Try Again",
+    "tryAgainOneMoreChance": "Try again. You have 1 more chance.",
+    "tryAgainTwoMoreChances": "Try again. You have 2 more chances.",
+    "water": "Water",
+    "waterText": "water"
+}
