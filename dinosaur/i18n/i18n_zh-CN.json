@@ -1,0 +1,19 @@
+{
+    "carbonDioxide": "二氧化碳",
+    "carbonDioxideText": "二氧化碳",
+    "check": "检查!",
+    "clickAndDrag": "点击你认为植物进行光合作用所需要的三种物质，并将它们拖拽到下方灰色的空格内.\n完成之后, 请点击 \"核查\" 按钮.",
+    "greatJob": "非常棒! 植物需要光能, 二氧化碳, 和水来制造它们自己的食物 (一种糖).\n接下来我们来了解植物是如何得到这三样物质的!",
+    "heatEnergy": "热能",
+    "lightEnergy": "光能",
+    "lightEnergyText": "光能",
+    "niceTry": "很遗憾，答案错误. 这是你最后一次机会了.\n点击 \"再试一次\" 按钮来重做测验!",
+    "oxygen": "氧气",
+    "soil": "土壤",
+    "sugar": "糖",
+    "tryAgain": "再试一次",
+    "tryAgainOneMoreChance": "再试一次. 你还有一次机会.",
+    "tryAgainTwoMoreChances": "再试一次. 你还有两次机会.",
+    "water": "水",
+    "waterText": "水"
+}
