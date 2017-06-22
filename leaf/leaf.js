@@ -121,6 +121,43 @@ function createCell() {
     cellText = draw.text('Cells').x(900).y(230).fill('#F00').font({size: 30}).hide();
 }
 
+function createPlantCell() {
+    plantCellLines = draw.image('./plantcelllines.svg', 95, 220).attr({
+        'x': 200,
+        'y': 410,
+    }).opacity(0);
+    plantCell = draw.image('./plantcell.svg', 200, 170).attr({
+        'x': 200,
+        'y': 410,
+    }).opacity(0);
+}
+
+function createMitochondria() {
+    mitochondria1 = draw.image('./mitochondria.svg', 80, 180).attr({
+        'x': 630,
+        'y': 420,
+    }).rotate(-10);
+    mitochondria2 = draw.image('./mitochondria.svg', 60, 130).attr({
+        'x': 800,
+        'y': 260,
+    }).rotate(15);
+}
+
+function createChloroplast() {
+    chloroplast1 = draw.image('./chloroplast.svg', 80, 170).attr({
+        'x': 660,
+        'y': 477,
+    });
+    chlorplast2 = draw.image('./chloroplast.svg', 100, 225).attr({
+        'x': 600,
+        'y': 280,
+    }).rotate(320);
+    chlorplast3 = draw.image('./chloroplast.svg', 80, 170).attr({
+        'x': 865,
+        'y': 260,
+    });
+}
+
 function createInstructions() {
     textbox = draw.image('./textbox.svg', 1180, 200).attr({
         'x': 10,
@@ -205,17 +242,25 @@ function leafCell() {
         redBox.show();
         cellText.show();
         this.dequeue();
-    });
+    });5
 }
 
-function plantCell() {
-    leafzoom.hide();
-    celllines.hide();
-    yellowBox.hide();
+function animatePlantCell() {
     cellClick.group.off('mouseover');
     cellClick.group.off('mouseout');
+    leafzoom.animate(1000, '-', 0).move(190, 200).size(70);
+    celllines.hide();
+    yellowBox.hide();
     redBox.hide();
-    cell.animate(1000, '-', 0).move(-50, 450).size(600, 300);
+    cell.animate(1000, '-', 0).move(-90, 420).size(600, 300);
+    cellText.animate(1000, '-', 0).move(280, 390).size(20, 10).delay(200).queue(function() {
+        plantCell.animate(1000, '-', 0).move(532, 230).size(632).opacity(1);
+        plantCellLines.animate(1000, '-', 0).move(343, 90).size(350, 800).opacity(1);
+    });
+    instructions.text(function(add) {
+        add.tspan('This is inside the plant cell. Where do you think plants release energy from glucose?')
+        add.tspan('Find an organelle that makes cellular respiration possible.').newLine()
+    }).x(50).y(50).font({size: 30});
 }
 
 function init() {
@@ -229,8 +274,11 @@ function init() {
     createPlant();
     createBigLeaf();
     createCell();
+    createPlantCell();
+    createMitochondria();
+    createChloroplast();
 
     leaf1click = new Clickable(leaf1, leaf1hover, animateLeaf1);
     leaf2click = new Clickable(leaf2, leaf2hover, animateLeaf2);
-    cellClick = new Clickable(redBox, yellowBox, plantCell)
+    cellClick = new Clickable(redBox, yellowBox, animatePlantCell)
 }
