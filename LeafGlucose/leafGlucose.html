@@ -1,0 +1,36 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <style>
+            body {
+                margin: 0px;
+                padding: 0px;
+            }
+            #powerSwitchInput:hover, #controls:hover {
+                cursor: pointer;
+            }
+        </style>
+        <script src="./jquery-3.1.1.min.js"></script>
+        <script src="./highcharts.js"></script>
+        <script src="./svg.min.js"></script>
+        <script src="./svg.draggable.min.js"></script>
+        <script src="./leafGlucose.js"></script>
+    </head>
+    <body onload="init()">
+        <div style="display:flex">
+            <div id="powerSwitchDiv">
+                <span>OFF</span><input type="range" max="1" step="1" value="1" id="powerSwitchInput" /><span>ON</span>
+            </div>
+            <div id="controls">
+                <img id="playPause" src="play_circle.png" />
+                <img id="reset" src="replay.png" />
+            </div>
+        </div>
+        <div style="display:flex">
+            <svg id="model" width="400" height="400" viewBox="0 0 1000 1000" version="1.1" xmlns="http://www.w3.org/2000/svg">
+            </svg>
+            <div id="highchartsDiv" width="400px">
+            </div>
+          </div>
+    </body>
+</html>
