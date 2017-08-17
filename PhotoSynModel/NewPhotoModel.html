@@ -1,23 +1,34 @@
 <!DOCTYPE HTML>
 <html lang="en">
-    <head>
+  <head>
     <meta charset="utf-8"/>
-        <style>
-            body {
-                margin: 0px;
-                padding: 0px;
+      <style>
+          body {
+            margin: 0px;
+            padding: 0px;
             }
-        </style>
-        <script src="./jquery-3.1.1.min.js"></script>
-        <script src="./fabric.min.js"></script>    
-    </head> 
-    <body>
-		<button id="start">Start Animation</button>
-      <!--  <button id="stop" onclick="stop=true;">Stop</button>  -->
-        <canvas id="controls" width="1000" height="300" style="border:6px solid black"></canvas>
+      </style>
+    <script src="./jquery-3.1.1.min.js"></script>
+    <script src="./fabric.min.js"></script>
+  </head>
+  <body>
+		  <button id="start">Run Photosynthesis Reaction</button>
+      <button id="resetAnimation">Reset Animation</button></br>
+      <button id="pauseAnimation">Pause Animation</button></br>
+      <p id="equation"></p>
+      <button id="resetInputs">Clear All Inputs</button></br>
+      <button id="+CO2">+CO2</button>
+      <button id="-CO2">-CO2</button>
+      <button id="resetCO2">Clear CO2</button>
+      <p id="totalCO2"></p>
+      <button id="+H2O">+H2O</button>
+      <button id="-H2O">-H2O</button>
+      <button id="resetH2O">Clear H2O</button>
+      <p id="totalH2O"></p>
+      <p id="loops"></p>
+      <p id="test"></p>
+      <canvas id="controls" width="1000" height="300" style="border:6px solid black"></canvas>
     	<canvas id="model" width="1000" height="600" style="border:6px solid black"></canvas>
-    	<script src="./NewPhotoModel.js"></script>
- 	
-    </body>
+      <script src="./NewPhotoModel.js"></script>
+  </body>
 </html>
-
