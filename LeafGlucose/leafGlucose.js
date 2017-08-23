@@ -78,8 +78,9 @@ var running = false;
 var lightOn = true;
 
 // array that holds the photon image objects
-var photonsToPlant = [];
-var photonsToChloroplast = [];
+//var photonsToPlant = [];
+//var photonsToChloroplast = [];
+var currentAnimation = null;
 
 /*
  * array that holds the leaf groups (a leaf group consists of a leaf image,
@@ -427,7 +428,7 @@ function createMitochondrion() {
 function createStorage() {
     storage = draw.image("./storage.png").attr({
         "x": 50,
-        "y": 400
+        "y": 375
     });
 }
 
@@ -1247,14 +1248,16 @@ function start() {
  */
 function resume() {
 
-    if (!running) {
+    //if (!running) {
+    if (currentAnimation == null) {
+        console.log("not running");
         /*
          * we are not currently running the simulation so we will start running
          * the simulation
          */
 
         // we are not currently running so we will now run
-        running = true;
+        //running = true;
 
         // change the button text to display 'Pause'
         //startButtonText.text('Pause').x(480).y(35);
@@ -1267,11 +1270,19 @@ function resume() {
         }
         */
 
+        plantAnimation();
+
+/*
         if (intervalId == null) {
             // timer for animation, calls plantAnimation every 5 seconds
             plantAnimation();
             intervalId = window.setInterval(plantAnimation, 8000);
         }
+        */
+    } else {
+      console.log("already running" + currentAnimation);
+      currentAnimation.play();
+      $("#playPause").attr("src", "pause_circle.png");
     }
 }
 
@@ -1280,25 +1291,30 @@ function resume() {
  */
 function pause() {
 
-    if (running) {
+    if (true) {
         /*
          * we are currently running the simulation so we will now pause the
          * simulation
          */
 
         // we are currently running so we will now pause
-        running = false;
+        //running = false;
 
         // change the button text to display 'Resume'
         //startButtonText.text('Resume').x(472).y(35);
         $("#playPause").attr("src", "play_circle.png");
 
         // stop the photons
-        stopPhotons();
+        //stopPhotons();
+        //console.log("about to pause: " + currentAnimation);
+        if (currentAnimation != null) {
+          currentAnimation.pause();
+        }
+
 
         // stop the set interval function call to plantAnimation()
-        clearInterval(intervalId);
-        intervalId = null;
+        //clearInterval(intervalId);
+        //intervalId = null;
     }
 }
 
@@ -1310,20 +1326,42 @@ function reset() {
     // end the current trial
     endTrial();
 
-    if (running) {
+    //if (running) {
         /*
          * if we are currently running the simulation, we will now pause the
          * simulation
          */
-        pause();
+        //pause();
+    //}
+
+    // reset current animation
+    if (currentAnimation != null) {
+      currentAnimation.stop();
+      currentAnimation = null;
     }
 
+    if (photonsGroup != null) {
+      photonsGroup.remove();
+    }
     showLeaf(0);
-    glucose1.hide();
-    glucose2.hide();
+    if (glucose1 != null) {
+      glucose1.remove();
+    }
+    if (glucose2 != null) {
+      glucose2.remove();
+    }
     showEnergyNeeded(false);
     showBatteryIndicator(100); // revert to 100%
     showMitochondrionBatteries(false); // hide the batteries on mitochondrion
+
+    // clear out the glucose in storage
+    for (var g = 0; g < glucosesInStorage.length; g++) {
+        // get a random glucose from storage
+        var glucoseInStorage = glucosesInStorage[g];
+        glucoseInStorage.remove();
+    }
+    glucosesInStorage = [];
+
 
     // change the button text to display 'Start'
     //startButtonText.text('Start').x(485).y(35);
@@ -1677,9 +1715,9 @@ function startLightOnAnimation(animationCallback) {
         'y': 50
     });
 
-    photonsToPlant = [photonPlant1, photonPlant2];
+    //photonsToPlant = [photonPlant1, photonPlant2];
 
-    var photonsGroup = draw.group();
+    photonsGroup = draw.group();
     photonsGroup.add(photonPlant1).add(photonPlant2);
 
     var photonChloroplast1 = draw.image('./photon.png', 50, 50).attr({
@@ -1692,8 +1730,8 @@ function startLightOnAnimation(animationCallback) {
         'y': 50
     });
 
-    photonsToChloroplast = [photonChloroplast1, photonChloroplast2];
-
+    //photonsToChloroplast = [photonChloroplast1, photonChloroplast2];
+    currentAnimation = photonsGroup;
     photonsGroup.add(photonChloroplast1).add(photonChloroplast2);
     photonsGroup.animate().move(50, 50).animate().attr({"opacity": 0}).afterAll(function() {
         // make glucose appear
@@ -1712,6 +1750,7 @@ function startLightOnAnimation(animationCallback) {
         // change energy needs to exclamation mark
         showEnergyNeeded(true);
 
+        currentAnimation = glucose2;
         // move glucose2 to mitochondrion
         glucose2.animate({"delay":500}).move(glucose2.x() + 100, glucose2.y() + 350).animate().attr({"opacity": 0}).afterAll(function() {
             // empty the batteries in the indicator
@@ -1739,7 +1778,8 @@ function startLightOnAnimation(animationCallback) {
 
                     // now move glucose1 to storage
                     // calculate where to move based on existing glucose count in storage
-                    glucose1.animate().move(storage.x() + (glucosesInStorage.length % 4) * 75 + getRandomInt(-10, 10), storage.y() + (Math.floor(glucosesInStorage.length / 3)) * 75 + getRandomInt(-10, 10)).afterAll(function() {
+                    currentAnimation = glucose1;
+                    glucose1.animate().move(storage.x() + (glucosesInStorage.length % 5) * 75 + getRandomInt(-10, 10), storage.y() + (Math.floor(glucosesInStorage.length / 5)) * 75 + getRandomInt(-15, 15)).afterAll(function() {
                         var glucoseInStorage = glucose1.clone();
                         glucosesInStorage.push(glucoseInStorage);
 
@@ -1749,9 +1789,13 @@ function startLightOnAnimation(animationCallback) {
                         // now that we're done with the animation, invoke the callback
                         animationCallback();
                     });
+
                 }
             }
 
+            var mitochondrionBatteryAnimationGroup = draw.set();
+            mitochondrionBatteryAnimationGroup.add(mitochondrionBattery1).add(mitochondrionBattery2);
+            currentAnimation = mitochondrionBatteryAnimationGroup;
             // move mitochondrion battery 1 to repair damage and battery 2 to transport nutrients after .5 second delay
             mitochondrionBattery1.animate({"delay": 500}).move(batteryEmptyRepairDamage.x(), batteryEmptyRepairDamage.y()).afterAll(mitochondrionBatteriesMovedCallback);
             mitochondrionBattery2.animate({"delay": 500}).move(batteryEmptyTransportNutrients.x(), batteryEmptyTransportNutrients.y()).afterAll(mitochondrionBatteriesMovedCallback);
@@ -1778,6 +1822,7 @@ function startLightOffAnimation(animationCallback) {
         var glucoseIndex = getRandomInt(0,glucosesInStorage.length);
         var glucoseInStorage = glucosesInStorage[glucoseIndex];
 
+        currentAnimation = glucoseInStorage;
         // move the glucose to center of mitochondrion
         glucoseInStorage.animate().queue(function() {
             // change batteries to half full
@@ -1819,6 +1864,10 @@ function startLightOffAnimation(animationCallback) {
                     animationCallback();
                 }
             }
+
+            var mitochondrionBatteryAnimationGroup = draw.set();
+            mitochondrionBatteryAnimationGroup.add(mitochondrionBattery1).add(mitochondrionBattery2);
+            currentAnimation = mitochondrionBatteryAnimationGroup;
 
             // move mitochondrion battery 1 to repair damage and battery 2 to transport nutrients after .5 second delay
             mitochondrionBattery1.animate({"delay": 500}).move(batteryEmptyRepairDamage.x(), batteryEmptyRepairDamage.y()).afterAll(mitochondrionBatteriesMovedCallback);
@@ -1935,9 +1984,10 @@ function x_startPhotonsToChloroplast() {
  * Stop all of the photons animations
  */
 function stopPhotons() {
-    photonsEnabled = false;
-    stopPhotonsToPlant();
-    stopPhotonsToChloroplast();
+    //photonsEnabled = false;
+    currentAnimation.pause();
+    //stopPhotonsToPlant();
+    //stopPhotonsToChloroplast();
 }
 
 /**
@@ -1949,10 +1999,10 @@ function stopPhotonsToPlant() {
     for (var i = 0; i < photonsToPlant.length; i++) {
 
         // stop the photon
-        photonsToPlant[i].animate().stop();
+        //photonsToPlant[i].animate().stop();
 
         // remove the photon
-        photonsToPlant[i].remove();
+        //photonsToPlant[i].remove();
     }
 }
 
@@ -1965,10 +2015,10 @@ function stopPhotonsToChloroplast() {
     for (var i = 0; i < photonsToChloroplast.length; i++) {
 
         // stop the photon
-        photonsToChloroplast[i].animate().stop();
+        //photonsToChloroplast[i].animate().stop();
 
         // remove the photon
-        photonsToChloroplast[i].remove();
+        //photonsToChloroplast[i].remove();
     }
 }
 
@@ -2044,7 +2094,7 @@ function turnLightOff() {
     lightBulbOff.show();
 
     // stop the photons
-    stopPhotons();
+    //stopPhotons();
 
     // display the darkness overlay
     darknessOverlay.animate().attr({
@@ -2058,7 +2108,7 @@ function turnLightOff() {
  */
 function plantAnimation() {
 
-    if (running) {
+    //if (running) {
         // the simulation is currently running
 
         // increment the week number
@@ -2098,7 +2148,7 @@ function plantAnimation() {
                         //var leafNum = Math.floor(glucoseIndex / 3);
 
                         // show the appropriate number of leaves
-                        //showLeaf(glucoseIndex + 1);
+                        showLeaf(glucoseIndex);
                         //showLeaf(Math.floor((glucoseIndex + 1) / 2));
 
                         // show the appropriate stage of the carrot
@@ -2114,6 +2164,9 @@ function plantAnimation() {
                         plotBand.to = weekNumber;
                         plotBand.color = '#fff9a5';
                         chart.xAxis[0].addPlotBand(plotBand);
+
+                        // loop after brief pause
+                        window.setTimeout(plantAnimation, 750);
 
                         // show the glucose animation
                         //glucoseAnimation()
@@ -2137,7 +2190,7 @@ function plantAnimation() {
                     //var leafNum = Math.floor(glucoseIndex / 3);
 
                     // show the appropriate number of leaves
-                    //showLeaf(glucoseIndex + 1);
+                    showLeaf(glucoseIndex);
                     //showLeaf(Math.floor((glucoseIndex + 1) / 2));
 
                     /*
@@ -2167,6 +2220,9 @@ function plantAnimation() {
 
                         // end the trial
                         endTrial();
+                    } else {
+                      // loop after brief pause
+                      window.setTimeout(plantAnimation, 750);
                     }
                 }
 
@@ -2174,7 +2230,7 @@ function plantAnimation() {
                 startLightOffAnimation(lightOffAnimationCallback);
             }
         }
-    }
+    //}
 }
 
 /**
@@ -2202,11 +2258,11 @@ function glucoseAnimation() {
 }
 
 /**
- * Show the number of leaves up to the leaf number. For example if
- * the leafNumber passed in is 3, it will show leaf1, leaf2, and leaf3.
- * @param numberOfLeaves the number of leaves to show
+ * Change the leaf based on number of glucose stored.
+ * @param glucoseCount the number of glucose stored.
  */
-function showLeaf(numberOfLeaves) {
+function showLeaf(glucoseCount) {
+    console.log("showLeaf: " + glucoseCount);
 
     // hide all the leaves
     for (var l = 0; l < allLeaves.length; l++) {
@@ -2214,16 +2270,14 @@ function showLeaf(numberOfLeaves) {
         leaf.hide();
     }
 
-    if (numberOfLeaves < 0) {
+    if (glucoseCount < 0) {
         leafDead.show()
-    } else if (numberOfLeaves >= 0 && numberOfLeaves <= 2) {
+    } else if (glucoseCount <= 2) {
         leafYellow.show()
-    } else if (numberOfLeaves >= 3 && numberOfLeaves <= 5) {
+    } else if (glucoseCount <= 5) {
         leafLightGreen.show()
-    } else if (numberOfLeaves >= 6) {
-        leafGreen.show()
     } else {
-        leafDead.show()
+        leafGreen.show()
     }
 
     /*
