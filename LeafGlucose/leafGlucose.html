@@ -6,8 +6,23 @@
                 margin: 0px;
                 padding: 0px;
             }
-            #powerSwitchInput:hover, #controls:hover {
+            #powerSwitchInput:hover, #animationSpeedSwitchInput:hover, #controls:hover {
                 cursor: pointer;
+            }
+            #powerSwitchInput {
+              width: 40px;
+              margin-top: 20px;
+               transform: rotate(270deg);
+              -moz-transform: rotate(270deg); /*do same for other browsers if required*/
+            }
+            #powerSwitchDiv, #animationSpeedSwitchDiv {
+              height: 50px;
+            }
+            #animationSpeedSwitchInput {
+                width: 40px;
+                margin-top: 20px;
+                transform: rotate(270deg);
+                -moz-transform: rotate(270deg); /*do same for other browsers if required*/
             }
         </style>
         <script src="./jquery-3.1.1.min.js"></script>
@@ -17,13 +32,21 @@
         <script src="./leafGlucose.js"></script>
     </head>
     <body onload="init()">
-        <div style="display:flex">
+        <div style="display:flex; width: 400px; justify-content: space-between">
             <div id="powerSwitchDiv">
-                <span>OFF</span><input type="range" max="1" step="1" value="1" id="powerSwitchInput" /><span>ON</span>
+                <div style="font-weight:bold">Light</div>
+                <input type="range" max="1" step="1" value="1" id="powerSwitchInput" title="Turn light ON/OFF" />
+                <div style="float:right; margin-left:-8px"><div style="margin-top:5px">ON</div><div style="margin-top:8px">OFF</div></div>
+            </div>
+            <div id="animationSpeedSwitchDiv">
+                <div style="font-weight:bold">Animation Speed</div>
+                <input type="range" max="2" min="1" step="1" value="1" id="animationSpeedSwitchInput" title="Change animation speed" />
+                <div style="float:right; margin-left:-8px"><div style="margin-top:5px">2x Speed</div><div style="margin-top:8px">Normal Speed</div></div>
             </div>
             <div id="controls">
-                <img id="playPause" src="play_circle.png" />
-                <img id="reset" src="replay.png" />
+                <div style="font-weight:bold">Controls</div>
+                <img id="playPause" src="play_circle.png" title="Play/Pause simulation" />
+                <img id="reset" src="replay.png" title="Reset simulation" />
             </div>
         </div>
         <div style="display:flex">
