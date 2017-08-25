@@ -85,8 +85,7 @@ var mitochondrion = null;
 var storage = null;
 
 var photonsGroup = null;
-var glucose1 = null;
-var glucose2 = null;
+var glucose1, glucose2, glucose3, glucose4 = null;
 var glucosesInStorage = [];
 
 var greenCheck = null;
@@ -112,6 +111,13 @@ var dayNumber = 0;
 
 // the max number of days
 var maxDays = 20;
+
+var dayRect = null;
+var dayText = null;
+// color of graph region when light is on/off
+var LIGHT_ON_GRAPH_REGION_COLOR = "#fff9a5";
+var LIGHT_OFF_GRAPH_REGION_COLOR = "#dddddd";
+
 
 /*
 * the glucose index used to determine how many leaves to display and what stage
@@ -268,6 +274,9 @@ function init() {
     // create the top left corner
     createTopLeftCorner();
 
+    // create the top right corner
+    createTopRightCorner();
+
     // show starting leaf (yellow)
     showLeaf(0);
 
@@ -322,11 +331,6 @@ function createTopLeftCorner() {
     draw.rect(250,300).x(0).y(0).fill('lightyellow').stroke({width:2});
 
     // create the leaf images
-    leafDead = draw.image('./leafDead.png', 128, 128).attr({
-        'x': 55,
-        'y': 90
-    });
-
     leafYellow = draw.image('./leafYellow.png', 128, 128).attr({
         'x': 55,
         'y': 90
@@ -342,11 +346,17 @@ function createTopLeftCorner() {
         'y': 90
     });
 
-    // store all the leaf images in a global variable
-    allLeaves = [leafDead, leafYellow, leafLightGreen, leafGreen];
-
     // draw the pot
     draw.image('./pot.png', 128, 128).attr({"x": 100, "y": 160});
+
+    // the dead leaf should appear above the pot
+    leafDead = draw.image('./leafDead.png', 128, 128).attr({
+        'x': 20,
+        'y': 150
+    });
+
+    // store all the leaf images in a global variable
+    allLeaves = [leafDead, leafYellow, leafLightGreen, leafGreen];
 
     // draw the rectangle below the pot
     draw.rect(250,40).x(0).y(270).fill('gray').stroke({width:2});
@@ -356,6 +366,17 @@ function createTopLeftCorner() {
 
     // create the light bulb off image
     lightBulbOff = draw.image('./lightbulb20002.png', 40, 70).rotate(150).hide();
+}
+
+/**
+ * Create the corner in the upper-right corner for displaying the current day
+ */
+function createTopRightCorner() {
+    // draws the upper left box where the light and plant will be displayed
+    dayRect = draw.rect(250,110).x(750).y(0).fill(LIGHT_ON_GRAPH_REGION_COLOR).stroke({width:2});
+
+    // create the message text
+    dayText = draw.text('Day 1').x(775).y(0).font({size: 64});
 }
 
 /**
@@ -647,6 +668,12 @@ function reset() {
     if (glucose2 != null) {
       glucose2.remove();
     }
+    if (glucose3 != null) {
+        glucose3.remove();
+    }
+    if (glucose4 != null) {
+        glucose4.remove();
+    }
     showEnergyNeeded(false);
     showBatteryIndicator(100); // revert to 100%
     showMitochondrionBatteries(false); // hide the batteries on mitochondrion
@@ -661,6 +688,9 @@ function reset() {
 
     // change the play/pause button to 'play'
     $("#playPause").attr("src", "play_circle.png");
+
+    // reset the day message text
+    dayText.text('Day 1');
 
     // initialize the variables
     dayNumber = 0;
@@ -986,23 +1016,33 @@ function startLightOnAnimation(animationCallback) {
     photonsGroup.animate({"duration": animationDuration}).move(50, 50).animate({"duration": animationDuration}).attr({"opacity": 0}).afterAll(function() {
         // make glucose appear
         glucose1 = draw.image('./glucose.png', 70, 70).attr({
-            "x": 525,
-            "y": 125
+            "x": 450,
+            "y": 100
         });
         glucose2 = glucose1.clone().attr({
-            "x": 625,
-            "y": 125
+            "x": 525,
+            "y": 150
         });
-
+        glucose3 = glucose1.clone().attr({
+            "x": 600,
+            "y": 150
+        });
+        glucose4 = glucose1.clone().attr({
+            "x": 675,
+            "y": 100
+        });
         // change batteries to half full
         showBatteryIndicator(50);
 
         // change energy needs to exclamation mark
         showEnergyNeeded(true);
 
-        currentAnimation = glucose2;
-        // move glucose2 to mitochondrion
-        glucose2.animate({"delay": 500 * animationSpeedRatio, "duration": animationDuration}).move(glucose2.x() + 100, glucose2.y() + 350).animate({"duration": animationDuration}).attr({"opacity": 0}).afterAll(function() {
+        var glucoseToMitochondrionGroup = draw.group();
+        glucoseToMitochondrionGroup.add(glucose3).add(glucose4);
+
+        currentAnimation = glucoseToMitochondrionGroup;
+        // move glucose3 and glucose4 to mitochondrion
+        glucoseToMitochondrionGroup.animate({"delay": 500 * animationSpeedRatio, "duration": animationDuration}).dmove(40, 375).animate({"duration": animationDuration}).attr({"opacity": 0}).afterAll(function() {
             // empty the batteries in the indicator
             showBatteryIndicator(0);
 
@@ -1014,7 +1054,7 @@ function startLightOnAnimation(animationCallback) {
             // when it's called twice, we know that both batteries have finished moving, so we can move forward in the animation
             function mitochondrionBatteriesMovedCallback() {
                 countMitochondrionBatteriesMoved++;
-                if (countMitochondrionBatteriesMoved === 1) {
+                if (countMitochondrionBatteriesMoved === 2) {
                     // show full batter in indicator box
                     showBatteryIndicator(100);
 
@@ -1026,19 +1066,39 @@ function startLightOnAnimation(animationCallback) {
                     mitochondrionBattery2.remove();
                     createMitochondrionBatteries();
 
-                    // now move glucose1 to storage
-                    // calculate where to move based on existing glucose count in storage
-                    currentAnimation = glucose1;
-                    glucose1.animate({"delay":500 * animationSpeedRatio, "duration": animationDuration}).move(storage.x() + (glucosesInStorage.length % 5) * 75 + getRandomInt(-10, 10), storage.y() + (Math.floor(glucosesInStorage.length / 5)) * 75 + getRandomInt(-15, 15)).afterAll(function() {
-                        var glucoseInStorage = glucose1.clone();
-                        glucosesInStorage.push(glucoseInStorage);
+                    var countGlucoseToStorageMoved = 0;
+                    // callback for after glucose is moved from chloroplast to storage.
+                    // when it's called twice, we know that both glucose have finished moving, so we can move forward in the animation
+                    function glucoseToStorageMovedCallback() {
+                        countGlucoseToStorageMoved++;
+                        if (countGlucoseToStorageMoved === 2) {
+                            var glucose1InStorage = glucose1.clone();
+                            var glucose2InStorage = glucose2.clone();
+                            glucosesInStorage.push(glucose1InStorage);
+                            glucosesInStorage.push(glucose2InStorage);
 
-                        // hide the glucose1
-                        glucose1.hide();
+                            // hide the glucose1 and glucose2
+                            glucose1.hide();
+                            glucose2.hide();
 
-                        // now that we're done with the animation, invoke the callback
-                        animationCallback();
-                    });
+                            // now that we're done with the animation, invoke the callback
+                            animationCallback();
+                        }
+                    }
+                    // now move glucose1 and glucose2 to storage
+                    var glucoseToStorageGroup = draw.set();
+                    glucoseToStorageGroup.add(glucose1).add(glucose2);
+
+                    // calculate where to move based on existing glucose count in storage.
+                    currentAnimation = glucoseToStorageGroup;
+                    glucose1.animate({"delay":500 * animationSpeedRatio, "duration": animationDuration})
+                        .move(storage.x() + ((glucosesInStorage.length / 2) % 5) * 75 + getRandomInt(-10, 10),
+                              storage.y() + (Math.floor((glucosesInStorage.length / 2) / 5)) * 75 + getRandomInt(-15, 15))
+                        .afterAll(glucoseToStorageMovedCallback);
+                    glucose2.animate({"delay":500 * animationSpeedRatio, "duration": animationDuration})
+                        .move(storage.x() + ((glucosesInStorage.length / 2) % 5) * 75 + getRandomInt(-10, 10),
+                            storage.y() + (Math.floor((glucosesInStorage.length / 2) / 5)) * 75 + getRandomInt(-15, 15))
+                        .afterAll(glucoseToStorageMovedCallback);
                 }
             }
 
@@ -1058,61 +1118,80 @@ function startLightOnAnimation(animationCallback) {
 function startLightOffAnimation(animationCallback) {
 
     if (glucosesInStorage.length > 0) {
-        // get the last-stored glucose from storage
-        var glucoseInStorageIndex = glucosesInStorage.length - 1;
-        var glucoseInStorage = glucosesInStorage[glucoseInStorageIndex];
+        // get the last two stored glucose from storage
+        var glucose1InStorageIndex = glucosesInStorage.length - 1;
+        var glucose1InStorage = glucosesInStorage[glucose1InStorageIndex];
+        var glucose2InStorageIndex = glucosesInStorage.length - 2;
+        var glucose2InStorage = glucosesInStorage[glucose2InStorageIndex];
 
-        currentAnimation = glucoseInStorage;
+        var storageToMitochondrionGroup = draw.set();
+        storageToMitochondrionGroup.add(glucose1InStorage).add(glucose2InStorage);
+        currentAnimation = storageToMitochondrionGroup;
+
+        // change batteries to half full
+        showBatteryIndicator(50);
+
+        // change energy needs to exclamation mark
+        showEnergyNeeded(true);
+
         // move the glucose to center of mitochondrion
-        glucoseInStorage.animate({"duration": animationDuration}).queue(function() {
-            // change batteries to half full
-            showBatteryIndicator(50);
+        window.setTimeout(function() {
 
-            // change energy needs to exclamation mark
-            showEnergyNeeded(true);
+            var countGlucoseMovedFromStorageToMitochondrion = 0;
+            // callback for after glucose is moved from storage to mitochondrion.
+            // when it's called twice, we know that both glucose have finished moving, so we can move forward in the animation
+            function glucoseMovedFromStorageToMitochondrion() {
+                countGlucoseMovedFromStorageToMitochondrion++;
 
-            this.dequeue();
-        }).animate({"delay":1000 * animationSpeedRatio, "duration": animationDuration}).move(mitochondrion.x() + 100, mitochondrion.y() + 100).animate({"duration": animationDuration}).opacity(0).afterAll(function() {
+                if (countGlucoseMovedFromStorageToMitochondrion === 2) {
+                    // remove glucose from storage
+                    glucosesInStorage.splice(glucose2InStorageIndex, 2);
 
-            // remove glucose from storage
-            glucosesInStorage.splice(glucoseInStorageIndex, 1);
+                    // empty the batteries in the indicator
+                    showBatteryIndicator(0);
 
-            // empty the batteries in the indicator
-            showBatteryIndicator(0);
+                    // show the full batteries on the mitochondrion
+                    showMitochondrionBatteries(true);
 
-            // show the full batteries on the mitochondrion
-            showMitochondrionBatteries(true);
+                    var countMitochondrionBatteriesMoved = 0;
+                    // callback for after mitochondrion batteries are moved from mitochondrion to battery indicator.
+                    // when it's called twice, we know that both batteries have finished moving, so we can move forward in the animation
+                    function mitochondrionBatteriesMovedCallback() {
+                        countMitochondrionBatteriesMoved++;
+                        if (countMitochondrionBatteriesMoved === 2) {
+                            // show full batter in indicator box
+                            showBatteryIndicator(100);
 
-            var countMitochondrionBatteriesMoved = 0;
-            // callback for after mitochondrion batteries are moved from mitochondrion to battery indicator.
-            // when it's called twice, we know that both batteries have finished moving, so we can move forward in the animation
-            function mitochondrionBatteriesMovedCallback() {
-                countMitochondrionBatteriesMoved++;
-                if (countMitochondrionBatteriesMoved === 1) {
-                    // show full batter in indicator box
-                    showBatteryIndicator(100);
+                            // change energy needs to checkmark
+                            showEnergyNeeded(false);
 
-                    // change energy needs to checkmark
-                    showEnergyNeeded(false);
+                            // remove and recreate the mitochondrion batteries
+                            mitochondrionBattery1.remove();
+                            mitochondrionBattery2.remove();
+                            createMitochondrionBatteries();
 
-                    // remove and recreate the mitochondrion batteries
-                    mitochondrionBattery1.remove();
-                    mitochondrionBattery2.remove();
-                    createMitochondrionBatteries();
+                            // now that we're done with the animation, invoke the callback
+                            animationCallback();
+                        }
+                    }
 
-                    // now that we're done with the animation, invoke the callback
-                    animationCallback();
+                    var mitochondrionBatteryAnimationGroup = draw.set();
+                    mitochondrionBatteryAnimationGroup.add(mitochondrionBattery1).add(mitochondrionBattery2);
+                    currentAnimation = mitochondrionBatteryAnimationGroup;
+
+                    // move mitochondrion battery 1 to repair damage and battery 2 to transport nutrients after .5 second delay
+                    mitochondrionBattery1.animate({"delay": 500 * animationSpeedRatio, "duration": animationDuration}).move(batteryEmptyRepairDamage.x(), batteryEmptyRepairDamage.y()).afterAll(mitochondrionBatteriesMovedCallback);
+                    mitochondrionBattery2.animate({"delay": 500 * animationSpeedRatio, "duration": animationDuration}).move(batteryEmptyTransportNutrients.x(), batteryEmptyTransportNutrients.y()).afterAll(mitochondrionBatteriesMovedCallback);
                 }
             }
 
-            var mitochondrionBatteryAnimationGroup = draw.set();
-            mitochondrionBatteryAnimationGroup.add(mitochondrionBattery1).add(mitochondrionBattery2);
-            currentAnimation = mitochondrionBatteryAnimationGroup;
-
-            // move mitochondrion battery 1 to repair damage and battery 2 to transport nutrients after .5 second delay
-            mitochondrionBattery1.animate({"delay": 500 * animationSpeedRatio, "duration": animationDuration}).move(batteryEmptyRepairDamage.x(), batteryEmptyRepairDamage.y()).afterAll(mitochondrionBatteriesMovedCallback);
-            mitochondrionBattery2.animate({"delay": 500 * animationSpeedRatio, "duration": animationDuration}).move(batteryEmptyTransportNutrients.x(), batteryEmptyTransportNutrients.y()).afterAll(mitochondrionBatteriesMovedCallback);
-        });
+            glucose1InStorage.animate({"duration": animationDuration})
+                .move(mitochondrionBattery1.x(), mitochondrionBattery1.y())
+                .animate({"duration": animationDuration}).opacity(0).afterAll(glucoseMovedFromStorageToMitochondrion);
+            glucose2InStorage.animate({"duration": animationDuration})
+                .move(mitochondrionBattery2.x(), mitochondrionBattery2.y())
+                .animate({"duration": animationDuration}).opacity(0).afterAll(glucoseMovedFromStorageToMitochondrion);
+        }, animationDuration);
     } else {
         // there's no glucose stored in storage
         if (!batteryEmptyRepairDamage.visible()) {
@@ -1237,6 +1316,9 @@ function plantAnimation() {
     // increment the week number
     dayNumber++;
 
+    // create the message text
+    dayText.text('Day ' + dayNumber);
+
     if (dayNumber > maxDays) {
         // we have reached the end of the simulation
 
@@ -1253,11 +1335,13 @@ function plantAnimation() {
 
         if (lightOn) {
             // the light is on
+            // match day rectangle color to graph's region color
+            dayRect.fill(LIGHT_ON_GRAPH_REGION_COLOR);
 
-                // animate the photons
+            // animate the photons
                 function lightOnAnimationCallback() {
                     // increment the glucose index
-                    glucoseIndex++;
+                    glucoseIndex += 2;
 
                     var createGlucose = true;
 
@@ -1277,7 +1361,7 @@ function plantAnimation() {
                     var plotBand = {
                       "from": dayNumber - 1,
                       "to": dayNumber,
-                      "color": "#fff9a5"
+                      "color": LIGHT_ON_GRAPH_REGION_COLOR
                     };
                     chart.xAxis[0].addPlotBand(plotBand);
 
@@ -1287,9 +1371,12 @@ function plantAnimation() {
                 startLightOnAnimation(lightOnAnimationCallback);
         } else  {
             // the light is off
+            // match day rectangle color to graph's region color
+            dayRect.fill(LIGHT_OFF_GRAPH_REGION_COLOR);
+
             function lightOffAnimationCallback() {
                 // decrement the glucose index
-                glucoseIndex--;
+                glucoseIndex -= 2;
 
                 var createGlucose = false;
 
@@ -1309,10 +1396,11 @@ function plantAnimation() {
                  * make the background of the graph grey for this week to
                  * represent the light being off
                  */
-                var plotBand = {};
-                plotBand.from = dayNumber - 1;
-                plotBand.to = dayNumber;
-                plotBand.color = '#dddddd';
+                var plotBand = {
+        			"from": dayNumber - 1,
+		        	"to": dayNumber,
+        			"color": LIGHT_OFF_GRAPH_REGION_COLOR
+		        };
                 chart.xAxis[0].addPlotBand(plotBand);
 
                 if (glucoseStored <= 0) {
@@ -1357,70 +1445,13 @@ function showLeaf(glucoseCount) {
 
     if (glucoseCount < 0) {
         leafDead.show()
-    } else if (glucoseCount <= 2) {
+    } else if (glucoseCount <= 4) {
         leafYellow.show()
-    } else if (glucoseCount <= 5) {
+    } else if (glucoseCount <= 10) {
         leafLightGreen.show()
     } else {
         leafGreen.show()
     }
-
-    /*
-    if (numberOfLeaves < 0) {
-        leafDead.attr({"opacity": 0});
-    } else if
-     */
-
-}
-
-/**
- * Show the leaf and its two glucose
- * @param leaf the leaf
- * @param glucose1 the first glucose on the leaf
- * @param glucose2 the second glucose on the leaf
- */
-function showLeaf_x(leaf, glucose1, glucose2) {
-
-    // show the leaf
-    leaf.animate().attr({
-        'opacity': 1
-    });
-
-    // show the first glucose
-    glucose1.animate().attr({
-        'opacity': 1
-    }).after(function() {
-
-        // show the second glucose 1 second later
-        glucose2.animate({delay: '1s'}).attr({
-            'opacity': 1
-        });
-    });
-}
-
-/**
- * Hide the leaf and its two glucose
- * @param leaf the leaf
- * @param glucose1 the first glucose on the leaf
- * @param glucose2 the second glucose on the leaf
- */
-function hideLeaf(leaf, glucose1, glucose2) {
-
-    // hide the second glucose
-    glucose2.animate().attr({
-        'opacity': 0
-    }).after(function() {
-
-        // hide the first glucose 1 second later
-        glucose1.animate({delay: '1s'}).attr({
-            'opacity': 0
-        });
-
-        // hide the leaf 1 second later
-        leaf.animate({delay: '1s'}).attr({
-            'opacity': 0
-        });
-    });
 }
 
 /**
