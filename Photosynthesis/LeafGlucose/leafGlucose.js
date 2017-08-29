@@ -4,9 +4,6 @@
 // the SVG.js draw object
 var draw = null;
 
-// power switch slider
-var powerSwitch = null;
-
 // the plant died message elements
 var plantDiedRect = null;
 var plantDiedText = null;
@@ -90,12 +87,23 @@ var glucosesInStorage = [];
 
 var greenCheck = null;
 var redExclamation = null;
+var repairDamageRect = null;
+var repairDamageRectMask = null;
+var transportNutrientsRect = null;
+var batteryEmptyRepairDamage = null;
+var batteryEmptyTransportNutrients = null;
+var BATTERY_FULL_HEIGHT = 66;  // height of battery rectangle when full, in pixles.
+var BATTERY_FULL_COLOR = "#82c940";  // color of battery rectangle when full
+var BATTERY_HALF_FULL_COLOR = "#ffd700";  // color of battery rectangle when half full
+var BATTERY_NEAR_EMPTY_COLOR = "#fc0d1b";  // color of battery rectangle when near empty
+var INDICATOR_BATTERY_ORIGINAL_Y = 821;
+
+/*
 var batteryFullRepairDamage = null;
 var batteryHalfRepairDamage = null;
-var batteryEmptyRepairDamage = null;
 var batteryFullTransportNutrients = null;
 var batteryHalfTransportNutrients = null;
-var batteryEmptyTransportNutrients = null;
+*/
 var mitochondrionBatteryGroup = null;
 var mitochondrionBattery1 = null;
 var mitochondrionBattery2 = null;
@@ -118,9 +126,10 @@ var dayText = null;
 var LIGHT_ON_GRAPH_REGION_COLOR = "#fff9a5";
 var LIGHT_OFF_GRAPH_REGION_COLOR = "#dddddd";
 
-// wait images for when user changes the light switch during an animation cycle
+// wait image for when user changes the light switch during an animation cycle
 var waitImageLightSwitch = null;
-//var waitImageTopLeftCorner = null;
+
+var energyLeft = 100;
 
 /*
 * the glucose index used to determine how many leaves to display and what stage
@@ -251,9 +260,6 @@ function init() {
     // initialize the trial data
     initializeTrialData();
 
-    // initialize the graph
-    initializeGraph();
-
     if (parent != null && parent.node != null) {
         /*
          * set the trials array into the parent node if it exists. this is
@@ -280,7 +286,7 @@ function init() {
     // create the top right corner
     createTopRightCorner();
 
-    // show starting leaf (yellow)
+    // show starting leaf (green)
     showLeaf(0);
 
     // create the darkness overlay that displays when the light is turned off
@@ -313,6 +319,9 @@ function init() {
     // create area where we display energy information
     createEnergyIndicatorBox();
 
+    // show full battery
+    updateEnergyDisplay(energyLeft);
+
     // create mitochondrion batteries
     createMitochondrionBatteries();
 
@@ -325,7 +334,16 @@ function init() {
     // create the simulation ended message
     createSimulationEndedMessage();
 
+    // initialize the graph
+    initializeGraph();
+
+    // listen for graph line show/hide toggles and toggle corresponding image's opacity.
+    registerGraphLineToggleListener();
+
+
     waitImageLightSwitch = $("#waitImageLightSwitch");
+
+    alert("The simulation will now start with all three lines on the graph. If you'd like to change which lines are shown on the graph, click on the label in the legend.");
 }
 
 /**
@@ -333,12 +351,12 @@ function init() {
  */
 function createTopLeftCorner() {
     // draws the upper left box where the light and plant will be displayed
-    draw.rect(250,300).x(0).y(0).fill('lightyellow').stroke({width:2});
+    draw.rect(250,300).x(0).y(0).fill('white').stroke({width:2});
 
     // create the leaf images
     leafYellow = draw.image('./leafYellow.png', 128, 128).attr({
-        'x': 55,
-        'y': 90
+        'x': 20,
+        'y': 150
     });
 
     leafLightGreen = draw.image('./leafLightGreen.png', 128, 128).attr({
@@ -371,16 +389,6 @@ function createTopLeftCorner() {
 
     // create the light bulb off image
     lightBulbOff = draw.image('./lightbulb20002.png', 40, 70).rotate(150).hide();
-
-    // create the wait image
-    /*
-    waitImageTopLeftCorner = draw.image('./wait.png', 70, 70).attr({
-        "x": 175,
-        "y": 15,
-        "opacity": 0.7
-    });
-    waitImageTopLeftCorner.hide();
-    */
 }
 
 /**
@@ -388,9 +396,9 @@ function createTopLeftCorner() {
  */
 function createTopRightCorner() {
     // draws the upper left box where the light and plant will be displayed
-    dayRect = draw.rect(250,110).x(750).y(0).fill(LIGHT_ON_GRAPH_REGION_COLOR).stroke({width:2});
+    dayRect = draw.rect(250, 110).x(750).y(0).fill(LIGHT_ON_GRAPH_REGION_COLOR).stroke({width:2});
 
-    // create the message text
+    // create the day message text
     dayText = draw.text('Day 1').x(775).y(0).font({size: 64});
 }
 
@@ -455,13 +463,12 @@ function createSimulationEndedMessage() {
 function createButtons() {
 
     // power switch handler
-    $("#powerSwitchInput").on("change", function() {
-        var powerSwitchValue = $(this).val();
-        if (powerSwitchValue == 0) {
+    $("#lightSwitchInput").on("change", function() {
+        var lightSwitchValue = $(this).val();
+        if (lightSwitchValue == 0) {
             // user turned power switch off
             addEvent('turnLightOffButtonClicked');
             lightOn = false;
-
         } else {
             // user turned power switch on
             addEvent('turnLightOnButtonClicked');
@@ -495,21 +502,27 @@ function createButtons() {
             addEvent('animationSpeedNormalClicked');
             animationSpeedRatio = 1;
             animationDuration = DEFAULT_ANIMATION_DURATION * animationSpeedRatio;
-        } else {
+        } else if (animationSpeedSwitchValue == 2) {
             // user wants to run at double speed
-            addEvent('animationSpeedDoubleClicked');
+            addEvent('animationSpeed2xClicked');
             animationSpeedRatio = 0.5;
+            animationDuration = DEFAULT_ANIMATION_DURATION * animationSpeedRatio;
+        } else {
+            // user wants to run at 4x the speed
+            // user wants to run at double speed
+            addEvent('animationSpeed4xClicked');
+            animationSpeedRatio = 0.25;
             animationDuration = DEFAULT_ANIMATION_DURATION * animationSpeedRatio;
         }
     });
 
     // play/pause button handler
     $("#playPause").on("click", function() {
-        var isControlEnabled = !$("#powerSwitchInput").prop("disabled");
+        var isControlEnabled = !$("#lightSwitchInput").prop("disabled");
         if (isControlEnabled) {
             var playPause = $(this).attr("src");
 
-            if (playPause == "play_circle.png") {
+            if (playPause === "play_circle.png") {
                 // user wants to start or resume the simulation
                 if (currentAnimation == null) {
                     //  we are not currently running the simulation so we will start running the simulation
@@ -557,37 +570,53 @@ function createEnergyIndicatorBox() {
         'y': 875
     }).hide();
 
+    redX = draw.image('./redX.png').attr({
+        'x': 125,
+        'y': 875
+    }).hide();
+
+    /*
     batteryFullRepairDamage = draw.image('./battery_full.png').attr({
         'x': 325,
         'y': 815
-    });
+    }).hide();
 
     batteryHalfRepairDamage = draw.image('./battery_half.png').attr({
         'x': 325,
         'y': 815
     }).hide();
+    */
+
+    repairDamageRect = draw.rect(48, BATTERY_FULL_HEIGHT).x(325).y(INDICATOR_BATTERY_ORIGINAL_Y).fill(BATTERY_FULL_COLOR);
+
+    //repairDamageRectMask = draw.rect(48, 0).x(325).y(821 - BATTERY_FULL_HEIGHT);
+    //repairDamageRect.maskWith(repairDamageRectMask);
 
     batteryEmptyRepairDamage = draw.image('./battery_empty.png').attr({
         'x': 325,
         'y': 815
-    }).hide();
+    });
 
     repairDamageIndicatorText = draw.text('Repair\nDamage').x(385).y(795).font({size: 40});
 
+    /*
     batteryFullTransportNutrients = draw.image('./battery_full.png').attr({
         'x': 625,
         'y': 815
-    });
+    }).hide();
 
     batteryHalfTransportNutrients = draw.image('./battery_half.png').attr({
         'x': 625,
         'y': 815
     }).hide();
+    */
+
+    transportNutrientsRect = draw.rect(48, BATTERY_FULL_HEIGHT).x(625).y(INDICATOR_BATTERY_ORIGINAL_Y).fill(BATTERY_FULL_COLOR);
 
     batteryEmptyTransportNutrients = draw.image('./battery_empty.png').attr({
         'x': 625,
         'y': 815
-    }).hide();
+    });
 
     // create the message text
     transportNutrientsIndicatorText = draw.text('Transport\nNutrients').x(685).y(795).font({size: 40});
@@ -618,8 +647,8 @@ function start() {
         initializeTrialData();
     }
 
-    //Show feedback if it's a new trial, we aren't already showing feedback, and there's a
-    //feedback message available
+    // Show feedback if it's a new trial, we aren't already showing feedback, and there's a
+    // feedback message available
     if (!feedbackShowing && isNewTrial)  {
         var feedbackMessage = getFeedbackMessage();
         if (feedbackMessage != "") {
@@ -710,8 +739,9 @@ function reset() {
     if (glucose4 != null) {
         glucose4.remove();
     }
-    showEnergyNeeded(false);
-    showBatteryIndicator(100); // revert to 100%
+
+    energyLeft = 100;  // revert to 100%
+    updateEnergyDisplay(energyLeft); // update the energy display section
     showMitochondrionBatteries(false); // hide the batteries on mitochondrion
 
     // clear out the glucose in storage
@@ -740,6 +770,9 @@ function reset() {
     // initialize the graph
     initializeGraph();
 
+    // add listener for graph line toggle
+    registerGraphLineToggleListener();
+
     // hide the 'Plant Died' message
     plantDiedRect.hide();
     plantDiedText.hide();
@@ -754,7 +787,6 @@ function reset() {
 
     // hide the wait image
     waitImageLightSwitch.fadeOut();
-    //waitImageTopLeftCorner.animate(300).opacity(0);
 
     // set this flag back to false because we are going to start a new trial
     simulationEnded = false;
@@ -1046,7 +1078,18 @@ function startLightOnAnimation(animationCallback) {
 
     currentAnimation = photonsGroup;
     photonsGroup.add(photonChloroplast1).add(photonChloroplast2);
-    photonsGroup.animate({"duration": animationDuration}).move(50, 50).animate({"duration": animationDuration}).attr({"opacity": 0}).afterAll(function() {
+    photonsGroup.animate({"duration": animationDuration}).move(50, 50)
+    .during(function(pos, morph, eased, situation) {
+        // update the battery indicator during the animation. "pos" is a number between 0 (beginning) -> 1 (end) of the animation
+        energyLeft = 100 - 25 * pos;
+        updateEnergyDisplay(energyLeft); // update the energy display section
+    })
+    .animate({"duration": animationDuration}).attr({"opacity": 0})
+    .during(function(pos, morph, eased, situation) {
+        // update the battery indicator during the animation. "pos" is a number between 0 (beginning) -> 1 (end) of the animation
+        energyLeft = 75 - 25 * pos;
+        updateEnergyDisplay(energyLeft);
+    }).afterAll(function() {
         // make glucose appear
         glucose1 = draw.image('./glucose.png', 70, 70).attr({
             "x": 450,
@@ -1064,20 +1107,25 @@ function startLightOnAnimation(animationCallback) {
             "x": 675,
             "y": 100
         });
-        // change batteries to half full
-        showBatteryIndicator(50);
-
-        // change energy needs to exclamation mark
-        showEnergyNeeded(true);
 
         var glucoseToMitochondrionGroup = draw.group();
         glucoseToMitochondrionGroup.add(glucose3).add(glucose4);
 
         currentAnimation = glucoseToMitochondrionGroup;
         // move glucose3 and glucose4 to mitochondrion
-        glucoseToMitochondrionGroup.animate({"delay": 500 * animationSpeedRatio, "duration": animationDuration}).dmove(40, 375).animate({"duration": animationDuration}).attr({"opacity": 0}).afterAll(function() {
-            // empty the batteries in the indicator
-            showBatteryIndicator(0);
+        glucoseToMitochondrionGroup.animate({"delay": 250 * animationSpeedRatio, "duration": animationDuration}).dmove(40, 375)
+            .during(function(pos, morph, eased, situation) {
+                // update the battery indicator during the animation. "pos" is a number between 0 (beginning) -> 1 (end) of the animation
+                energyLeft = 50 - 15 * pos;
+                updateEnergyDisplay(energyLeft);
+            })
+            .animate({"duration": animationDuration}).attr({"opacity": 0})
+            .during(function(pos, morph, eased, situation) {
+                // update the battery indicator during the animation. "pos" is a number between 0 (beginning) -> 1 (end) of the animation
+                energyLeft = 35 - 15 * pos;
+                updateEnergyDisplay(energyLeft);
+            })
+          .afterAll(function() {
 
             // show the full batteries on the mitochondrion
             showMitochondrionBatteries(true);
@@ -1088,11 +1136,9 @@ function startLightOnAnimation(animationCallback) {
             function mitochondrionBatteriesMovedCallback() {
                 countMitochondrionBatteriesMoved++;
                 if (countMitochondrionBatteriesMoved === 2) {
-                    // show full batter in indicator box
-                    showBatteryIndicator(100);
 
-                    // change energy needs to checkmark
-                    showEnergyNeeded(false);
+                    energyLeft = 100; // reset to full battery
+                    updateEnergyDisplay(energyLeft);
 
                     // remove and recreate the mitochondrion batteries
                     mitochondrionBattery1.remove();
@@ -1109,6 +1155,8 @@ function startLightOnAnimation(animationCallback) {
                             var glucose2InStorage = glucose2.clone();
                             glucosesInStorage.push(glucose1InStorage);
                             glucosesInStorage.push(glucose2InStorage);
+                            glucose1InStorage.width(glucose1.width()/1.25).height(glucose1.height()/1.25).dx(25).dy(-25);
+                            glucose2InStorage.width(glucose1.width()/1.25).height(glucose1.height()/1.25).dx(-25).dy(25);
 
                             // hide the glucose1 and glucose2
                             glucose1.hide();
@@ -1124,13 +1172,13 @@ function startLightOnAnimation(animationCallback) {
 
                     // calculate where to move based on existing glucose count in storage.
                     currentAnimation = glucoseToStorageGroup;
-                    glucose1.animate({"delay":500 * animationSpeedRatio, "duration": animationDuration})
-                        .move(storage.x() + ((glucosesInStorage.length / 2) % 5) * 75 + getRandomInt(-10, 10),
-                              storage.y() + (Math.floor((glucosesInStorage.length / 2) / 5)) * 75 + getRandomInt(-15, 15))
+                    glucose1.animate({"delay":250 * animationSpeedRatio, "duration": animationDuration})
+                    .move(storage.x() + ((glucosesInStorage.length / 2) % 5) * 75,
+                          storage.y() + (Math.floor((glucosesInStorage.length / 2) / 5)) * 75)
                         .afterAll(glucoseToStorageMovedCallback);
-                    glucose2.animate({"delay":500 * animationSpeedRatio, "duration": animationDuration})
-                        .move(storage.x() + ((glucosesInStorage.length / 2) % 5) * 75 + getRandomInt(-10, 10),
-                            storage.y() + (Math.floor((glucosesInStorage.length / 2) / 5)) * 75 + getRandomInt(-15, 15))
+                    glucose2.animate({"delay":250 * animationSpeedRatio, "duration": animationDuration})
+                    .move(storage.x() + ((glucosesInStorage.length / 2) % 5) * 75,
+                        storage.y() + (Math.floor((glucosesInStorage.length / 2) / 5)) * 75)
                         .afterAll(glucoseToStorageMovedCallback);
                 }
             }
@@ -1138,9 +1186,15 @@ function startLightOnAnimation(animationCallback) {
             var mitochondrionBatteryAnimationGroup = draw.set();
             mitochondrionBatteryAnimationGroup.add(mitochondrionBattery1).add(mitochondrionBattery2);
             currentAnimation = mitochondrionBatteryAnimationGroup;
-            // move mitochondrion battery 1 to repair damage and battery 2 to transport nutrients after .5 second delay
-            mitochondrionBattery1.animate({"delay": 500 * animationSpeedRatio, "duration": animationDuration}).move(batteryEmptyRepairDamage.x(), batteryEmptyRepairDamage.y()).afterAll(mitochondrionBatteriesMovedCallback);
-            mitochondrionBattery2.animate({"delay": 500 * animationSpeedRatio, "duration": animationDuration}).move(batteryEmptyTransportNutrients.x(), batteryEmptyTransportNutrients.y()).afterAll(mitochondrionBatteriesMovedCallback);
+            // move mitochondrion battery 1 to repair damage and battery 2 to transport nutrients after delay
+            mitochondrionBattery1.animate({"delay": 250 * animationSpeedRatio, "duration": animationDuration}).move(batteryEmptyRepairDamage.x(), batteryEmptyRepairDamage.y())
+            .during(function(pos, morph, eased, situation) {
+                // update the battery indicator during the animation. "pos" is a number between 0 (beginning) -> 1 (end) of the animation
+                energyLeft = 20 - 15 * pos;
+                updateEnergyDisplay(energyLeft);
+            })
+            .afterAll(mitochondrionBatteriesMovedCallback);
+            mitochondrionBattery2.animate({"delay": 250 * animationSpeedRatio, "duration": animationDuration}).move(batteryEmptyTransportNutrients.x(), batteryEmptyTransportNutrients.y()).afterAll(mitochondrionBatteriesMovedCallback);
         });
     });
 }
@@ -1154,94 +1208,99 @@ function startLightOffAnimation(animationCallback) {
         // get the last two stored glucose from storage
         var glucose1InStorageIndex = glucosesInStorage.length - 1;
         var glucose1InStorage = glucosesInStorage[glucose1InStorageIndex];
+        glucose1InStorage.width(glucose1InStorage.width() * 1.25).height(glucose1InStorage.height() * 1.25);
+
         var glucose2InStorageIndex = glucosesInStorage.length - 2;
         var glucose2InStorage = glucosesInStorage[glucose2InStorageIndex];
+        glucose2InStorage.width(glucose2InStorage.width() * 1.25).height(glucose2InStorage.height() * 1.25);
 
         var storageToMitochondrionGroup = draw.set();
         storageToMitochondrionGroup.add(glucose1InStorage).add(glucose2InStorage);
         currentAnimation = storageToMitochondrionGroup;
 
-        // change batteries to half full
-        showBatteryIndicator(50);
-
-        // change energy needs to exclamation mark
-        showEnergyNeeded(true);
-
         // move the glucose to center of mitochondrion
-        window.setTimeout(function() {
+          var countGlucoseMovedFromStorageToMitochondrion = 0;
+          // callback for after glucose is moved from storage to mitochondrion.
+          // when it's called twice, we know that both glucose have finished moving, so we can move forward in the animation
+          function glucoseMovedFromStorageToMitochondrion() {
+              countGlucoseMovedFromStorageToMitochondrion++;
 
-            var countGlucoseMovedFromStorageToMitochondrion = 0;
-            // callback for after glucose is moved from storage to mitochondrion.
-            // when it's called twice, we know that both glucose have finished moving, so we can move forward in the animation
-            function glucoseMovedFromStorageToMitochondrion() {
-                countGlucoseMovedFromStorageToMitochondrion++;
+              if (countGlucoseMovedFromStorageToMitochondrion === 2) {
+                  // remove glucose from storage
+                  glucosesInStorage.splice(glucose2InStorageIndex, 2);
 
-                if (countGlucoseMovedFromStorageToMitochondrion === 2) {
-                    // remove glucose from storage
-                    glucosesInStorage.splice(glucose2InStorageIndex, 2);
+                  // empty the batteries in the indicator
+                  updateEnergyDisplay(energyLeft);
 
-                    // empty the batteries in the indicator
-                    showBatteryIndicator(0);
+                  // show the full batteries on the mitochondrion
+                  showMitochondrionBatteries(true);
 
-                    // show the full batteries on the mitochondrion
-                    showMitochondrionBatteries(true);
+                  var countMitochondrionBatteriesMoved = 0;
+                  // callback for after mitochondrion batteries are moved from mitochondrion to battery indicator.
+                  // when it's called twice, we know that both batteries have finished moving, so we can move forward in the animation
+                  function mitochondrionBatteriesMovedCallback() {
+                      countMitochondrionBatteriesMoved++;
+                      if (countMitochondrionBatteriesMoved === 2) {
+                          energyLeft = 100; // reset to 100%
+                          updateEnergyDisplay(energyLeft);
 
-                    var countMitochondrionBatteriesMoved = 0;
-                    // callback for after mitochondrion batteries are moved from mitochondrion to battery indicator.
-                    // when it's called twice, we know that both batteries have finished moving, so we can move forward in the animation
-                    function mitochondrionBatteriesMovedCallback() {
-                        countMitochondrionBatteriesMoved++;
-                        if (countMitochondrionBatteriesMoved === 2) {
-                            // show full batter in indicator box
-                            showBatteryIndicator(100);
+                          // remove and recreate the mitochondrion batteries
+                          mitochondrionBattery1.remove();
+                          mitochondrionBattery2.remove();
+                          createMitochondrionBatteries();
 
-                            // change energy needs to checkmark
-                            showEnergyNeeded(false);
+                          // now that we're done with the animation, invoke the callback
+                          animationCallback();
+                      }
+                  }
 
-                            // remove and recreate the mitochondrion batteries
-                            mitochondrionBattery1.remove();
-                            mitochondrionBattery2.remove();
-                            createMitochondrionBatteries();
+                  var mitochondrionBatteryAnimationGroup = draw.set();
+                  mitochondrionBatteryAnimationGroup.add(mitochondrionBattery1).add(mitochondrionBattery2);
+                  currentAnimation = mitochondrionBatteryAnimationGroup;
 
-                            // now that we're done with the animation, invoke the callback
-                            animationCallback();
-                        }
-                    }
+                  // move mitochondrion battery 1 to repair damage and battery 2 to transport nutrients after .5 second delay
+                  mitochondrionBattery1.animate({"delay": 250 * animationSpeedRatio, "duration": animationDuration}).move(batteryEmptyRepairDamage.x(), batteryEmptyRepairDamage.y())
+                  .during(function(pos, morph, eased, situation) {
+                      // update the battery indicator during the animation. "pos" is a number between 0 (beginning) -> 1 (end) of the animation
+                      energyLeft = 50 - 45 * pos;
+                      updateEnergyDisplay(energyLeft);
+                  })
+                  .afterAll(mitochondrionBatteriesMovedCallback);
+                  mitochondrionBattery2.animate({"delay": 250 * animationSpeedRatio, "duration": animationDuration}).move(batteryEmptyTransportNutrients.x(), batteryEmptyTransportNutrients.y()).afterAll(mitochondrionBatteriesMovedCallback);
+              }
+          }
 
-                    var mitochondrionBatteryAnimationGroup = draw.set();
-                    mitochondrionBatteryAnimationGroup.add(mitochondrionBattery1).add(mitochondrionBattery2);
-                    currentAnimation = mitochondrionBatteryAnimationGroup;
-
-                    // move mitochondrion battery 1 to repair damage and battery 2 to transport nutrients after .5 second delay
-                    mitochondrionBattery1.animate({"delay": 500 * animationSpeedRatio, "duration": animationDuration}).move(batteryEmptyRepairDamage.x(), batteryEmptyRepairDamage.y()).afterAll(mitochondrionBatteriesMovedCallback);
-                    mitochondrionBattery2.animate({"delay": 500 * animationSpeedRatio, "duration": animationDuration}).move(batteryEmptyTransportNutrients.x(), batteryEmptyTransportNutrients.y()).afterAll(mitochondrionBatteriesMovedCallback);
-                }
-            }
-
-            glucose1InStorage.animate({"duration": animationDuration})
-                .move(mitochondrionBattery1.x(), mitochondrionBattery1.y())
-                .animate({"duration": animationDuration}).opacity(0).afterAll(glucoseMovedFromStorageToMitochondrion);
-            glucose2InStorage.animate({"duration": animationDuration})
-                .move(mitochondrionBattery2.x(), mitochondrionBattery2.y())
-                .animate({"duration": animationDuration}).opacity(0).afterAll(glucoseMovedFromStorageToMitochondrion);
-        }, animationDuration);
+          glucose1InStorage.animate({"duration": animationDuration})
+              .move(mitochondrionBattery1.x(), mitochondrionBattery1.y())
+              .during(function(pos, morph, eased, situation) {
+                  // update the battery indicator during the animation. "pos" is a number between 0 (beginning) -> 1 (end) of the animation
+                  energyLeft = 100 - 25 * pos;
+                  updateEnergyDisplay(energyLeft);
+              })
+              .animate({"duration": animationDuration}).opacity(0)
+              .during(function(pos, morph, eased, situation) {
+                  // update the battery indicator during the animation. "pos" is a number between 0 (beginning) -> 1 (end) of the animation
+                  energyLeft = 75 - 25 * pos;
+                  updateEnergyDisplay(energyLeft);
+              })
+              .afterAll(glucoseMovedFromStorageToMitochondrion);
+          glucose2InStorage.animate({"duration": animationDuration})
+              .move(mitochondrionBattery2.x(), mitochondrionBattery2.y())
+              .animate({"duration": animationDuration}).opacity(0).afterAll(glucoseMovedFromStorageToMitochondrion);
     } else {
         // there's no glucose stored in storage
-        if (!batteryEmptyRepairDamage.visible()) {
-            // change batteries to half full
-            showBatteryIndicator(50);
-            // change energy needs to exclamation mark
-            showEnergyNeeded(true);
-
-            window.setTimeout(function() {
-                // empty the batteries in the indicator
-                showBatteryIndicator(0);
-
-                // now that we're done with the animation, invoke the callback
+        if (energyLeft > 0) {
+            currentAnimation = storage.animate({"duration": animationDuration * 3}).dmove(1,1)
+            .during(function(pos, morph, eased, situation) {
+                // update the battery indicator during the animation. "pos" is a number between 0 (beginning) -> 1 (end) of the animation
+                energyLeft = 100 - 100 * pos;
+                updateEnergyDisplay(energyLeft);
+            })
+            .afterAll(function() {
                 animationCallback();
-            }, 2000);
+            });
         } else {
-            // now that we're done with the animation, invoke the callback
+            // no energy left, we're done with the animation, invoke the callback
             animationCallback();
         }
     }
@@ -1249,26 +1308,59 @@ function startLightOffAnimation(animationCallback) {
 }
 
 /**
- * Show the battery as empty, half full, or full.
- * @param energyRemaining: [0, 50, 100]
+ * Updates the energy display section at the bottom of the window
+ * @param energyRemaining an integer between 0 and 100
+ */
+function updateEnergyDisplay(energyRemaining) {
+    showEnergyNeeds(energyRemaining);
+    showBatteryIndicator(energyRemaining);
+}
+
+/**
+ * Show the energy left in the battery, given the energyRemaining parameter.
+ * 100 -> 50: green
+ * 50 -> 25: yellow
+ * 25 -> 0: red
+ * @param energyRemaining an integer between 0 and 100
  */
 function showBatteryIndicator(energyRemaining) {
-    batteryEmptyRepairDamage.hide();
-    batteryEmptyTransportNutrients.hide();
-    batteryHalfRepairDamage.hide();
-    batteryHalfTransportNutrients.hide();
-    batteryFullRepairDamage.hide();
-    batteryFullTransportNutrients.hide();
+    if (energyRemaining < 0) {
+        return;
+    }
+    var newBatteryHeight = BATTERY_FULL_HEIGHT * energyRemaining / 100;
+    repairDamageRect.height(newBatteryHeight);
+    transportNutrientsRect.height(newBatteryHeight);
 
-    if (energyRemaining === 0) {
-        batteryEmptyRepairDamage.show();
-        batteryEmptyTransportNutrients.show();
-    } else if (energyRemaining === 50) {
-        batteryHalfRepairDamage.show();
-        batteryHalfTransportNutrients.show();
-    } else if (energyRemaining === 100) {
-        batteryFullRepairDamage.show();
-        batteryFullTransportNutrients.show();
+    var newBatteryY = INDICATOR_BATTERY_ORIGINAL_Y + (BATTERY_FULL_HEIGHT - newBatteryHeight);
+    repairDamageRect.y(newBatteryY);
+    transportNutrientsRect.y(newBatteryY);
+
+    if (energyRemaining <= 25) {
+      repairDamageRect.fill(BATTERY_NEAR_EMPTY_COLOR);
+      transportNutrientsRect.fill(BATTERY_NEAR_EMPTY_COLOR);
+    } else if (energyRemaining <= 50) {
+      repairDamageRect.fill(BATTERY_HALF_FULL_COLOR);
+      transportNutrientsRect.fill(BATTERY_HALF_FULL_COLOR);
+    } else {
+      repairDamageRect.fill(BATTERY_FULL_COLOR);
+      transportNutrientsRect.fill(BATTERY_FULL_COLOR);
+    }
+}
+
+/**
+ * Shows green check mark if full of energy, none if half energy, red exclamation mark if energy is needed.
+ * @param energyLeft an integer between 0 and 100
+ */
+function showEnergyNeeds(energyLeft) {
+    greenCheck.hide();
+    redExclamation.hide();
+    redX.hide();
+    if (energyLeft == 0) {
+        redX.show();
+    } else if (energyLeft <= 25) {
+        redExclamation.show();
+    } else if (energyLeft > 50) {
+        greenCheck.show();
     }
 }
 
@@ -1281,20 +1373,6 @@ function showMitochondrionBatteries(doShow) {
         return mitochondrionBatteryGroup.show();
     } else {
         return mitochondrionBatteryGroup.hide();
-    }
-}
-
-/**
- * Shows green check mark if energy is not needed, red exclamation mark if energy is needed.
- * @param isEnergyNeeded
- */
-function showEnergyNeeded(isEnergyNeeded) {
-    if (isEnergyNeeded) {
-        greenCheck.hide();
-        redExclamation.show();
-    } else {
-        greenCheck.show();
-        redExclamation.hide();
     }
 }
 
@@ -1316,7 +1394,6 @@ function turnLightOn() {
 
     // hide the wait image now that the light change has taken effect
     waitImageLightSwitch.fadeOut();
-    //waitImageTopLeftCorner.hide();
 }
 
 /**
@@ -1337,14 +1414,13 @@ function turnLightOff() {
 
     // hide the wait image now that the light change has taken effect
     waitImageLightSwitch.fadeOut();
-    //waitImageTopLeftCorner.hide();
 }
 
 /**
  * Disable control buttons
  */
 function disableControlButtons() {
-    $("#powerSwitchInput").prop("disabled", true);
+    $("#lightSwitchInput").prop("disabled", true);
     $("#animationSpeedSwitchInput").prop("disabled", true);
     $("#playPause").css("opacity", 0.3);
 }
@@ -1353,7 +1429,7 @@ function disableControlButtons() {
  * Enable control buttons
  */
 function enableControlButtons() {
-    $("#powerSwitchInput").prop("disabled", false);
+    $("#lightSwitchInput").prop("disabled", false);
     $("#animationSpeedSwitchInput").prop("disabled", false);
     $("#playPause").css("opacity", 1);
 }
@@ -1366,7 +1442,7 @@ function enableControlButtons() {
  */
 function playAnimationLoop() {
 
-    // increment the week number
+    // increment the day number
     dayNumber++;
 
     if (dayNumber > maxDays) {
@@ -1409,9 +1485,6 @@ function playAnimationLoop() {
                 // update the graph
                 var glucoseStored = updateGraph(dayNumber);
 
-                // show the appropriate number of leaves
-                showLeaf(glucoseIndex);
-
                 // make the background of the graph yellow for this week to
                 // represent the light being on
                 var plotBand = {
@@ -1422,7 +1495,7 @@ function playAnimationLoop() {
                 chart.xAxis[0].addPlotBand(plotBand);
 
                 // loop animation after brief pause
-                window.setTimeout(playAnimationLoop, 750);
+                window.setTimeout(playAnimationLoop, 750 * animationSpeedRatio);
             }
             startLightOnAnimation(lightOnAnimationCallback);
         } else  {
@@ -1444,43 +1517,45 @@ function playAnimationLoop() {
                 // update the graph
                 var glucoseStored = updateGraph(dayNumber);
 
-                // show the appropriate number of leaves
-                showLeaf(glucoseIndex);
-
-                /*
-                 * make the background of the graph grey for this week to
-                 * represent the light being off
-                 */
+                // make the background of the graph grey for this week to
+                // represent the light being off
                 var plotBand = {
-        			"from": dayNumber - 1,
-		        	"to": dayNumber,
-        			"color": LIGHT_OFF_GRAPH_REGION_COLOR
-		        };
+                    "from": dayNumber - 1,
+      		        "to": dayNumber,
+              		"color": LIGHT_OFF_GRAPH_REGION_COLOR
+                };
                 chart.xAxis[0].addPlotBand(plotBand);
 
-                if (glucoseStored <= 0) {
-                    /*
-                     * the amount of glucose stored is 0 or less which means
-                     * the plant has died
-                     */
-
-                    // pause the simulation
-                    pause();
-
-                    // remove all the leaves
-                    showLeaf(-1);
-
-                    // show the plant died message
-                    plantDied();
-
-                    // end the trial
-                    endTrial();
+                if (glucoseStored < 0) {
+                    // the amount of glucose stored is 0 or less which means
+                    // the plant has died
 
                     // disable control buttons
                     disableControlButtons();
+
+                    // start leaf death sequence, which by default takes 3 seconds
+                    currentAnimation = mitochondrion.animate(3000 * animationSpeedRatio).dmove(1,1)
+                    .during(function(pos, morph, eased, situation) {
+                        // get the death leaf index based on time (0)
+                        var deathLeafIndex = 0;
+                        if (pos < .33) {
+                            deathLeafIndex = 1;
+                        } else if (pos < .66) {
+                            deathLeafIndex = 2;
+                        } else {
+                            deathLeafIndex = 3;
+                        }
+                        showLeaf(deathLeafIndex);
+                    }).afterAll(function() {
+                        // end the trial
+                        endTrial();
+
+                        // show the plant died message
+                        plantDied();
+                    });
                 } else {
                   // loop animation after brief pause
-                  window.setTimeout(playAnimationLoop, 750);
+                  window.setTimeout(playAnimationLoop, 750 * animationSpeedRatio);
                 }
             }
             // start the animation
@@ -1490,25 +1565,26 @@ function playAnimationLoop() {
 }
 
 /**
- * Change the leaf based on number of glucose stored.
+ * Change the leaf based on the leaf index specified
+ * 0 = green, 1 = light green, 2 = yellow, 3 = dead brown
  * @param glucoseCount the number of glucose stored.
  */
-function showLeaf(glucoseCount) {
-
-    // hide all the leaves
+function showLeaf(leafIndex) {
+    // first hide all the leaves
     for (var l = 0; l < allLeaves.length; l++) {
         var leaf = allLeaves[l];
         leaf.hide();
     }
 
-    if (glucoseCount < 0) {
-        leafDead.show()
-    } else if (glucoseCount <= 4) {
-        leafYellow.show()
-    } else if (glucoseCount <= 10) {
-        leafLightGreen.show()
+    // then show the appropriate leaf
+    if (leafIndex === 0) {
+        leafGreen.show();
+    } else if (leafIndex <= 1) {
+        leafLightGreen.show();
+    } else if (leafIndex <= 2) {
+        leafYellow.show();
     } else {
-        leafGreen.show()
+        leafDead.show();
     }
 }
 
@@ -1548,7 +1624,8 @@ function initializeGraph() {
                 text: 'Amount of Glucose'
             },
             min: 0,
-            max: 80
+            max: 80,
+            tickInterval: 20,
         },
         tooltip: {
             enabled: false
@@ -1558,7 +1635,8 @@ function initializeGraph() {
                 name: 'Total Glucose Made',
                 color: '#72ae2e',
                 lineWidth: 3,
-                data: glucoseCreatedData
+                data: glucoseCreatedData,
+                dashStyle: "shortDot"
             },
             {
                 name: 'Total Glucose Used',
@@ -1579,6 +1657,38 @@ function initializeGraph() {
 
     // draw the chart
     chart = new Highcharts.Chart(chartOptions);
+
+    // now toggle line on/off, if user previous toggled it
+    var parts = [chloroplast, mitochondrion, storage];
+    for (var i = 0; i < parts.length; i++) {
+        var part = parts[i];
+        if (part.opacity() === 0.5) {
+            chart.series[i].hide();
+        }
+    }
+}
+
+/**
+ * listen for graph line show/hide toggles and toggle corresponding image's opacity.
+ */
+function registerGraphLineToggleListener() {
+    $(".highcharts-legend-item").on("click", function() {
+        // get the index of the line user toggled (0 = glucose made, 1 = used, 2 = stored)
+        var lineIndex = $(".highcharts-legend-item").index($(this));
+
+        // is the line hidden or displayed?
+        var isHidden = $(this).hasClass("highcharts-legend-item-hidden");
+
+        // get the appropriate image object based on which line user toggled
+        var image = [chloroplast, mitochondrion, storage][lineIndex];
+
+        // set the opacity accordingly
+        if (isHidden) {
+            image.opacity(0.5);
+        } else {
+            image.opacity(1);
+        }
+    });
 }
 
 /**
