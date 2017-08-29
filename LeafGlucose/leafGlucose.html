@@ -6,10 +6,10 @@
                 margin: 0px;
                 padding: 0px;
             }
-            #powerSwitchInput:hover, #animationSpeedSwitchInput:hover, #controls:hover {
+            #lightSwitchInput:hover, #animationSpeedSwitchInput:hover, #controls:hover {
                 cursor: pointer;
             }
-            #powerSwitchInput {
+            #lightSwitchInput {
               width: 40px;
               margin-top: 20px;
                transform: rotate(270deg);
@@ -19,7 +19,7 @@
               height: 50px;
             }
             #animationSpeedSwitchInput {
-                width: 40px;
+                width: 45px;
                 margin-top: 20px;
                 transform: rotate(270deg);
                 -moz-transform: rotate(270deg); /*do same for other browsers if required*/
@@ -30,6 +30,13 @@
             }
             #highchartsDiv {
                 border: 1px solid;
+            }
+            #waitImageLightSwitch {
+                display: none;
+                position: absolute;
+                top: 25px;
+                left: 65px;
+                opacity: 0.7;
             }
         </style>
         <script src="./jquery-3.1.1.min.js"></script>
@@ -42,13 +49,17 @@
         <div style="display:flex; width: 400px; justify-content: space-between">
             <div id="powerSwitchDiv">
                 <div style="font-weight:bold">Light</div>
-                <input type="range" max="1" step="1" value="1" id="powerSwitchInput" title="Turn light ON/OFF" />
+                <input type="range" max="1" step="1" value="1" id="lightSwitchInput" title="Turn light ON/OFF" />
                 <div style="float:right; margin-left:-8px"><div style="margin-top:5px">ON</div><div style="margin-top:8px">OFF</div></div>
+                <img id="waitImageLightSwitch" src="wait.png" />
             </div>
             <div id="animationSpeedSwitchDiv">
                 <div style="font-weight:bold">Animation Speed</div>
-                <input type="range" max="2" min="1" step="1" value="1" id="animationSpeedSwitchInput" title="Change animation speed" />
-                <div style="float:right; margin-left:-8px"><div style="margin-top:5px">2x Speed</div><div style="margin-top:8px">Normal Speed</div></div>
+                <input type="range" max="3" min="1" step="1" value="1" id="animationSpeedSwitchInput" title="Change animation speed" />
+                <div style="float:right; margin-left:-8px">
+                    <div>4x Speed</div>
+                    <div>2x Speed</div>
+                    <div>Normal Speed</div></div>
             </div>
             <div id="controls">
                 <div style="font-weight:bold">Controls</div>
@@ -56,7 +67,7 @@
                 <img id="reset" src="replay.png" title="Reset simulation" />
             </div>
         </div>
-        <div style="display:flex">
+        <div style="display:flex; margin-top:5px">
             <svg id="model" width="400" height="400" viewBox="0 0 1000 1000" version="1.1" xmlns="http://www.w3.org/2000/svg">
             </svg>
             <div id="highchartsDiv" width="400px">
