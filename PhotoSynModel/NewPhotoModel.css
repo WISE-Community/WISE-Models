@@ -1,4 +1,285 @@
-inputsDiv {
-    border: 1px dotted black;
-    background: navy;
+.inputsDiv {
+  background-color: #dbdbdb;
+  width: 317px;
+  height: 160px;
+  margin-bottom: 1px;
+  margin-left: 1px;
+  position: absolute;
+  left: 510px;
+  top: 6px
+}
+
+p {
+  margin-top: 8px;
+  margin-left: 0px;
+  margin-bottom: 5px;
+  text-align: left;
+  font-family: arial;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.lightControl1 {
+  position: absolute;
+  left: 195px;
+  top: 44px;
+  height: 30px;
+  width: 30px;
+}
+
+.lightControl2 {
+  position: absolute;
+  left: 195px;
+  top: 79px;
+  height: 30px;
+  width: 30px;
+  margin-right: 0px;
+}
+
+.lightText1 {
+  position: absolute;
+  left: 230px;
+  top: 46px;
+  height: 30px;
+  width: 90px;
+  margin-right: 0px;
+  text-transform: uppercase;
+  font-weight: bold;
+  color:  yellow;
+}
+
+.lightText2 {
+  position: absolute;
+  left: 230px;
+  top: 80px;
+  height: 30px;
+  width: 90px;
+  margin-right: 0px;
+  text-transform: uppercase;
+  font-weight: bold;
+  color:  #595959;
+}
+.speedControl {
+  position: absolute;
+  left: 835px;
+  top: 13px;
+  height: 160px;
+  width: 160px;
+  background-color: #dbdbdb;
+}
+
+.waterInfo {
+  position: absolute;
+  left: 350px;
+  top: 190px;
+}
+
+.runReset {
+  position: absolute;
+  left: 5px;
+  top: 2px;
+}
+
+.speedSwitchControl {
+  width: 65px;
+  position: absolute;
+  left: 25px;
+  top: 115px;
+  transform: rotate(270deg);
+  -moz-transform: rotate(270deg); /*do same for other browsers if required*/
+}
+
+.speedText {
+  position: absolute;
+  left: 10px;
+  top: 70px;
+  text-align: left;
+  line-height: 1.3;
+  font-family: arial;
+  font-size: 16px;
+  font-weight: bold;
+  color: #191970;
+  text-transform: uppercase;
+}
+
+.speedText2 {
+  position: absolute;
+  left: 80px;
+  top: 90px;
+  text-align: left;
+  line-height: 1.7;
+  font-family: arial;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+#speedSwitch:hover, #start:hover, #resetAnimation:hover, #replay:hover, #addCO2:hover, #subtractCO2:hover, #addH2O:hover, #subtractH2O:hover, #resetCO2:hover, #resetH2O:hover, #lightOn:hover, #lightOff:hover {
+  cursor: pointer;
+  border-color: yellow;
+}
+
+.CO2InputButton:active, .H2OInputButton:active, .rxnButton:active, .resetButton:active, .clearH2OButton:active, .clearCO2Button:active, .lightControl1:active, .lightControl2:active {
+  color: #A9A9A9;
+}
+
+#start:active, #replay:active, #resetAnimation:active {
+  opacity: 0.2;
+}
+
+#start:disabled, #replay:disabled, #resetAnimation:disabled {
+  opacity: 0.2;
+}
+
+.speedButton {
+  margin-left: 10px;
+  margin-bottom: 10px;
+  height: 36px;
+  width: 50px;
+  border: solid;
+  border-radius: 30px;
+  background-color: #ff8000;
+  font-family: arial;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.resetImage {
+  position: absolute;
+  left: 105px;
+  top: 0.1px;
+}
+
+.resetText {
+  position: absolute;
+  left: 115px;
+  top: 38px;
+  font-family: arial;
+  font-size: 13px;
+  text-transform: uppercase;
+  font-weight: bold;
+  color: red;
+}
+
+.replayImage {
+  position: absolute;
+  left: 60px;
+  top: 5px;
+}
+
+.replayText {
+  position: absolute;
+  left: 55px;
+  top: 38px;
+  font-family: arial;
+  font-size: 13px;
+  text-transform: uppercase;
+  font-weight: bold;
+  color: #FF8C00;
+}
+
+.runImage {
+  position: absolute;
+  left: 4px;
+  top: 5px;
+}
+
+.runText {
+  position: absolute;
+  left: 7px;
+  top: 38px;
+  font-family: arial;
+  font-size: 13px;
+  text-transform: uppercase;
+  font-weight: bold;
+  color: green;
+}
+
+.CO2InputButton {
+  margin-top: 0px;
+  margin-left: 15px;
+  margin-right: 10px;
+  margin-bottom: 5px;
+  height: 30px;
+  width: 70px;
+  border: solid;
+  border-radius: 30px;
+  background-color: #757777;
+  font-family: arial;
+  font-size: 16px;
+  text-transform: uppercase;
+  font-weight: bold;
+}
+
+.H2OInputButton {
+  margin-top: 0px;
+  margin-left: 20px;
+  margin-right: 10px;
+  margin-bottom: 5px;
+  height: 30px;
+  width: 70px;
+  border: solid;
+  border-radius: 30px;
+  background-color: #9ef0ff;
+  font-family: arial;
+  font-size: 16px;
+  text-transform: uppercase;
+  font-weight: bold;
+}
+
+.clearCO2Button {
+  height: 37px;
+  width: 73px;
+  margin-top: 10px;
+  margin-left: 13px;
+  margin-right: 10px;
+  border: solid;
+  border-radius: 30px;
+  background-color: white;
+  font-family: arial;
+  font-size: 12px;
+  text-transform: uppercase;
+  font-weight: bold;
+}
+
+.clearH2OButton {
+  height: 37px;
+  width: 73px;
+  margin-top: 10px;
+  margin-left: 17px;
+  margin-right: 0px;
+  border: solid;
+  border-radius: 30px;
+  background-color: white;
+  font-family: arial;
+  font-size: 12px;
+  text-transform: uppercase;
+  font-weight: bold;
+}
+
+.pRxnInfo {
+  margin: 15px;
+  display: inline;
+  font-family: arial;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.equation {
+  margin-bottom: 0px;
+  margin-right: 5px;
+  margin-left: 10px;
+  text-align: left;
+  font-family: arial;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.loop {
+  display: inline;
+  margin-left: 180px;
+  margin-bottom: 50px;
+  text-align: right;
+  font-family: arial;
+  font-size: 16px;
+  font-weight: bold;
 }

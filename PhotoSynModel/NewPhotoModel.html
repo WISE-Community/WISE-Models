@@ -8,27 +8,58 @@
             padding: 0px;
             }
       </style>
-    <script src="./jquery-3.1.1.min.js"></script>
+    <script src="./jquery-3.2.1.min.js"></script>
     <script src="./fabric.min.js"></script>
+    <link rel="stylesheet" href="./NewPhotoModel.css" />
   </head>
   <body>
-		  <button id="start">Run Photosynthesis Reaction</button>
-      <button id="resetAnimation">Reset Animation</button></br>
-      <button id="pauseAnimation">Pause Animation</button></br>
-      <p id="equation"></p>
-      <button id="resetInputs">Clear All Inputs</button></br>
-      <button id="+CO2">+CO2</button>
-      <button id="-CO2">-CO2</button>
-      <button id="resetCO2">Clear CO2</button>
-      <p id="totalCO2"></p>
-      <button id="+H2O">+H2O</button>
-      <button id="-H2O">-H2O</button>
-      <button id="resetH2O">Clear H2O</button>
-      <p id="totalH2O"></p>
-      <p id="loops"></p>
-      <p id="test"></p>
-      <canvas id="controls" width="1000" height="300" style="border:6px solid black"></canvas>
-    	<canvas id="model" width="1000" height="600" style="border:6px solid black"></canvas>
-      <script src="./NewPhotoModel.js"></script>
+    <canvas id="controls" width="1000" height="175" style="border:6px solid black; z-index:1"></canvas>
+    <canvas id="model" width="1000" height="525" style="border:6px solid black"></canvas>
+    <div class="inputsDiv" style="z-index:2">
+      <p class="equation" id="equation"></p></br>
+      <button class="CO2InputButton" id="addCO2" title="Add carbon dioxide">+ CO2</button>
+      <button class="H2OInputButton" id="addH2O" title="Add water">+ H2O</button></br>
+      <button class="CO2InputButton" id="subtractCO2" title="Subtract carbon dioxide">- CO2</button>
+      <button class="H2OInputButton" id="subtractH2O" title="Subtract water">- H2O</button></br>
+      <button class="clearCO2Button" id="resetCO2" title="Clear all carbon dioxide">Clear CO2</button>
+      <button class="clearH2OButton" id="resetH2O" title="Clear all water">Clear H2O</button></br>
+      <div>
+        <form>
+          <input class="lightControl1" type="radio" name="light" id="lightOn" value="on" title="Light on" />
+          <input class="lightControl2" type="radio" name="light" id="lightOff" value="off" title="Light off" />
+        </form>
+        <div>
+          <p class="lightText1">Light On</p>
+          <p class="lightText2">Light Off</p>
+          <p class="loop" id="test"></p>
+        </div>
+      </div>
+      <p class="loop" id="loops"></p>
+    </div>
+
+    <div class="speedControl" style="z-index:3">
+      <div class="runReset">
+        <input type="image" class="runImage" src="runButton.png" name="run" id="start" title="Run the reaction" alt="Play button" height="38" width="38" />
+        <p class="runText">Run</p>
+        <input type="image" class="resetImage" src="resetButton.png" name="reset" id="resetAnimation" title="Reset the animation" alt="Reset button" height="50" width="65" />
+        <p class="resetText">Reset</p>
+        <input type="image" class="replayImage" src="replayButton.png" name="replay" id="replay" title="Replay the animation" alt="Replay button" height="38" width="38" />
+        <p class="replayText">Replay</p>
+      </div>
+      <input class="speedSwitchControl" type="range" max="3" min="1" step="1" value="1" id="speedSwitch" title="Change animation speed" />
+      <div class="speedText">
+        Animation Speed
+      </div>
+      <div class="speedText2">
+        4X</br>
+        2X</br>
+        Normal</br>
+      </div>
+    </div>
+    <div class="waterInfo" id="water" style="z-index:4">
+      <img src="water.png" alt="Water molecule" height="30" width="35">
+      <p class="pRxnInfo" id="totalH2O"></p>
+    </div>
+    <script src="./NewPhotoModel.js"></script>
   </body>
 </html>
