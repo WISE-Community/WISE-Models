@@ -55,7 +55,7 @@ fabric.Image.fromURL('./GlucoseMachine.png', function(img){
 });
 
 var iconLegend = null;
-fabric.Image.fromURL('./iconLegend.png', function(img){
+fabric.Image.fromURL('./IconLegend.png', function(img){
 	img.scale(0.195);
 	img.setLeft(7);
 	img.setWidth(2490);
