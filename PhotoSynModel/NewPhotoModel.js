@@ -46,7 +46,7 @@ fabric.Image.fromURL('./membraneChannel.png', function(img){
 });
 
 var glucoseMachine = null;
-fabric.Image.fromURL('./GlucoseMachine.png', function(img){
+fabric.Image.fromURL('./glucoseMachine.png', function(img){
 	img.scale(0.4);
 	img.setLeft(621);
 	img.setTop(187);
@@ -55,7 +55,7 @@ fabric.Image.fromURL('./GlucoseMachine.png', function(img){
 });
 
 var iconLegend = null;
-fabric.Image.fromURL('./IconLegend.png', function(img){
+fabric.Image.fromURL('./iconLegend.png', function(img){
 	img.scale(0.195);
 	img.setLeft(7);
 	img.setWidth(2490);
@@ -181,7 +181,7 @@ initializeAnimation();
 
 
 var chlorophyll1 = null;
-fabric.Image.fromURL('./DominoH2O.png', function(img){
+fabric.Image.fromURL('./dominoH2O.png', function(img){
 	img.scale(0.3);
 	img.setLeft(240);
 	img.setTop(445);
@@ -191,7 +191,7 @@ fabric.Image.fromURL('./DominoH2O.png', function(img){
 });
 
 var chlorophyll2 = null;
-fabric.Image.fromURL('./DominoH2O.png', function(img){
+fabric.Image.fromURL('./dominoH2O.png', function(img){
 	img.scale(0.3);
 	img.setLeft(335);
 	img.setTop(425);
@@ -201,7 +201,7 @@ fabric.Image.fromURL('./DominoH2O.png', function(img){
 });
 
 var chlorophyll3 = null;
-fabric.Image.fromURL('./DominoH2O.png', function(img){
+fabric.Image.fromURL('./dominoH2O.png', function(img){
 	img.scale(0.3);
 	img.setLeft(330);
 	img.setTop(455);
@@ -211,7 +211,7 @@ fabric.Image.fromURL('./DominoH2O.png', function(img){
 });
 
 var atpDomino1 = null;
-fabric.Image.fromURL('./DominoATP.png', function(img){
+fabric.Image.fromURL('./dominoATP.png', function(img){
 	img.scale(0.3);
 	img.setLeft(495);
 	img.setTop(445);
@@ -220,7 +220,7 @@ fabric.Image.fromURL('./DominoATP.png', function(img){
 });
 
 var atpDomino2 = null;
-fabric.Image.fromURL('./DominoATP.png', function(img){
+fabric.Image.fromURL('./dominoATP.png', function(img){
 	img.scale(0.3);
 	img.setLeft(540);
 	img.setTop(425);
