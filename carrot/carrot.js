@@ -192,6 +192,12 @@ function init() {
 
     // parse the URL parameters
     parameters = parseURLParameters();
+    
+    /*
+     * Get the parameters for the model from WISE. This model doesn't actually utilize
+     * getParameters(), this is just here as an example.
+     */
+    //getParameters();
 
     if (parameters['feedbackPolicy'] != null) {
         // get the feedbackPolicy from the URL parameters
@@ -2076,6 +2082,20 @@ function getStudentWork() {
 }
 
 /**
+ * Get the parameters for the model from WISE
+ */
+function getParameters() {
+
+    // make a message to request the parameters
+    var message = {
+        messageType: "getParameters"
+    };
+
+    // send the message to request the parameters
+    sendMessage(message);
+}
+
+/**
  * Send a message to the parent
  * @param the message to send to the parent
  */
@@ -2110,6 +2130,9 @@ function receiveMessage(message) {
                 this.studentWorkFromOtherComponents = messageData.studentWorkFromOtherComponents;
             } else if (messageData.messageType == 'componentStateSaved') {
                 var componentState = messageData.componentState;
+            } else if (messageData.messageType == 'parameters') {
+                // WISE has sent the parameters to us
+                console.log(messageData.parameters);
             }
         }
     }
