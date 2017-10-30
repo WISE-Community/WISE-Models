@@ -1662,7 +1662,7 @@ function makeGlucose() {
 		duration: (500 * time),
 		onChange: canvasModel.renderAll.bind(canvasModel),
 	});
-	for (var i = 1; i <= 6; i++) {
+	for (var i = 1; i <= (waterCounter/2); i++) {
 		var emptyOutputEnergyCarrier = getEmptyOutputEnergyCarrier(i);
 		canvasModel.add(emptyOutputEnergyCarrier);
 	}
