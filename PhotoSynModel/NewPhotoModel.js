@@ -1,14 +1,17 @@
 // create two canvases with id model and controls, respectively
 
-// make the model canvas background color light blue
-var canvasModel = new fabric.Canvas('model', {
+/* make the model canvas background color light blue and objects selectable
+	var canvasModel = new fabric.Canvas('model', {
+	backgroundColor: 'rgb(173,216,230)'
+}); */
+
+var canvasModel = this.__canvas = new fabric.StaticCanvas('model',{
 	backgroundColor: 'rgb(173,216,230)'
 });
-
 //canvasModel.setDimensions({width: '100%',height: '100%',});
 
-// make the model canvas background color light gray
-var canvasControls = new fabric.Canvas('controls', {
+// make the model canvas background color light gray and objects NOT selectable
+var canvasControls = this.__canvas = new fabric.StaticCanvas('controls', {
 	backgroundColor: '#dbdbdb'
 });
 
@@ -18,6 +21,42 @@ var canvasControls = new fabric.Canvas('controls', {
 // modify the image, set dimensions and remove the white background
 // add modified image to the canvas
 
+// object to collect all trial related data
+var trialData = {};
+
+// trial data that will be collected
+var alertType = "";
+var madeSingleOxy = "";
+var madeGlucose = "";
+var lightOnOff = "";
+
+// an array of trial data objects
+var trials = [];
+
+// other global important variables
+var carbDioxCounter = 0;
+var waterCounter = 0;
+var remainingNumH2O;
+var glucoseMade = false;
+var time = 1;
+
+function initializeTrialData() {
+    // initialize the trial data
+		alertType = "none";
+		madeSingleOxy = "no";
+		madeGlucose = "no";
+		lightOnOff = "on";
+
+    // create the trial
+		trialData.alertType = alertType;
+		trialData.amountCO2 = carbDioxCounter;
+		trialData.amountH2O = waterCounter;
+		trialData.madeSingleOxy = madeSingleOxy;
+		trialData.madeGlucose = madeGlucose;
+		trialData.lightOnOff = lightOnOff;
+}
+
+
 var chloroplast = null;
 fabric.Image.fromURL('./chloroplast.png', function(img){
 	img.scale(8);
@@ -26,8 +65,6 @@ fabric.Image.fromURL('./chloroplast.png', function(img){
 	img.setLeft(-160);
 	img.setTop(17);
 	img.set('selectable', false);
-	//img.filters.push(new fabric.Image.filters.RemoveWhite({threshold: 25, distance: 150}));
-	//img.applyFilters(canvasModel.renderAll.bind(canvasModel));
 	chloroplast = img;
 	canvasModel.add(img);
 	canvasModel.moveTo(img,0);
@@ -62,7 +99,6 @@ fabric.Image.fromURL('./iconLegend.png', function(img){
 	img.setHeight(860);
 	iconLegend = img;
 	canvasControls.add(img)
-	//img.on('selected', animationStart)
 });
 
 canvasControls.add(new fabric.Line([0, 0, 0, 300], {
@@ -157,7 +193,7 @@ fabric.Image.fromURL('./photon.png', function(img) {
 });
 
 var energyCarrierEMPTY1 = null;
-fabric.Image.fromURL('./energyCarrierEmpty.png', function(img){
+fabric.Image.fromURL('./energyCarrierEMPTY.png', function(img){
 	img.scale(0.15);
 	img.setAngle(153);
 	img.setLeft(834);
@@ -166,6 +202,9 @@ fabric.Image.fromURL('./energyCarrierEmpty.png', function(img){
 	canvasModel.add(img)
 });
 */
+
+// Calls the function to initialize ALL the objects
+
 function initializeAnimation () {
 	initializePhase1Objects();
 	initializePhase2Objects();
@@ -175,6 +214,7 @@ function initializeAnimation () {
 	$("#speedSwitch").val(1);
 	$("#lightOn").prop('checked', true);
 	$('#water').hide();
+	initializeTrialData();
 }
 
 initializeAnimation();
@@ -229,7 +269,7 @@ fabric.Image.fromURL('./dominoATP.png', function(img){
 });
 
 var energyCarrierEMPTY99 = null;
-fabric.Image.fromURL('./energyCarrierEmpty.png', function(img){
+fabric.Image.fromURL('./energyCarrierEMPTY.png', function(img){
 	img.scale(0.15);
 	img.setAngle(44);
 	img.setLeft(613);
@@ -467,31 +507,6 @@ function initializePhase1Objects() {
 	initializePhoton();
 }
 
-// Calls the function to initialize ALL the objects
-
-
-// Student prompted to "Add the type and amount of inputs to make a glucose molecule and keep the plant alive."
-// "num___" variable values should correspond to the student's input
-// After input selections, students presented with a confirmation prompt and chemical formula: "Based on your selections, the following chemical reaction will attempt to run."
-// Student prompted to "Click the 'Run Chemical Reaction' button or the 'Make Changes' button to change your input selections."
-// Objects load onto screen based on student inputs
-// If correct inputs are added then the reaction runs
-// Potential run errors:
-// 		No correct inputs: "The chloroplast cannot use these starting materials to make glucose. Please select different inputs."
-//		Insufficient amount of inputs: "There are not enough starting materials to make glucose. Make sure that the atoms in your starting materials match the atoms in glucose and/or that you have enough energy."
-//		Deadly leftovers: "The amounts of starting materials used created chemical leftovers that will destroy the plant cell. Adjust the starting amounts to prevent deadly leftovers."
-//		Toxic input (Hydrogen atom): "Extra hydrogen atoms will make the plant cell die. Remove the extra hydrogen atoms to keep the plant alive."
-//		Toxic input (Oxygen atom): "Single oxygen atoms will make the plant cell die. Remove the extra oxygen atoms to keep the plant alive."
-//		Incorrect input (Oxygen gas): "Since oxygen gas is a waste product for the plant cell, it cannot be used by the chloroplast to make glucose. Remove the oxygen gas from your starting materials."
-//		Incorrect input (Glucose): "Since the goal is to make glucose, the chloroplast cannot use glucose as a starting material. Please remove glucose from your starting materials. "
-// If all the correct inputs and amounts have been added a Success message will be triggered: "Congratulations, you've provided the chloroplast with the energy and matter it needed to make glucose!"
-// If more than 6 CO2 are added as inputs then the entire reaction will run twice.  On the second loop, the "Success" and the "Insufficient amount of inputs" messages will be generated.
-
-var carbDioxCounter = 0;
-var waterCounter = 0;
-var remainingNumH2O;
-var glucoseMade = false;
-var time = 1;
 
 // *** Non-canvas Controls ***//
 
@@ -576,12 +591,57 @@ $("#lightOn").on("click", function() {
 });
 
 
+var lowReactantsAlert = null;
+fabric.Image.fromURL('./lowReactantsAlert.jpg', function(img) {
+	img.scale(0.6);
+	img.setLeft(230);
+	img.setTop(100);
+	lowReactantsAlert = img;
+});
+
+function lowAlertDelay() {
+	var pause = setTimeout(lowAlert, (2500 * time));
+}
+
+
+function lowAlert() {
+	alertType = "lowReactantsAlert";
+	alert("THE REACTION FAILED!\n\nLook at the message, then Click 'Reset' to try a new idea.");
+	canvasModel.add(lowReactantsAlert);
+	lightOnOff = "off";
+	trialData.lightOnOff = lightOnOff;
+	trials.push(trialData);
+	$("#resetAnimation").prop('disabled', false);
+	$("#replay").prop('disabled', false);
+}
+
 function animationStart() {
+	// add the new trial to the array of trials
 	remainingNumH2O = waterCounter;
 	if (carbDioxCounter == 0 && waterCounter == 0) {
-		alert("You must add starting materials to make glucose, because matter must be created from something.");
+		alert("THE REACTION FAILED!\n\nLook at the message, then Click 'Reset' to try a new idea.");
+		canvasModel.add(lowReactantsAlert);
+		if ($("#lightOff").is(':checked')) {
+			lightOnOff = "off";
+			trialData.lightOnOff = lightOnOff;
+		}
+		trialData.alertType = "lowReactantsAlert";
+		trials.push(trialData);
 		$("#start").prop('disabled', false);
-	} else {
+	} else if (carbDioxCounter > 0 && waterCounter == 0 && ($("#lightOff").is(':checked'))){
+		$("#totalH2O").html("Total H2O = " + waterCounter);
+		$("#start").prop('disabled', true);
+		$("#addCO2").prop('disabled', true);
+		$("#subtractCO2").prop('disabled', true);
+		$("#resetCO2").prop('disabled', true);
+		$("#addH2O").prop('disabled', true);
+		$("#subtractH2O").prop('disabled', true);
+		$("#resetH2O").prop('disabled', true);
+		$("#resetAnimation").prop('disabled', true);
+		$("#replay").prop('disabled', true);
+		addCarbonDioxide();
+		lowAlertDelay();
+		} else {
 		$("#totalH2O").html("Total H2O = " + waterCounter);
 		$("#start").prop('disabled', true);
 		$("#addCO2").prop('disabled', true);
@@ -755,9 +815,25 @@ function initializePhase2Objects() {
 	initializeOxyGas();
 }
 
+var chlorophyllLightAlert = null;
+fabric.Image.fromURL('./chlorophyllLightAlert.jpg', function(img) {
+	img.scale(0.6);
+	img.setLeft(50);
+	img.setTop(50);
+	chlorophyllLightAlert = img;
+});
+
 function addPhotons() {
 	if ($("#lightOff").is(':checked')) {
-		alert("The reaction could not complete because there is no light to trigger the chlorophyll stack.");
+		alert("THE REACTION FAILED!\n\nLook at the message, then Click 'Reset' to try a new idea.");
+		canvasModel.add(chlorophyllLightAlert);
+		alertType = "chlorophyllLightAlert";
+		lightOnOff = "off";
+		trialData.alertType = alertType;
+		trialData.lightOnOff = lightOnOff;
+		trialData.amountCO2 = carbDioxCounter;
+		trialData.amountH2O = waterCounter;
+		trials.push(trialData);
 		$("#resetAnimation").prop('disabled', false);
 		$("#replay").prop('disabled', false);
 		return;
@@ -776,11 +852,20 @@ function addPhotons() {
 	}
 }
 
+var chlorophyllWaterAlert = null;
+fabric.Image.fromURL('./chlorophyllWaterAlert.jpg', function(img) {
+	img.scale(0.6);
+	img.setLeft(360);
+	img.setTop(310);
+	chlorophyllWaterAlert = img;
+});
 
 function movePhoton1(hasH20) {
 	var photon1 = getPhoton(1);
 	photon1.setOpacity(1);
 	canvasModel.add(photon1);
+	var photonSound = new Audio('photonSound.mp3');
+	photonSound.play();
 	photon1.animate({left: 263, top: 452}, {
 		duration: (1500 * time),
 		onChange: canvasModel.renderAll.bind(canvasModel),
@@ -790,11 +875,19 @@ function movePhoton1(hasH20) {
 				onChange: canvasModel.renderAll.bind(canvasModel),
 				onComplete: function (){
 					if (!hasH20) {
-						alert("The reaction cannot continue, because the chlorophyll stacks cannot function properly when a water is missing. Click the 'Reset Animation' button to test a new idea.");
+						alert("THE REACTION FAILED!\n\nLook at the message, then Click 'Replay' or 'Reset' to try a new idea.");
+						canvasModel.add(chlorophyllWaterAlert);
+						alertType = "chlorophyllWaterAlert";
+						trialData.alertType = alertType;
+						trialData.amountCO2 = carbDioxCounter;
+						trialData.amountH2O = waterCounter;
+						trials.push(trialData);
 						$("#resetAnimation").prop('disabled', false);
 						$("#replay").prop('disabled', false);
 						return;
 					} else {
+						var waterSplitSound = new Audio('waterSplitSound.mp3');
+						waterSplitSound.play();
 						photon1.setOpacity(0);
 						photon1.setLeft(32);
 						photon1.setTop(29);
@@ -859,7 +952,15 @@ function movePhoton2 (hasH20) {
 					if (!hasH20) {
 						remainingNumH2O = 0;
 						$("#totalH2O").html("Remaining H2O = " + remainingNumH2O);
-						alert("The reaction cannot continue, because the chlorophyll stacks cannot function properly when a water is missing.  Click the 'Reset Animation' button to test a new idea.");
+						alert("THE REACTION FAILED!\n\nLook at the message, then Click 'Replay' or 'Reset' to try a new idea.");
+						canvasModel.add(chlorophyllWaterAlert);
+						if (trialData.alertType = "none"){
+							alertType = "chlorophyllWaterAlert";
+							trialData.alertType = alertType;
+							trialData.amountCO2 = carbDioxCounter;
+							trialData.amountH2O = waterCounter;
+							trials.push(trialData);
+						}
 						$("#resetAnimation").prop('disabled', false);
 						$("#replay").prop('disabled', false);
 						return;
@@ -998,6 +1099,8 @@ function hydrogenWheelLoop() {
 }
 
 function hydroCascade() {
+	var chargingBlockSound = new Audio('chargingBlockSound.mp3');
+	chargingBlockSound.play();
 	for (var i = 1; i <= 4; i++) {
 		var hydrogenAtom = getHydroAtom(i);
 		canvasModel.remove(hydrogenAtom);
@@ -1217,8 +1320,24 @@ function deathAlertDelay() {
 	var pause = setTimeout(deathAlert, (7500 * time));
 }
 
+var singleOxygenAlert = null;
+fabric.Image.fromURL('./singleOxygenAlert.jpg', function(img) {
+	img.scale(0.6);
+	img.setLeft(205);
+	img.setTop(105);
+	singleOxygenAlert = img;
+});
+
 function deathAlert() {
-	alert("Although your atom count for the input molecules matches the atoms needed to make glucose, the reaction produces single oxygen atoms as leftovers which kill the plant. Think about what inputs to add so that the glucose reaction can use the extra atoms to make something that won't kill the plant. Click the 'Reset Animation' button to test a new idea.");
+	alert("REACTION ERROR!\n\nLook at the message, then Click 'Replay' or 'Reset' to try a new idea.");
+	canvasModel.add(singleOxygenAlert);
+	alertType = "singleOxygenAlert";
+	madeSingleOxy = "yes";
+	trialData.alertType = alertType;
+	trialData.madeSingleOxy = madeSingleOxy;
+	trialData.amountCO2 = carbDioxCounter;
+	trialData.amountH2O = waterCounter;
+	trials.push(trialData);
 	$("#resetAnimation").prop('disabled', false);
 	$("#replay").prop('disabled', false);
 }
@@ -1250,6 +1369,9 @@ function delayFormH20() {
 }
 
 function scatterSingleOxy(id) {
+	madeSingleOxy = true;
+	var singleOxySound = new Audio('singleOxySound.mp3');
+	singleOxySound.play();
 	var singleOxy = getSingleOxy((waterCounter - 6) + id);
 	canvasModel.add(singleOxy);
 	singleOxy.animate({left: (Math.random() * (randomLeftMax - randomLeftMin + 1)) + randomLeftMin, top: (Math.random() * (randomTopMax - randomTopMin + 1)) + randomTopMin, opacity: 1}, {
@@ -1351,7 +1473,13 @@ function resetForWaterLoop() {
 		collectMolecules();
 		return;
 	} else if (!glucoseMade || (glucoseMade && carbDioxCounter < 6)) {
-		alert("The reaction could not finish, because you do not have all the necessary starting materials. Look at the chemical formula for glucose and make sure that each atom is present in your starting materials. Click the 'Reset Animation' button to test a new idea.");
+		alert("THE REACTION FAILED!\n\nLook at the message, then Click 'Replay' or 'Reset' to try a new idea.");
+		canvasModel.add(lowReactantsAlert);
+		alertType = "lowReactantsAlert";
+		trialData.alertType = alertType;
+		trialData.amountCO2 = carbDioxCounter;
+		trialData.amountH2O = waterCounter;
+		trials.push(trialData);
 		$("#resetAnimation").prop('disabled', false);
 		$("#replay").prop('disabled', false);
 		return;
@@ -1397,6 +1525,8 @@ function delay() {
 }
 
 function collectMolecules() {
+	var glucoseRxnSound = new Audio('glucoseRxnSound.mp3');
+	glucoseRxnSound.play();
 	collectInputHydro();
 	collectCO2();
 	delay();
@@ -1419,7 +1549,13 @@ function makeGroup() {
 	moleculesGroup = new fabric.Group(hydrogenInputAtom, carbonDioxide, energyCarrierFULL);
 	canvasModel.add(moleculesGroup);
 	if (carbDioxCounter < 6) {
-		alert("The reaction could not finish, because you do not have all the necessary starting materials. Look at the chemical formula for glucose and make sure that each atom is present in your starting materials. Click the 'Reset Animation' button to test a new idea.");
+		alert("THE REACTION FAILED!\n\nLook at the message, then Click 'Replay' or 'Reset' to try a new idea.");
+		canvasModel.add(lowReactantsAlert);
+		alertType = "lowReactantsAlert";
+		trialData.alertType = alertType;
+		trialData.amountCO2 = carbDioxCounter;
+		trialData.amountH2O = waterCounter;
+		trials.push(trialData);
 		$("#resetAnimation").prop('disabled', false);
 		$("#replay").prop('disabled', false);
 		return;
@@ -1460,7 +1596,7 @@ function resetWaterOutputObjects() {
 }
 
 function makeEmptyOutputEnergyCarrier(id, scale, left, top) {
-	fabric.Image.fromURL('./energyCarrierEmpty.png', function(img){
+	fabric.Image.fromURL('./energyCarrierEMPTY.png', function(img){
 		img.scale(scale);
 		img.setLeft(left);
 		img.setTop(top);
@@ -1506,13 +1642,36 @@ function initializePhase4Objects () {
 	initializeEmptyOutputEnergyCarrier();
 }
 
+var extraCO2Alert = null;
+fabric.Image.fromURL('./extraCO2Alert.jpg', function(img) {
+	img.scale(0.6);
+	img.setLeft(465);
+	img.setTop(45);
+	extraCO2Alert = img;
+});
+
 function success() {
 	if (carbDioxCounter > 6) {
-		alert("Although you successfully made a glucose molecule, there are extra CO2. Try to make glucose using the exact amount of starting materials. Click the 'Reset Animation' button to test a new idea.");
+		alert("REACTION CAUTION!\n\nLook at the message, then Click 'Reset' to try a new idea.");
+		canvasModel.add(extraCO2Alert);
+		alertType = "extraCO2Alert";
+		madeGlucose = "yes";
+		trialData.alertType = alertType;
+		trialData.madeGlucose = madeGlucose;
+		trialData.amountCO2 = carbDioxCounter;
+		trialData.amountH2O = waterCounter;
+		trials.push(trialData);
 		$("#resetAnimation").prop('disabled', false);
 		$("#replay").prop('disabled', false);
 	} else {
 		alert("CONGRATULATIONS! You made a glucose molecule using the exact amount of starting materials. Fill the blank in the equation with all the products that you made. Then, write the completed chemical formula in your notebook.");
+		alertType = "successAlert";
+		madeGlucose = "yes";
+		trialData.alertType = alertType;
+		trialData.madeGlucose = madeGlucose;
+		trialData.amountCO2 = carbDioxCounter;
+		trialData.amountH2O = waterCounter;
+		trials.push(trialData);
 		$("#resetAnimation").prop('disabled', false);
 		$("#replay").prop('disabled', false);
 		return;
@@ -1590,6 +1749,11 @@ function resetAll() {
 	waterLoopCounter = 0;
 	remainingNumH2O = waterCounter;
 	canvasModel.remove(releasedGasText);
+	canvasModel.remove(lowReactantsAlert);
+	canvasModel.remove(chlorophyllWaterAlert);
+	canvasModel.remove(chlorophyllLightAlert);
+	canvasModel.remove(extraCO2Alert);
+	canvasModel.remove(singleOxygenAlert);
 	resetCascade();
 	resetCO2Objects();
 	resetH2OObjects();
@@ -1606,6 +1770,7 @@ function resetAll() {
 	initializePhase2Objects();
 	initializePhase3Objects();
 	initializePhase4Objects();
+	initializeTrialData();
 	if (glucoseMade) {
 			canvasModel.remove(glucose);
 	}
@@ -1631,6 +1796,11 @@ function replay() {
 	waterLoopCounter = 0;
 	remainingNumH2O = waterCounter;
 	canvasModel.remove(releasedGasText);
+	canvasModel.remove(lowReactantsAlert);
+	canvasModel.remove(chlorophyllWaterAlert);
+	canvasModel.remove(chlorophyllLightAlert);
+	canvasModel.remove(extraCO2Alert);
+	canvasModel.remove(singleOxygenAlert);
 	resetCascade();
 	resetCO2Objects();
 	resetH2OObjects();
@@ -1647,6 +1817,7 @@ function replay() {
 	initializePhase2Objects();
 	initializePhase3Objects();
 	initializePhase4Objects();
+	initializeTrialData();
 	if (glucoseMade) {
 			canvasModel.remove(glucose);
 	}
