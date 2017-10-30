@@ -21,9 +21,6 @@ var canvasControls = this.__canvas = new fabric.StaticCanvas('controls', {
 // modify the image, set dimensions and remove the white background
 // add modified image to the canvas
 
-// object to collect all trial related data
-var trialData = {};
-
 // trial data that will be collected
 var alertType = "";
 var madeSingleOxy = "";
@@ -46,6 +43,11 @@ function initializeTrialData() {
 		madeSingleOxy = "no";
 		madeGlucose = "no";
 		lightOnOff = "on";
+}
+
+function addNewTrial() {
+		// object to collect all trial related data
+		var trialData = {};
 
     // create the trial
 		trialData.alertType = alertType;
@@ -54,8 +56,9 @@ function initializeTrialData() {
 		trialData.madeSingleOxy = madeSingleOxy;
 		trialData.madeGlucose = madeGlucose;
 		trialData.lightOnOff = lightOnOff;
-}
 
+		trials.push(trialData);
+}
 
 var chloroplast = null;
 fabric.Image.fromURL('./chloroplast.png', function(img){
@@ -609,8 +612,7 @@ function lowAlert() {
 	alert("THE REACTION FAILED!\n\nLook at the message, then Click 'Reset' to try a new idea.");
 	canvasModel.add(lowReactantsAlert);
 	lightOnOff = "off";
-	trialData.lightOnOff = lightOnOff;
-	trials.push(trialData);
+	addNewTrial();
 	$("#resetAnimation").prop('disabled', false);
 	$("#replay").prop('disabled', false);
 }
@@ -623,10 +625,9 @@ function animationStart() {
 		canvasModel.add(lowReactantsAlert);
 		if ($("#lightOff").is(':checked')) {
 			lightOnOff = "off";
-			trialData.lightOnOff = lightOnOff;
 		}
-		trialData.alertType = "lowReactantsAlert";
-		trials.push(trialData);
+		alertType = "lowReactantsAlert";
+		addNewTrial();
 		$("#start").prop('disabled', false);
 	} else if (carbDioxCounter > 0 && waterCounter == 0 && ($("#lightOff").is(':checked'))){
 		$("#totalH2O").html("Total H2O = " + waterCounter);
@@ -829,11 +830,7 @@ function addPhotons() {
 		canvasModel.add(chlorophyllLightAlert);
 		alertType = "chlorophyllLightAlert";
 		lightOnOff = "off";
-		trialData.alertType = alertType;
-		trialData.lightOnOff = lightOnOff;
-		trialData.amountCO2 = carbDioxCounter;
-		trialData.amountH2O = waterCounter;
-		trials.push(trialData);
+		addNewTrial();
 		$("#resetAnimation").prop('disabled', false);
 		$("#replay").prop('disabled', false);
 		return;
@@ -878,10 +875,7 @@ function movePhoton1(hasH20) {
 						alert("THE REACTION FAILED!\n\nLook at the message, then Click 'Replay' or 'Reset' to try a new idea.");
 						canvasModel.add(chlorophyllWaterAlert);
 						alertType = "chlorophyllWaterAlert";
-						trialData.alertType = alertType;
-						trialData.amountCO2 = carbDioxCounter;
-						trialData.amountH2O = waterCounter;
-						trials.push(trialData);
+						addNewTrial();
 						$("#resetAnimation").prop('disabled', false);
 						$("#replay").prop('disabled', false);
 						return;
@@ -954,12 +948,9 @@ function movePhoton2 (hasH20) {
 						$("#totalH2O").html("Remaining H2O = " + remainingNumH2O);
 						alert("THE REACTION FAILED!\n\nLook at the message, then Click 'Replay' or 'Reset' to try a new idea.");
 						canvasModel.add(chlorophyllWaterAlert);
-						if (trialData.alertType = "none"){
+						if (alertType = "none"){
 							alertType = "chlorophyllWaterAlert";
-							trialData.alertType = alertType;
-							trialData.amountCO2 = carbDioxCounter;
-							trialData.amountH2O = waterCounter;
-							trials.push(trialData);
+							addNewTrial();
 						}
 						$("#resetAnimation").prop('disabled', false);
 						$("#replay").prop('disabled', false);
@@ -1333,11 +1324,7 @@ function deathAlert() {
 	canvasModel.add(singleOxygenAlert);
 	alertType = "singleOxygenAlert";
 	madeSingleOxy = "yes";
-	trialData.alertType = alertType;
-	trialData.madeSingleOxy = madeSingleOxy;
-	trialData.amountCO2 = carbDioxCounter;
-	trialData.amountH2O = waterCounter;
-	trials.push(trialData);
+	addNewTrial();
 	$("#resetAnimation").prop('disabled', false);
 	$("#replay").prop('disabled', false);
 }
@@ -1476,10 +1463,7 @@ function resetForWaterLoop() {
 		alert("THE REACTION FAILED!\n\nLook at the message, then Click 'Replay' or 'Reset' to try a new idea.");
 		canvasModel.add(lowReactantsAlert);
 		alertType = "lowReactantsAlert";
-		trialData.alertType = alertType;
-		trialData.amountCO2 = carbDioxCounter;
-		trialData.amountH2O = waterCounter;
-		trials.push(trialData);
+		addNewTrial();
 		$("#resetAnimation").prop('disabled', false);
 		$("#replay").prop('disabled', false);
 		return;
@@ -1552,10 +1536,7 @@ function makeGroup() {
 		alert("THE REACTION FAILED!\n\nLook at the message, then Click 'Replay' or 'Reset' to try a new idea.");
 		canvasModel.add(lowReactantsAlert);
 		alertType = "lowReactantsAlert";
-		trialData.alertType = alertType;
-		trialData.amountCO2 = carbDioxCounter;
-		trialData.amountH2O = waterCounter;
-		trials.push(trialData);
+		addNewTrial();
 		$("#resetAnimation").prop('disabled', false);
 		$("#replay").prop('disabled', false);
 		return;
@@ -1656,22 +1637,14 @@ function success() {
 		canvasModel.add(extraCO2Alert);
 		alertType = "extraCO2Alert";
 		madeGlucose = "yes";
-		trialData.alertType = alertType;
-		trialData.madeGlucose = madeGlucose;
-		trialData.amountCO2 = carbDioxCounter;
-		trialData.amountH2O = waterCounter;
-		trials.push(trialData);
+		addNewTrial();
 		$("#resetAnimation").prop('disabled', false);
 		$("#replay").prop('disabled', false);
 	} else {
 		alert("CONGRATULATIONS! You made a glucose molecule using the exact amount of starting materials. Fill the blank in the equation with all the products that you made. Then, write the completed chemical formula in your notebook.");
 		alertType = "successAlert";
 		madeGlucose = "yes";
-		trialData.alertType = alertType;
-		trialData.madeGlucose = madeGlucose;
-		trialData.amountCO2 = carbDioxCounter;
-		trialData.amountH2O = waterCounter;
-		trials.push(trialData);
+		addNewTrial();
 		$("#resetAnimation").prop('disabled', false);
 		$("#replay").prop('disabled', false);
 		return;
