@@ -37,6 +37,8 @@ var remainingNumH2O;
 var glucoseMade = false;
 var time = 1;
 
+var latestComponentStateId = null;
+
 function initializeTrialData() {
     // initialize the trial data
 		alertType = "none";
@@ -56,8 +58,11 @@ function addNewTrial() {
 		trialData.madeSingleOxy = madeSingleOxy;
 		trialData.madeGlucose = madeGlucose;
 		trialData.lightOnOff = lightOnOff;
+		var time = Date.now();
+		trialData.clientSaveTime = time;
 
 		trials.push(trialData);
+		save();
 }
 
 var chloroplast = null;
@@ -1827,3 +1832,84 @@ canvasControls.on ({
 //canvas.setZoom();
 
 //var makeshiftMakeGlucose = setTimeout(makeGlucose, 100900); */
+
+/**
+ * Save the student data to WISE
+ */
+function save() {
+		// create a component state
+    var componentState = {};
+    componentState.isAutoSave = false;
+    componentState.isSubmit = false;
+    componentState.studentData = {
+				"trials": trials
+		};
+		componentState.id = latestComponentStateId;
+
+    // save the component state to WISE
+    saveWISE5State(componentState);
+}
+
+/**
+ * Send a component state to the parent
+ * @param componentState the component state
+ */
+function saveWISE5State(componentState) {
+    componentState.messageType = 'studentWork';
+    componentState.id = latestComponentStateId;
+
+    sendMessage(componentState);
+}
+
+/**
+ * Send a message to the parent
+ * @param the message to send to the parent
+ */
+function sendMessage(message) {
+    parent.postMessage(message, "*");
+}
+
+/**
+ * Receive a message from the parent
+ * @param message the message from the parent
+ */
+function receiveMessage(message) {
+
+    if (message != null) {
+        var messageData = message.data;
+
+        if (messageData != null) {
+            if (messageData.messageType == 'studentWork') {
+                /*
+                 * we have received a message that contains the latest student work from
+                 * this component and other components in this node
+                 */
+                /*latestStudentWorkFromThisComponent = messageData.latestStudentWorkFromThisComponent;
+                latestStudentWorkFromThisNode = messageData.latestStudentWorkFromThisNode;
+                latestStudentWorkFromOtherComponents = messageData.latestStudentWorkFromOtherComponents;*/
+            } else if (messageData.messageType == 'nodeSubmitClicked') {
+                /*
+                 * the student has clicked the submit button and the student
+                 * work has been included in the message data
+                 */
+                /*latestStudentWorkFromThisComponent = messageData.latestStudentWorkFromThisComponent;
+                latestStudentWorkFromThisNode = messageData.latestStudentWorkFromThisNode;
+                latestStudentWorkFromOtherComponents = messageData.latestStudentWorkFromOtherComponents;*/
+            } else if (messageData.messageType == 'componentStateSaved') {
+                /*
+                 * the student work that this model asked to save has now been saved
+                 * to the server
+                 */
+                //latestStudentWorkFromThisComponent = messageData.componentState;
+                //latestComponentStateSaved = messageData.componentState;
+								latestComponentStateId = messageData.componentState.id;
+            } else if (messageData.messageType == 'siblingComponentStudentDataChanged') {
+                // the student work from another component in this node has changed
+                /*updateLatestStudentWorkFromThisNode(messageData.componentState);*/
+            }
+        }
+    }
+}
+
+// listen for messages from the parent
+window.addEventListener('message', receiveMessage);
