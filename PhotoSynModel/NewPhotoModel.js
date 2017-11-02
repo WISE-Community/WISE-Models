@@ -1,7 +1,7 @@
 // create two canvases with id model and controls, respectively
 
-/* make the model canvas background color light blue and objects selectable
-	var canvasModel = new fabric.Canvas('model', {
+//make the model canvas background color light blue and objects selectable
+	/*var canvasModel = new fabric.Canvas('model', {
 	backgroundColor: 'rgb(173,216,230)'
 }); */
 
@@ -614,7 +614,7 @@ function lowAlertDelay() {
 
 function lowAlert() {
 	alertType = "lowReactantsAlert";
-	alert("THE REACTION FAILED!\n\nLook at the message, then Click 'Reset' to try a new idea.");
+	alert("THE REACTION FAILED!\n\nLook at the message for more information.");
 	canvasModel.add(lowReactantsAlert);
 	lightOnOff = "off";
 	addNewTrial();
@@ -626,14 +626,25 @@ function animationStart() {
 	// add the new trial to the array of trials
 	remainingNumH2O = waterCounter;
 	if (carbDioxCounter == 0 && waterCounter == 0) {
-		alert("THE REACTION FAILED!\n\nLook at the message, then Click 'Reset' to try a new idea.");
+		$("#totalH2O").html("Total H2O = " + waterCounter);
+		$("#start").prop('disabled', true);
+		$("#addCO2").prop('disabled', true);
+		$("#subtractCO2").prop('disabled', true);
+		$("#resetCO2").prop('disabled', true);
+		$("#addH2O").prop('disabled', true);
+		$("#subtractH2O").prop('disabled', true);
+		$("#resetH2O").prop('disabled', true);
+		$("#resetAnimation").prop('disabled', true);
+		$("#replay").prop('disabled', true);
+		alert("THE REACTION FAILED!\n\nLook at the message for more information.");
 		canvasModel.add(lowReactantsAlert);
 		if ($("#lightOff").is(':checked')) {
 			lightOnOff = "off";
 		}
 		alertType = "lowReactantsAlert";
 		addNewTrial();
-		$("#start").prop('disabled', false);
+		$("#resetAnimation").prop('disabled', false);
+		$("#replay").prop('disabled', false);
 	} else if (carbDioxCounter > 0 && waterCounter == 0 && ($("#lightOff").is(':checked'))){
 		$("#totalH2O").html("Total H2O = " + waterCounter);
 		$("#start").prop('disabled', true);
@@ -831,7 +842,7 @@ fabric.Image.fromURL('./chlorophyllLightAlert.jpg', function(img) {
 
 function addPhotons() {
 	if ($("#lightOff").is(':checked')) {
-		alert("THE REACTION FAILED!\n\nLook at the message, then Click 'Reset' to try a new idea.");
+		alert("THE REACTION FAILED!\n\nLook at the message for more information.");
 		canvasModel.add(chlorophyllLightAlert);
 		alertType = "chlorophyllLightAlert";
 		lightOnOff = "off";
@@ -877,7 +888,7 @@ function movePhoton1(hasH20) {
 				onChange: canvasModel.renderAll.bind(canvasModel),
 				onComplete: function (){
 					if (!hasH20) {
-						alert("THE REACTION FAILED!\n\nLook at the message, then Click 'Replay' or 'Reset' to try a new idea.");
+						alert("THE REACTION FAILED!\n\nLook at the message for more information.");
 						canvasModel.add(chlorophyllWaterAlert);
 						alertType = "chlorophyllWaterAlert";
 						addNewTrial();
@@ -951,7 +962,7 @@ function movePhoton2 (hasH20) {
 					if (!hasH20) {
 						remainingNumH2O = 0;
 						$("#totalH2O").html("Remaining H2O = " + remainingNumH2O);
-						alert("THE REACTION FAILED!\n\nLook at the message, then Click 'Replay' or 'Reset' to try a new idea.");
+						alert("THE REACTION FAILED!\n\nLook at the message for more information.");
 						canvasModel.add(chlorophyllWaterAlert);
 						if (alertType = "none"){
 							alertType = "chlorophyllWaterAlert";
@@ -1325,7 +1336,7 @@ fabric.Image.fromURL('./singleOxygenAlert.jpg', function(img) {
 });
 
 function deathAlert() {
-	alert("REACTION ERROR!\n\nLook at the message, then Click 'Replay' or 'Reset' to try a new idea.");
+	alert("REACTION ERROR!\n\nLook at the message for more information.");
 	canvasModel.add(singleOxygenAlert);
 	alertType = "singleOxygenAlert";
 	madeSingleOxy = "yes";
@@ -1465,7 +1476,7 @@ function resetForWaterLoop() {
 		collectMolecules();
 		return;
 	} else if (!glucoseMade || (glucoseMade && carbDioxCounter < 6)) {
-		alert("THE REACTION FAILED!\n\nLook at the message, then Click 'Replay' or 'Reset' to try a new idea.");
+		alert("THE REACTION FAILED!\n\nLook at the message for more information.");
 		canvasModel.add(lowReactantsAlert);
 		alertType = "lowReactantsAlert";
 		addNewTrial();
@@ -1538,7 +1549,7 @@ function makeGroup() {
 	moleculesGroup = new fabric.Group(hydrogenInputAtom, carbonDioxide, energyCarrierFULL);
 	canvasModel.add(moleculesGroup);
 	if (carbDioxCounter < 6) {
-		alert("THE REACTION FAILED!\n\nLook at the message, then Click 'Replay' or 'Reset' to try a new idea.");
+		alert("THE REACTION FAILED!\n\nLook at the message for more information.");
 		canvasModel.add(lowReactantsAlert);
 		alertType = "lowReactantsAlert";
 		addNewTrial();
@@ -1636,9 +1647,17 @@ fabric.Image.fromURL('./extraCO2Alert.jpg', function(img) {
 	extraCO2Alert = img;
 });
 
+var successMessage = null;
+fabric.Image.fromURL('./successMessage.jpg', function(img) {
+	img.scale(0.6);
+	img.setLeft(80);
+	img.setTop(330);
+	successMessage = img;
+});
+
 function success() {
 	if (carbDioxCounter > 6) {
-		alert("REACTION CAUTION!\n\nLook at the message, then Click 'Reset' to try a new idea.");
+		alert("REACTION CAUTION!\n\nLook at the message for more information.");
 		canvasModel.add(extraCO2Alert);
 		alertType = "extraCO2Alert";
 		madeGlucose = "yes";
@@ -1646,8 +1665,9 @@ function success() {
 		$("#resetAnimation").prop('disabled', false);
 		$("#replay").prop('disabled', false);
 	} else {
-		alert("CONGRATULATIONS! You made a glucose molecule using the exact amount of starting materials. Fill the blank in the equation with all the products that you made. Then, write the completed chemical formula in your notebook.");
-		alertType = "successAlert";
+		alert("CONGRATULATIONS!");
+		canvasModel.add(successMessage);
+		alertType = "successMessage";
 		madeGlucose = "yes";
 		addNewTrial();
 		$("#resetAnimation").prop('disabled', false);
@@ -1732,6 +1752,7 @@ function resetAll() {
 	canvasModel.remove(chlorophyllLightAlert);
 	canvasModel.remove(extraCO2Alert);
 	canvasModel.remove(singleOxygenAlert);
+	canvasModel.remove(successMessage);
 	resetCascade();
 	resetCO2Objects();
 	resetH2OObjects();
@@ -1779,6 +1800,7 @@ function replay() {
 	canvasModel.remove(chlorophyllLightAlert);
 	canvasModel.remove(extraCO2Alert);
 	canvasModel.remove(singleOxygenAlert);
+	canvasModel.remove(successMessage);
 	resetCascade();
 	resetCO2Objects();
 	resetH2OObjects();
